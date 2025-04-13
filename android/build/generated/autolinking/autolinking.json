@@ -220,31 +220,6 @@
           "isPureCxxDependency": false
         }
       }
-    },
-    "react-native-vector-icons": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-vector-icons",
-      "name": "react-native-vector-icons",
-      "platforms": {
-        "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-vector-icons/RNVectorIcons.podspec",
-          "version": "10.2.0",
-          "configurations": [],
-          "scriptPhases": []
-        },
-        "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-vector-icons/android",
-          "packageImportPath": "import com.oblador.vectoricons.VectorIconsPackage;",
-          "packageInstance": "new VectorIconsPackage()",
-          "buildTypes": [],
-          "libraryName": "RNVectorIconsSpec",
-          "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-vector-icons/android/build/generated/source/codegen/jni/CMakeLists.txt",
-          "cxxModuleCMakeListsModuleName": null,
-          "cxxModuleCMakeListsPath": null,
-          "cxxModuleHeaderName": null,
-          "isPureCxxDependency": false
-        }
-      }
     }
   },
   "commands": [
@@ -698,7 +673,9 @@
     "ios": {},
     "android": {}
   },
-  "assets": [],
+  "assets": [
+    "./node_modules/react-native-vector-icons/Fonts"
+  ],
   "project": {
     "ios": {
       "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/ios",

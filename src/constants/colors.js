@@ -7,14 +7,15 @@ export default {
   // Primary colors - Purple gradient scheme
   primary: '#6B46C1',
   primaryDark: '#4A1D96',
+  primaryDarker: '#371480',
   primaryLight: '#8B5CF6',
   
   // Background colors
   background: '#FFFFFF',
   backgroundDark: '#F7FAFC',
-  gradientStart: '#4A1D96',
-  gradientMiddle: '#6B46C1',
-  gradientEnd: '#8B5CF6',
+  gradientStart: '#6B46C1',
+  gradientMiddle: '#5533AD',
+  gradientEnd: '#4A1D96',
   
   // Text colors
   textDark: '#1A202C',
