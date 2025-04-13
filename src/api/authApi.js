@@ -19,8 +19,45 @@ export const authApi = {
   
   signup: async (userData) => {
     try {
+      // If signing up with Google
+      if (userData.googleId) {
+        const response = await apiClient.post('/auth/google-signup', userData);
+        const { token, refreshToken, user } = response.data;
+        
+        // Store tokens
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('refreshToken', refreshToken);
+        
+        return { user, token };
+      }
+      
+      // Regular email signup
       const response = await apiClient.post('/auth/signup', userData);
       return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error.message;
+    }
+  },
+  
+  googleSignIn: async (googleUser) => {
+    try {
+      const response = await apiClient.post('/auth/google-signin', {
+        idToken: googleUser.idToken,
+        user: {
+          email: googleUser.user.email,
+          name: googleUser.user.name,
+          googleId: googleUser.user.id,
+          photo: googleUser.user.photo,
+        },
+      });
+      
+      const { token, refreshToken, user } = response.data;
+      
+      // Store tokens
+      await AsyncStorage.setItem('token', token);
+      await AsyncStorage.setItem('refreshToken', refreshToken);
+      
+      return { user, token };
     } catch (error) {
       throw error.response ? error.response.data : error.message;
     }

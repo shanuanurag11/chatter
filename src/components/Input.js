@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import Colors from '../constants/colors';
+import Theme from '../constants/theme';
 
 const Input = ({
   label,
@@ -12,9 +15,11 @@ const Input = ({
   keyboardType = 'default',
   autoCapitalize = 'none',
   style,
+  icon,
+  isDark = false,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [isPasswordVisible, setIsPasswordVisible] = useState(!secureTextEntry);
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => {
@@ -28,19 +33,32 @@ const Input = ({
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, isDark && styles.labelDark]}>{label}</Text>}
       <View
         style={[
           styles.inputContainer,
-          isFocused && styles.focused,
+          isDark ? styles.inputContainerDark : styles.inputContainerLight,
+          isFocused && (isDark ? styles.focusedDark : styles.focusedLight),
           error && styles.errorInput,
         ]}
       >
+        {icon && (
+          <Icon 
+            name={icon} 
+            size={20} 
+            color={isDark ? Colors.placeholderText : Colors.textLight} 
+            style={styles.iconStyle} 
+          />
+        )}
         <TextInput
-          style={styles.input}
+          style={[
+            styles.input, 
+            isDark && styles.inputDark
+          ]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
+          placeholderTextColor={isDark ? Colors.placeholderText : '#A0AEC0'}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           onFocus={handleFocus}
           onBlur={handleBlur}
@@ -52,7 +70,11 @@ const Input = ({
             onPress={togglePasswordVisibility}
             style={styles.eyeIcon}
           >
-            <Text>{isPasswordVisible ? '🙈' : '👁️'}</Text>
+            <Icon 
+              name={isPasswordVisible ? 'visibility-off' : 'visibility'} 
+              size={20} 
+              color={isDark ? Colors.placeholderText : Colors.textLight} 
+            />
           </TouchableOpacity>
         )}
       </View>
@@ -63,42 +85,62 @@ const Input = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: Theme.spacing.md,
   },
   label: {
-    marginBottom: 8,
-    fontSize: 14,
+    marginBottom: Theme.spacing.xs,
+    fontSize: Theme.fontSize.sm,
     fontWeight: '500',
-    color: '#333',
+    color: Colors.textDark,
+  },
+  labelDark: {
+    color: Colors.white,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderRadius: Theme.borderRadius.md,
+    height: 50,
+  },
+  inputContainerLight: {
     borderWidth: 1,
     borderColor: '#E0E0E0',
-    borderRadius: 8,
     backgroundColor: '#F9F9F9',
+  },
+  inputContainerDark: {
+    backgroundColor: Colors.inputBackground,
+  },
+  iconStyle: {
+    marginLeft: Theme.spacing.md,
   },
   input: {
     flex: 1,
     height: 50,
-    paddingHorizontal: 16,
-    fontSize: 16,
+    paddingHorizontal: Theme.spacing.md,
+    fontSize: Theme.fontSize.md,
+    color: Colors.textDark,
   },
-  focused: {
-    borderColor: '#4285F4',
-    backgroundColor: '#FFFFFF',
+  inputDark: {
+    color: Colors.white,
+  },
+  focusedLight: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.white,
+  },
+  focusedDark: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   errorInput: {
-    borderColor: '#EA4335',
+    borderColor: Colors.error,
   },
   errorText: {
-    color: '#EA4335',
-    fontSize: 12,
-    marginTop: 4,
+    color: Colors.error,
+    fontSize: Theme.fontSize.xs,
+    marginTop: Theme.spacing.xs,
   },
   eyeIcon: {
-    padding: 10,
+    padding: Theme.spacing.sm,
+    marginRight: Theme.spacing.xs,
   },
 });
 

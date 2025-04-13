@@ -1,5 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import Colors from '../constants/colors';
+import Theme from '../constants/theme';
 
 const Button = ({ 
   title, 
@@ -8,7 +10,8 @@ const Button = ({
   textStyle, 
   loading = false, 
   disabled = false,
-  variant = 'primary', // 'primary', 'secondary', 'outline'
+  variant = 'primary', // 'primary', 'secondary', 'outline', 'white'
+  icon = null,
 }) => {
   
   const getButtonStyles = () => {
@@ -19,6 +22,8 @@ const Button = ({
         return [styles.button, styles.secondary, style];
       case 'outline':
         return [styles.button, styles.outline, style];
+      case 'white':
+        return [styles.button, styles.white, style];
       default:
         return [styles.button, styles.primary, style];
     }
@@ -30,8 +35,21 @@ const Button = ({
     switch (variant) {
       case 'outline':
         return [styles.text, styles.outlineText, textStyle];
+      case 'white':
+        return [styles.text, styles.whiteText, textStyle];
       default:
         return [styles.text, textStyle];
+    }
+  };
+  
+  const getLoaderColor = () => {
+    switch (variant) {
+      case 'outline':
+        return Colors.primary;
+      case 'white':
+        return Colors.primary;
+      default:
+        return Colors.white;
     }
   };
   
@@ -43,9 +61,12 @@ const Button = ({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'outline' ? '#4285F4' : '#FFF'} />
+        <ActivityIndicator color={getLoaderColor()} />
       ) : (
-        <Text style={getTextStyles()}>{title}</Text>
+        <>
+          {icon}
+          <Text style={getTextStyles()}>{title}</Text>
+        </>
       )}
     </TouchableOpacity>
   );
@@ -54,35 +75,44 @@ const Button = ({
 const styles = StyleSheet.create({
   button: {
     height: 50,
-    borderRadius: 8,
+    borderRadius: Theme.borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: Theme.spacing.md,
+    flexDirection: 'row',
   },
   primary: {
-    backgroundColor: '#4285F4',
+    backgroundColor: Colors.primary,
   },
   secondary: {
-    backgroundColor: '#34A853',
+    backgroundColor: Colors.success,
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#4285F4',
+    borderColor: Colors.primary,
+  },
+  white: {
+    backgroundColor: Colors.white,
+    ...Theme.shadows.medium,
   },
   disabled: {
-    backgroundColor: '#E5E5E5',
+    backgroundColor: Colors.textLight,
+    opacity: 0.7,
   },
   text: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: Colors.white,
+    fontSize: Theme.fontSize.md,
     fontWeight: '600',
   },
   outlineText: {
-    color: '#4285F4',
+    color: Colors.primary,
+  },
+  whiteText: {
+    color: Colors.primary,
   },
   disabledText: {
-    color: '#9E9E9E',
+    color: Colors.white,
   },
 });
 
