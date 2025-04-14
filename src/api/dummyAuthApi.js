@@ -22,6 +22,14 @@ const users = [
     password: 'password123',
     photo: 'https://randomuser.me/api/portraits/women/1.jpg',
   },
+  {
+    id: '3',
+    name: 'Test User',
+    email: 'test@example.com',
+    phone: '1234567890',
+    password: '123456',
+    photo: 'https://randomuser.me/api/portraits/lego/3.jpg',
+  },
 ];
 
 /**
@@ -217,16 +225,22 @@ const loginWithApple = async (appleData) => {
 
 export const dummyAuthApi = {
   // Login with phone number
-  loginWithPhone: async (phone, password) => {
+  loginWithPhone: async (phoneData, password) => {
     await delay(1500); // Simulate network delay
     
-    const user = users.find(user => user.phone === phone);
+    // Handle both object parameter and separate parameters
+    const phoneNumber = typeof phoneData === 'object' ? phoneData.phone : phoneData;
+    const passwordValue = typeof phoneData === 'object' ? phoneData.password : password;
+    
+    console.log('Attempting login with:', { phone: phoneNumber, password: passwordValue });
+    
+    const user = users.find(user => user.phone === phoneNumber);
     
     if (!user) {
       throw { message: 'User not found with this phone number' };
     }
     
-    if (user.password !== password) {
+    if (user.password !== passwordValue) {
       throw { message: 'Invalid password' };
     }
     

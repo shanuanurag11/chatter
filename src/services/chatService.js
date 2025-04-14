@@ -17,7 +17,7 @@ const DUMMY_CHAT_THREADS = [
     name: 'Sarah Johnson',
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
     lastMessage: {
-      text: "Yes, I'm free tomorrow afternoon. Let's meet at 2pm.",
+      text: "Yes, I\'m free tomorrow afternoon. Let's meet at 2pm.",
       timestamp: new Date(Date.now() - 25 * 60000).toISOString(),
     },
     unread: 2,
@@ -119,11 +119,11 @@ function getRandomMessage(isUser) {
   ];
   
   const otherMessages = [
-    "I'm doing well, thanks for asking!",
-    "Yes, I'm available tomorrow. What time works for you?",
+    "I\'m doing well, thanks for asking!",
+    "Yes, I\'m available tomorrow. What time works for you?",
     "Great job on completing that task!",
     "The new design looks fantastic.",
-    "I'm free on Saturday, but busy on Sunday.",
+    "I\'m free on Saturday, but busy on Sunday.",
     "Thanks, I'll review them as soon as possible.",
     "I can talk now if you're free."
   ];
@@ -151,7 +151,24 @@ class ChatService {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.deviceId = Platform.OS === 'ios' ? 'ios_device' : 'android_device';
-    this.chats = [...DUMMY_CHAT_THREADS];
+    
+    // Clone and normalize the chat threads
+    this.chats = DUMMY_CHAT_THREADS.map(chat => ({
+      ...chat,
+      // Ensure both id and conversationId exist
+      id: chat.id || chat.conversationId,
+      conversationId: chat.conversationId || chat.id,
+      // Normalize other required fields
+      name: chat.name || chat.userName,
+      avatar: chat.avatar || chat.userAvatar,
+    }));
+    
+    // Initialize MESSAGE_HISTORY from DUMMY_CHATS
+    DUMMY_CHATS.forEach(chat => {
+      if (!MESSAGE_HISTORY[chat.conversationId]) {
+        MESSAGE_HISTORY[chat.conversationId] = chat.messages || [];
+      }
+    });
     
     // Simulate periodic online status changes
     setInterval(() => {
@@ -284,8 +301,30 @@ class ChatService {
     // Simulate API delay
     await this.delay(1000);
     
+    console.log(`Fetching chat history for ${conversationId}`);
+    
+    // Handle case where conversationId is empty/missing
+    if (!conversationId) {
+      console.error('No conversation ID provided');
+      return [];
+    }
+    
+    // Check both direct ID and in DUMMY_CHATS
     if (!MESSAGE_HISTORY[conversationId]) {
-      throw new Error('Conversation not found');
+      console.log('Conversation not found in MESSAGE_HISTORY, trying to find in DUMMY_CHATS');
+      
+      // Look for it in DUMMY_CHATS and initialize if found
+      const dummyChat = DUMMY_CHATS.find(chat => 
+        chat.conversationId === conversationId || chat.userId === conversationId
+      );
+      
+      if (dummyChat && dummyChat.messages) {
+        MESSAGE_HISTORY[conversationId] = [...dummyChat.messages];
+        console.log(`Found messages in DUMMY_CHATS for ${conversationId}`);
+      } else {
+        console.error(`Conversation ${conversationId} not found in any data source`);
+        return [];
+      }
     }
     
     return [...MESSAGE_HISTORY[conversationId]];
@@ -296,8 +335,10 @@ class ChatService {
     // Simulate API delay
     await this.delay(500);
     
+    // Handle missing MESSAGE_HISTORY
     if (!MESSAGE_HISTORY[conversationId]) {
-      throw new Error('Conversation not found');
+      console.log(`Initializing new message history for ${conversationId}`);
+      MESSAGE_HISTORY[conversationId] = [];
     }
     
     const newMessage = {

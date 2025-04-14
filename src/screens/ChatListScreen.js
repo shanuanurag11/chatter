@@ -9,10 +9,12 @@ import {
   ActivityIndicator,
   RefreshControl,
   StatusBar,
+  SafeAreaView,
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import chatService from '../services/chatService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import LinearGradient from 'react-native-linear-gradient';
 
 // Format timestamp function
 const formatTimeAgo = (timestamp) => {
@@ -167,23 +169,39 @@ const ChatListScreen = () => {
   
   // Navigate to chat detail screen
   const handleChatPress = (chat) => {
-    // Mark conversation as read when navigating to it
-    chatService.markConversationAsRead(chat.id);
-    
-    // Update local state to reflect read status
-    setChats(prevChats => 
-      prevChats.map(c => 
-        c.id === chat.id ? { ...c, unread: 0 } : c
-      )
-    );
-    
-    // Navigate to chat detail screen
-    navigation.navigate('ChatDetail', { 
-      conversationId: chat.id,
-      name: chat.name,
-      avatar: chat.avatar,
-      isOnline: chat.isOnline
-    });
+    try {
+      console.log('Chat pressed with data:', chat);
+      
+      if (!chat || !chat.id) {
+        console.error('Invalid chat object:', chat);
+        return;
+      }
+      
+      // Mark conversation as read when navigating to it
+      chatService.markConversationAsRead(chat.id);
+      
+      // Update local state to reflect read status
+      setChats(prevChats => 
+        prevChats.map(c => 
+          c.id === chat.id ? { ...c, unread: 0 } : c
+        )
+      );
+      
+      // Prepare navigation params
+      const params = {
+        conversationId: chat.id,
+        name: chat.name,
+        avatar: chat.avatar,
+        isOnline: chat.isOnline
+      };
+      
+      console.log('Navigating to ChatDetail with params:', params);
+      
+      // Navigate to chat detail screen
+      navigation.navigate('ChatDetail', params);
+    } catch (error) {
+      console.error('Error navigating to chat:', error);
+    }
   };
   
   // Render separator between items
@@ -213,32 +231,60 @@ const ChatListScreen = () => {
   }
   
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#6C63FF" />
       
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Messages</Text>
+      <View style={styles.headerWrapper}>
+        <LinearGradient
+          colors={['#6C63FF', '#8E64FF']}
+          style={styles.headerGradient}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+        />
+        <View style={styles.headerDecorationContainer}>
+          <View style={styles.headerDecoration1} />
+          <View style={styles.headerDecoration2} />
+        </View>
+        
+        <View style={styles.header}>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Messages</Text>
+            <View style={styles.headerAccent} />
+          </View>
+          
+          <View style={styles.headerActions}>
+            <TouchableOpacity style={styles.headerButton}>
+              <Ionicons name="search-outline" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={[styles.headerButton, styles.headerButtonSecondary]}>
+              <Ionicons name="add" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
       
-      <FlatList
-        data={chats}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ChatItem chat={item} onPress={handleChatPress} />
-        )}
-        ItemSeparatorComponent={renderSeparator}
-        contentContainerStyle={chats.length === 0 ? {flex: 1} : null}
-        ListEmptyComponent={EmptyState}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#007AFF']}
-            tintColor="#007AFF"
-          />
-        }
-      />
-    </View>
+      <View style={styles.contentContainer}>
+        <FlatList
+          data={chats}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <ChatItem chat={item} onPress={handleChatPress} />
+          )}
+          ItemSeparatorComponent={renderSeparator}
+          contentContainerStyle={chats.length === 0 ? {flex: 1} : {paddingTop: 12}}
+          ListEmptyComponent={EmptyState}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#6C63FF']}
+              tintColor="#6C63FF"
+            />
+          }
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -246,20 +292,100 @@ const ChatListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#FAFAFA',
+  },
+  contentContainer: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -20,
+    paddingTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    elevation: 4,
+  },
+  headerWrapper: {
+    position: 'relative',
+    paddingTop: 20,
+    paddingBottom: 40,
+    overflow: 'hidden',
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  headerDecorationContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
+  headerDecoration1: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  headerDecoration2: {
+    position: 'absolute',
+    bottom: -80,
+    left: -60,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   header: {
-    paddingTop: 50,
-    paddingBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    paddingTop: 16,
+  },
+  headerTitleContainer: {
+    position: 'relative',
+    marginBottom: 4,
   },
   headerTitle: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: 'bold',
-    color: '#000000',
+    color: '#FFFFFF',
+  },
+  headerAccent: {
+    position: 'absolute',
+    bottom: -6,
+    left: 0,
+    width: 32,
+    height: 3,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 1.5,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
+  headerButtonSecondary: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   chatItem: {
     flexDirection: 'row',

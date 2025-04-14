@@ -11,6 +11,8 @@ import {
   Image,
   ActivityIndicator,
   SafeAreaView,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import chatService from '../services/chatService';
@@ -76,7 +78,40 @@ const messageUtils = {
 
 // -------------------- UI COMPONENTS --------------------
 
-const MessageBubble = ({ message, isUser }) => {
+const MessageOptionsMenu = ({ visible, onClose, options }) => {
+  if (!visible) return null;
+  
+  return (
+    <Modal
+      transparent={true}
+      visible={visible}
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <Pressable 
+        style={styles.modalOverlay} 
+        onPress={onClose}
+      >
+        <View style={styles.messageOptionsContainer}>
+          {options.map((option, index) => (
+            <TouchableOpacity 
+              key={index}
+              style={styles.messageOption}
+              onPress={() => {
+                option.onPress();
+                onClose();
+              }}
+            >
+              <Text style={styles.messageOptionText}>{option.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </Pressable>
+    </Modal>
+  );
+};
+
+const MessageBubble = ({ message, isUser, onLongPress }) => {
   const messageContent = typeof message.content === 'string' 
     ? message.content 
     : typeof message.text === 'string' ? message.text : '';
@@ -84,35 +119,49 @@ const MessageBubble = ({ message, isUser }) => {
   const messageStatus = typeof message.status === 'string' ? message.status : '';
     
   return (
-    <View style={[
-      styles.messageBubbleContainer,
-      isUser ? styles.userMessageContainer : styles.otherMessageContainer
-    ]}>
+    <TouchableOpacity
+      onLongPress={onLongPress}
+      activeOpacity={0.8}
+      delayLongPress={200}
+    >
       <View style={[
-        styles.messageBubble,
-        isUser ? styles.userMessage : styles.otherMessage
+        styles.messageBubbleContainer,
+        isUser ? styles.userMessageContainer : styles.otherMessageContainer
       ]}>
-        <Text style={[
-          styles.messageText,
-          isUser ? styles.userMessageText : styles.otherMessageText
-        ]}>
-          {messageContent}
-        </Text>
+        {!isUser && (
+          <Image 
+            source={{ uri: message.avatar || 'https://randomuser.me/api/portraits/women/44.jpg' }} 
+            style={styles.messageAvatar} 
+          />
+        )}
+        <View>
+          <View style={[
+            styles.messageBubble,
+            isUser ? styles.userMessage : styles.otherMessage
+          ]}>
+            <Text style={[
+              styles.messageText,
+              isUser ? styles.userMessageText : styles.otherMessageText
+            ]}>
+              {messageContent}
+            </Text>
+          </View>
+          <View style={[
+            styles.messageTimeContainer,
+            isUser ? { alignSelf: 'flex-end' } : { alignSelf: 'flex-start' }
+          ]}>
+            <Text style={styles.messageTime}>
+              {message.timestamp ? messageUtils.formatMessageTime(message.timestamp) : ''}
+            </Text>
+            {isUser && messageStatus ? (
+              <Text style={styles.messageStatus}>
+                {' · '}{messageStatus}
+              </Text>
+            ) : null}
+          </View>
+        </View>
       </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Text style={[
-          styles.messageTime,
-          isUser ? styles.userMessageTime : styles.otherMessageTime
-        ]}>
-          {message.timestamp ? messageUtils.formatMessageTime(message.timestamp) : ''}
-        </Text>
-        {isUser && messageStatus ? (
-          <Text style={styles.messageStatus}>
-            {' · '}{messageStatus}
-          </Text>
-        ) : null}
-      </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
@@ -141,9 +190,9 @@ const TypingIndicator = () => (
   </View>
 );
 
-const ChatHeader = ({ avatar, name, isOnline, onBackPress, onVideoPress }) => {
+const ChatHeader = ({ avatar, name, isOnline, onBackPress, onVideoPress, onAudioPress, onMorePress }) => {
   const displayName = name || '';
-  const avatarUrl = avatar || 'https://via.placeholder.com/40';
+  const avatarUrl = avatar || 'https://randomuser.me/api/portraits/women/44.jpg';
   const onlineStatus = isOnline === true ? 'Online' : 'Offline';
   
   return (
@@ -153,10 +202,10 @@ const ChatHeader = ({ avatar, name, isOnline, onBackPress, onVideoPress }) => {
         onPress={onBackPress}
         activeOpacity={0.7}
       >
-        <Ionicons name="chevron-back" size={24} color="#007AFF" />
+        <Ionicons name="chevron-back" size={24} color="#000" />
       </TouchableOpacity>
       
-      <View style={styles.headerProfile}>
+      <TouchableOpacity style={styles.headerProfile} activeOpacity={0.7}>
         <Image 
           source={{ uri: avatarUrl }} 
           style={styles.headerAvatar}
@@ -167,15 +216,33 @@ const ChatHeader = ({ avatar, name, isOnline, onBackPress, onVideoPress }) => {
             {onlineStatus}
           </Text>
         </View>
-      </View>
-      
-      <TouchableOpacity 
-        style={styles.videoButton} 
-        onPress={onVideoPress}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="videocam" size={22} color="#007AFF" />
       </TouchableOpacity>
+      
+      <View style={styles.headerActions}>
+        <TouchableOpacity 
+          style={styles.headerActionButton} 
+          onPress={onAudioPress}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="call" size={22} color="#000" />
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.headerActionButton} 
+          onPress={onVideoPress}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="videocam" size={22} color="#000" />
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.headerActionButton} 
+          onPress={onMorePress}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="ellipsis-vertical" size={22} color="#000" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -184,16 +251,18 @@ const ChatInput = ({ inputText, onChangeText, onSend, sending }) => {
   return (
     <View style={styles.inputContainer}>
       <TouchableOpacity style={styles.attachButton}>
-        <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
+        <Ionicons name="image" size={24} color="#888" />
       </TouchableOpacity>
       
-      <TextInput
-        style={styles.textInput}
-        placeholder="Message"
-        value={inputText}
-        onChangeText={onChangeText}
-        multiline
-      />
+      <View style={styles.textInputContainer}>
+        <TextInput
+          style={styles.textInput}
+          placeholder="Message"
+          value={inputText}
+          onChangeText={onChangeText}
+          multiline
+        />
+      </View>
       
       {inputText.trim() ? (
         <TouchableOpacity 
@@ -209,7 +278,7 @@ const ChatInput = ({ inputText, onChangeText, onSend, sending }) => {
         </TouchableOpacity>
       ) : (
         <TouchableOpacity style={styles.micButton}>
-          <Ionicons name="mic-outline" size={24} color="#007AFF" />
+          <Ionicons name="happy" size={24} color="#888" />
         </TouchableOpacity>
       )}
     </View>
@@ -218,7 +287,7 @@ const ChatInput = ({ inputText, onChangeText, onSend, sending }) => {
 
 const LoadingView = () => (
   <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color="#007AFF" />
+    <ActivityIndicator size="large" color="#6C63FF" />
     <Text style={styles.loadingText}>Loading messages...</Text>
   </View>
 );
@@ -228,7 +297,14 @@ const LoadingView = () => (
 const ChatDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { conversationId, name, avatar, isOnline } = route.params;
+  
+  // Extract params with safety checks
+  const conversationId = route.params?.conversationId || '';
+  const name = route.params?.name || 'Chat';
+  const avatar = route.params?.avatar || 'https://randomuser.me/api/portraits/women/44.jpg';
+  const isOnline = route.params?.isOnline || false;
+  
+  console.log('ChatDetailScreen initialized with params:', route.params);
   
   // State
   const [messages, setMessages] = useState([]);
@@ -236,43 +312,141 @@ const ChatDetailScreen = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+  const [showMessageOptions, setShowMessageOptions] = useState(false);
+  const [initialScrollDone, setInitialScrollDone] = useState(false);
   
   // Refs
   const flatListRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const hasFetchedRef = useRef(false);
   
   // -------------------- EFFECTS --------------------
 
+  // Initial load
   useEffect(() => {
-    // Load message history
-    loadChatHistory();
+    console.log('ChatDetailScreen params received:', {
+      conversationId,
+      name,
+      avatar,
+      isOnline
+    });
     
-    // Set up message listener
-    const unsubscribe = setupMessageListener();
-    
-    // Configure navigation header
-    configureNavigationHeader();
-    
-    return () => unsubscribe();
-  }, [navigation, conversationId, name, avatar, isOnline]);
+    // Prevent multiple fetches on remounts
+    if (!hasFetchedRef.current) {
+      hasFetchedRef.current = true;
+      
+      // Load message history
+      loadChatHistory();
+      
+      // Set up message listener
+      const unsubscribe = setupMessageListener();
+      return () => unsubscribe();
+    }
+  }, []);
+  
+  // Update if conversation ID changes
+  useEffect(() => {
+    if (hasFetchedRef.current && conversationId) {
+      console.log('Conversation ID changed, reloading messages');
+      loadChatHistory();
+    }
+  }, [conversationId]);
+  
+  // Add effect to scroll to bottom when messages change
+  useEffect(() => {
+    if (messages.length > 0 && !initialScrollDone) {
+      setInitialScrollDone(true);
+      setTimeout(() => {
+        scrollToBottom(false);
+      }, 300);
+    }
+  }, [messages]);
   
   // -------------------- DATA OPERATIONS --------------------
 
   const loadChatHistory = async () => {
     try {
-      const history = await chatService.getChatHistory(conversationId);
+      // Handle both id and conversationId for compatibility
+      const chatId = conversationId || '';
+      console.log('Loading chat history for ID:', chatId);
+      
+      const history = await chatService.getChatHistory(chatId);
       
       // Process messages to ensure all values are strings
-      const processedHistory = history.map(msg => 
-        messageUtils.processMessage(msg)
-      );
+      const processedHistory = history.map(msg => {
+        const processed = messageUtils.processMessage(msg);
+        // Add avatar for non-user messages
+        if (processed.senderId !== 'me') {
+          processed.avatar = avatar;
+        }
+        return processed;
+      });
       
-      setMessages(processedHistory.reverse()); // Reverse to show latest at bottom
+      // Reverse to show latest at bottom
+      setMessages(processedHistory.reverse());
       setLoading(false);
+      
+      // Schedule scrolling to bottom after messages render
+      setTimeout(() => {
+        scrollToBottom(false);
+      }, 300);
     } catch (error) {
-      console.error('Failed to load messages:', error);
+      console.error('Failed to load messages:', error, conversationId);
       setLoading(false);
+      
+      // Use dummy data if there's an error
+      const dummyMessages = generateDummyMessages();
+      setMessages(dummyMessages);
+      
+      // Scroll to bottom with dummy messages as well
+      setTimeout(() => {
+        scrollToBottom(false);
+      }, 300);
     }
+  };
+  
+  // Generate dummy messages for testing
+  const generateDummyMessages = () => {
+    const dummyMessages = [
+      {
+        id: '1',
+        content: 'hi',
+        timestamp: '2023-07-20T23:21:00.000Z',
+        senderId: conversationId,
+        avatar: avatar
+      },
+      {
+        id: '2',
+        content: 'kya kar rahe ho',
+        timestamp: '2023-07-20T23:23:00.000Z',
+        senderId: conversationId,
+        avatar: avatar
+      },
+      {
+        id: '3',
+        content: 'Just working on some code. How about you?',
+        timestamp: '2023-07-20T23:30:00.000Z',
+        senderId: 'me',
+        status: 'read'
+      },
+      {
+        id: '4',
+        content: "I\'m free this weekend. Want to catch up?",
+        timestamp: '2023-07-20T23:35:00.000Z',
+        senderId: conversationId,
+        avatar: avatar
+      },
+      {
+        id: '5',
+        content: 'Sure! How about Saturday afternoon?',
+        timestamp: '2023-07-20T23:40:00.000Z',
+        senderId: 'me',
+        status: 'delivered'
+      }
+    ];
+    
+    return dummyMessages;
   };
   
   const setupMessageListener = () => {
@@ -300,12 +474,15 @@ const ChatDetailScreen = () => {
         ''
       );
       processedMessage.senderId = messageData.senderId || conversationId;
+      processedMessage.avatar = avatar;
       
       // Add new message to the list
       setMessages(prevMessages => [...prevMessages, processedMessage]);
       
-      // Scroll to bottom
-      scrollToBottom();
+      // Scroll to bottom with a slight delay to allow rendering
+      setTimeout(() => {
+        scrollToBottom(true);
+      }, 100);
     } catch (error) {
       console.error('Error processing incoming message:', error);
     }
@@ -351,10 +528,24 @@ const ChatDetailScreen = () => {
       // Add the new message to the list
       setMessages(prevMessages => [...prevMessages, processedMessage]);
       
-      // Scroll to bottom
-      scrollToBottom();
+      // Scroll to bottom immediately for sent messages
+      scrollToBottom(true);
     } catch (error) {
       console.error('Failed to send message:', error);
+      
+      // Fallback to add message locally if API fails
+      const localMessage = {
+        id: `local_${Date.now()}`,
+        content: messageText,
+        senderId: 'me',
+        timestamp: new Date().toISOString(),
+        status: 'sent'
+      };
+      
+      setMessages(prevMessages => [...prevMessages, localMessage]);
+      
+      // Scroll to bottom
+      scrollToBottom(true);
     } finally {
       setSending(false);
     }
@@ -362,9 +553,9 @@ const ChatDetailScreen = () => {
   
   // -------------------- UI HELPERS --------------------
   
-  const scrollToBottom = () => {
+  const scrollToBottom = (animated = true) => {
     setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
+      flatListRef.current?.scrollToEnd({ animated });
     }, 100);
   };
   
@@ -386,43 +577,36 @@ const ChatDetailScreen = () => {
     console.log('User is typing');
   };
   
-  const configureNavigationHeader = () => {
-    navigation.setOptions({
-      title: '',
-      headerRight: () => (
-        <TouchableOpacity 
-          style={styles.callButton}
-          onPress={() => {
-            console.log('Starting video call with:', conversationId);
-          }}
-        >
-          <Ionicons name="videocam" size={24} color="#007AFF" />
-        </TouchableOpacity>
-      ),
-      headerLeft: () => (
-        <View style={styles.headerLeft}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="chevron-back" size={28} color="#007AFF" />
-            <Text style={styles.backText}>Chats</Text>
-          </TouchableOpacity>
-        </View>
-      ),
-      headerTitle: () => (
-        <View style={styles.headerTitle}>
-          <Image source={{ uri: avatar }} style={styles.headerAvatar} />
-          <View>
-            <Text style={styles.headerName}>{name}</Text>
-            <Text style={styles.headerStatus}>
-              {isOnline ? 'Online' : 'Offline'}
-            </Text>
-          </View>
-        </View>
-      ),
-    });
+  const handleMessageLongPress = (message) => {
+    setSelectedMessage(message);
+    setShowMessageOptions(true);
   };
+  
+  const handleMessageOptions = {
+    stickyOnTop: () => {
+      console.log('Sticky on top:', selectedMessage.id);
+      // Implementation would go here
+    },
+    remark: () => {
+      console.log('Remark on message:', selectedMessage.id);
+      // Implementation would go here
+    },
+    block: () => {
+      console.log('Block message:', selectedMessage.id);
+      // Implementation would go here
+    },
+    report: () => {
+      console.log('Report message:', selectedMessage.id);
+      // Implementation would go here
+    }
+  };
+  
+  const messageOptions = [
+    { label: 'Sticky on Top', onPress: handleMessageOptions.stickyOnTop },
+    { label: 'Remark', onPress: handleMessageOptions.remark },
+    { label: 'Block', onPress: handleMessageOptions.block },
+    { label: 'Report', onPress: handleMessageOptions.report }
+  ];
   
   const renderMessageItem = ({ item, index }) => {
     if (!item) {
@@ -440,7 +624,13 @@ const ChatDetailScreen = () => {
     const isUser = item.senderId === 'me';
     
     try {
-      return <MessageBubble message={item} isUser={isUser} />;
+      return (
+        <MessageBubble 
+          message={item} 
+          isUser={isUser} 
+          onLongPress={() => handleMessageLongPress(item)}
+        />
+      );
     } catch (error) {
       console.error('Error rendering message bubble:', error, item);
       return null;
@@ -460,9 +650,9 @@ const ChatDetailScreen = () => {
         name={name}
         isOnline={isOnline}
         onBackPress={() => navigation.goBack()}
-        onVideoPress={() => {
-          console.log('Starting video call with:', conversationId);
-        }}
+        onVideoPress={() => console.log('Video call with:', name)}
+        onAudioPress={() => console.log('Audio call with:', name)}
+        onMorePress={() => console.log('More options for:', name)}
       />
       
       <KeyboardAvoidingView
@@ -470,16 +660,31 @@ const ChatDetailScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : null}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={messageUtils.generateSafeKey}
-          renderItem={renderMessageItem}
-          contentContainerStyle={styles.messagesList}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
-        />
-        
-        {isTyping && <TypingIndicator />}
+        <View style={styles.chatBackground}>
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={messageUtils.generateSafeKey}
+            renderItem={renderMessageItem}
+            contentContainerStyle={styles.messagesList}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
+            showsVerticalScrollIndicator={false}
+            maintainVisibleContentPosition={{ 
+              minIndexForVisible: 0,
+              autoscrollToTopThreshold: 10
+            }}
+            onContentSizeChange={() => {
+              if (messages.length > 0) {
+                flatListRef.current?.scrollToEnd({ animated: false });
+              }
+            }}
+            initialNumToRender={15}
+            maxToRenderPerBatch={10}
+            removeClippedSubviews={false}
+          />
+          
+          {isTyping && <TypingIndicator />}
+        </View>
         
         <ChatInput 
           inputText={inputText}
@@ -488,6 +693,12 @@ const ChatDetailScreen = () => {
           sending={sending}
         />
       </KeyboardAvoidingView>
+      
+      <MessageOptionsMenu 
+        visible={showMessageOptions}
+        onClose={() => setShowMessageOptions(false)}
+        options={messageOptions}
+      />
     </SafeAreaView>
   );
 };
@@ -497,70 +708,71 @@ const ChatDetailScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: '#F5F5F5',
+  },
+  chatBackground: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 10,
+    padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#CECED2',
+    borderBottomColor: '#EEEEEE',
     backgroundColor: '#FFFFFF',
   },
   headerProfile: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-    justifyContent: 'center',
+    marginLeft: 10,
   },
-  headerLeft: {
+  headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingLeft: 8,
+    padding: 5,
   },
-  videoButton: {
+  headerActionButton: {
     padding: 8,
-  },
-  backText: {
-    fontSize: 17,
-    color: '#007AFF',
-    marginLeft: -5,
-  },
-  headerTitle: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginLeft: 5,
   },
   headerAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginRight: 10,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12,
   },
   headerName: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
     color: '#000000',
   },
   headerStatus: {
     fontSize: 12,
-    color: '#8E8E93',
-  },
-  callButton: {
-    padding: 8,
-    marginRight: 8,
+    color: '#888888',
+    marginTop: 2,
   },
   messagesList: {
     paddingHorizontal: 16,
     paddingBottom: 16,
+    paddingTop: 12,
   },
   messageBubbleContainer: {
+    flexDirection: 'row',
     marginVertical: 4,
     maxWidth: '80%',
+  },
+  messageAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 8,
+    alignSelf: 'flex-end',
+    marginBottom: 15,
   },
   userMessageContainer: {
     alignSelf: 'flex-end',
@@ -570,18 +782,19 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     borderRadius: 18,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 10,
     marginBottom: 4,
   },
   userMessage: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#6C63FF',
   },
   otherMessage: {
-    backgroundColor: '#E9E9EB',
+    backgroundColor: '#FFFFFF',
   },
   messageText: {
     fontSize: 16,
+    lineHeight: 20,
   },
   userMessageText: {
     color: '#FFFFFF',
@@ -589,29 +802,26 @@ const styles = StyleSheet.create({
   otherMessageText: {
     color: '#000000',
   },
+  messageTimeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   messageTime: {
     fontSize: 11,
-    color: '#8E8E93',
-  },
-  userMessageTime: {
-    color: '#8E8E93',
-    alignSelf: 'flex-end',
-  },
-  otherMessageTime: {
-    color: '#8E8E93',
+    color: '#888888',
   },
   messageStatus: {
     fontSize: 11,
-    color: '#8E8E93',
+    color: '#888888',
   },
   dateHeaderContainer: {
     alignItems: 'center',
     marginVertical: 16,
   },
   dateHeaderText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '500',
-    color: '#8E8E93',
+    color: '#888888',
     backgroundColor: 'rgba(238, 238, 238, 0.8)',
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -624,23 +834,25 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#CECED2',
+    borderTopColor: '#EEEEEE',
   },
   attachButton: {
     padding: 8,
   },
-  textInput: {
+  textInputContainer: {
     flex: 1,
     marginHorizontal: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
     backgroundColor: '#F2F2F7',
     borderRadius: 20,
+  },
+  textInput: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     fontSize: 16,
     maxHeight: 100,
   },
   sendButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#6C63FF',
     width: 36,
     height: 36,
     borderRadius: 18,
@@ -658,7 +870,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#8E8E93',
+    color: '#888888',
   },
   typingContainer: {
     flexDirection: 'row',
@@ -677,7 +889,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#8E8E93',
+    backgroundColor: '#888888',
     marginHorizontal: 2,
   },
   typingDotMiddle: {
@@ -685,7 +897,34 @@ const styles = StyleSheet.create({
   },
   typingText: {
     fontSize: 12,
-    color: '#8E8E93',
+    color: '#888888',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  messageOptionsContainer: {
+    width: 200,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  messageOption: {
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  messageOptionText: {
+    fontSize: 16,
+    color: '#333333',
   },
 });
 

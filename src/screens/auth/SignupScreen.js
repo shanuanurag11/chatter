@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginWithGoogle } from '../../store/slices/authSlice';
+import { loginWithGoogle, loginWithPhone } from '../../store/slices/authSlice';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Logo from '../../components/Logo';
 import AnimatedBackground from '../../components/AnimatedBackground';
@@ -48,8 +48,8 @@ const SignupScreen = ({ navigation }) => {
         // Login successful
         console.log('Google login successful');
       })
-      .catch((error) => {
-        Alert.alert('Login Error', error?.message || 'Failed to login with Google');
+      .catch((err) => {
+        Alert.alert('Login Error', err?.message || 'Failed to login with Google');
       });
   };
 
@@ -62,7 +62,24 @@ const SignupScreen = ({ navigation }) => {
       );
       return;
     }
-    navigation.navigate('PhoneLogin');
+
+    // Hardcoded credentials for dummy login
+    const phone = '1234567890';
+    const password = '123456';
+
+    console.log('Attempting dummy phone login with:', { phone, password });
+
+    dispatch(loginWithPhone({ phone, password }))
+      .unwrap()
+      .then(() => {
+        console.log('Dummy phone login successful');
+        // Navigation will be handled automatically by the AppNavigator
+        // based on the isAuthenticated state
+      })
+      .catch((err) => {
+        console.error('Dummy phone login failed:', err);
+        Alert.alert('Login Error', err?.message || 'Failed to login with Phone');
+      });
   };
 
   return (
@@ -90,6 +107,8 @@ const SignupScreen = ({ navigation }) => {
           <Button
             title="Continue with Phone"
             onPress={handlePhoneLogin}
+            loading={isLoading}
+            disabled={isLoading}
             variant="white"
             icon={
               <Icon name="phone" size={24} color={Colors.primary} style={styles.buttonIcon} />

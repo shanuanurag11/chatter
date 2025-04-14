@@ -197,7 +197,10 @@ const MessageItem = memo(({ item, onPress }) => {
  */
 const MessageHeader = ({ onNewMessagePress, onOptionsPress }) => (
   <View style={styles.header}>
-    <Text style={styles.headerTitle}>Message</Text>
+    <View style={styles.headerTitleContainer}>
+      <Text style={styles.headerTitle}>Messages</Text>
+      <View style={styles.headerDot}></View>
+    </View>
     
     <View style={styles.headerActions}>
       <TouchableOpacity 
@@ -643,6 +646,26 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+    paddingTop: 56,
+    paddingBottom: 16,
+    backgroundColor: '#ffffff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  headerTitleContainer: {
+    position: 'relative',
+  },
+  headerDot: {
+    position: 'absolute',
+    bottom: -4,
+    left: 2,
+    width: 8,
+    height: 8,
+    backgroundColor: Colors.primary,
+    borderRadius: 4,
   },
   headerTitle: {
     fontSize: 28,

@@ -2,7 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Screen1 from '../screens/tabs/Screen1';
 import PeopleScreen from '../screens/tabs/PeopleScreen';
-import MessageScreen from '../screens/tabs/MessageScreen';
+import ChatListScreen from '../screens/ChatListScreen';
 import Screen4 from '../screens/tabs/Screen4';
 import CustomTabBar from '../components/CustomTabBar';
 
@@ -32,7 +32,7 @@ const TabNavigator = () => {
       />
       <Tab.Screen 
         name="Message" 
-        component={MessageScreen} 
+        component={ChatListScreen} 
         options={{ 
           title: 'MESSAGE',
         }} 
