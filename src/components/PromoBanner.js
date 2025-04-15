@@ -179,10 +179,9 @@ const adjustColor = (color, amount) => {
 
 const styles = StyleSheet.create({
   outerContainer: {
-    width: width - 32,
+    width: '100%',
     height: 160,
-    marginHorizontal: 16,
-    marginVertical: 16,
+    marginVertical: 8,
     borderRadius: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },

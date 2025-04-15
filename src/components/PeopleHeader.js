@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import Colors from '../constants/colors';
+import CustomStatusBar from '../components/CustomStatusBar';
 
 // Animated tab indicator component
 const TabIndicator = ({ width, position }) => {
@@ -33,9 +34,26 @@ const PeopleHeader = ({
   
   return (
     <View style={styles.container}>
-      {/* App logo with gradient background */}
+      {/* Status bar with theme color */}
+      <CustomStatusBar backgroundColor={Colors.primary} barStyle="light-content" />
+      
+      {/* Background gradient */}
       <LinearGradient
         colors={[Colors.gradientStart, Colors.gradientEnd]}
+        start={{x: 0, y: 0}}
+        end={{x: 1, y: 0}}
+        style={styles.headerGradient}
+      />
+      
+      {/* Top decorative circles */}
+      <View style={styles.headerDecorationContainer}>
+        <View style={styles.headerDecoration1} />
+        <View style={styles.headerDecoration2} />
+      </View>
+      
+      {/* App logo with gradient background */}
+      <LinearGradient
+        colors={[Colors.white, '#F0F0F0']}
         start={{x: 0, y: 0}}
         end={{x: 1, y: 1}}
         style={styles.logoContainer}
@@ -74,28 +92,64 @@ const PeopleHeader = ({
             onPress={onLocationPress}
           >
             <LinearGradient
-              colors={['#F5F5F5', '#E8E8E8']}
+              colors={[Colors.white, '#F7F7F7']}
               style={styles.iconButtonGradient}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 1}}
             >
               <Icon name="place" size={22} color={Colors.primary} />
             </LinearGradient>
           </TouchableOpacity>
         </View>
       </View>
-      
-      {/* Decorative bottom border */}
-      <View style={styles.bottomBorder} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingTop: 10,
-    paddingBottom: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+    position: 'relative',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  headerDecorationContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    overflow: 'hidden',
+  },
+  headerDecoration1: {
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  headerDecoration2: {
+    position: 'absolute',
+    bottom: -60,
+    left: -30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
   logoContainer: {
     position: 'absolute',
@@ -106,14 +160,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 5,
   },
   logoText: {
-    color: '#fff',
+    color: Colors.primary,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -122,7 +176,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: 50,
+    paddingBottom: 20,
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -138,11 +193,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   activeTabText: {
-    color: '#000',
+    color: Colors.white,
     fontWeight: 'bold',
   },
   inactiveTabText: {
-    color: 'rgba(170, 170, 170, 0.8)',
+    color: 'rgba(255, 255, 255, 0.7)',
   },
   activeTabIndicator: {
     position: 'absolute',
@@ -150,16 +205,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: Colors.primary,
+    backgroundColor: Colors.white,
     borderRadius: 1.5,
   },
   rightButtons: {
     flexDirection: 'row',
   },
   iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     shadowColor: 'rgba(0, 0, 0, 0.2)',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -172,15 +227,7 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 22,
-  },
-  bottomBorder: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    borderRadius: 21,
   },
 });
 

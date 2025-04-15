@@ -13,6 +13,9 @@ import { View, StyleSheet } from 'react-native';
 
 const Stack = createStackNavigator();
 
+// Define app-wide status bar color
+const STATUS_BAR_COLOR = '#6C63FF';
+
 const AppNavigator = () => {
   const dispatch = useDispatch();
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
@@ -24,7 +27,7 @@ const AppNavigator = () => {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <CustomStatusBar backgroundColor={Colors.primaryDark} />
+        <CustomStatusBar backgroundColor={STATUS_BAR_COLOR} />
         <LoadingScreen />
       </View>
     );
@@ -32,7 +35,7 @@ const AppNavigator = () => {
 
   return (
     <View style={styles.container}>
-      <CustomStatusBar backgroundColor={Colors.primaryDark} />
+      <CustomStatusBar backgroundColor={STATUS_BAR_COLOR} />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {isAuthenticated ? (

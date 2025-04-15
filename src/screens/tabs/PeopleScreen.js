@@ -7,11 +7,12 @@ import {
   RefreshControl,
   Alert,
   SafeAreaView,
-  StatusBar,
   Platform,
   Text,
   TouchableOpacity,
   Animated,
+  Image,
+  Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import PeopleHeader from '../../components/PeopleHeader';
@@ -33,6 +34,11 @@ const ITEM_HEIGHT = 230; // Approximate height of a Person Card with margin
 const NUM_COLUMNS = 2;
 const INITIAL_ITEMS = 12;
 const BATCH_SIZE = 12;
+
+const { width } = Dimensions.get('window');
+const ITEM_WIDTH = width / 2 - 16; // 2 columns with some margin
+const BANNER_ANIMATION_DURATION = 800;
+const DELAYED_LOADING_TIMEOUT = 500; // Minimum loading time for better UX
 
 const PeopleScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
@@ -72,11 +78,19 @@ const PeopleScreen = ({ navigation }) => {
     fadeAnim.setValue(0);
     
     try {
+      // Create a delay promise for minimum loading time
+      const delayPromise = new Promise(resolve => 
+        setTimeout(resolve, DELAYED_LOADING_TIMEOUT)
+      );
+      
       // Fetch people and banner data in parallel
       const [peopleData, bannerData] = await Promise.all([
         peopleService.getPeople(activeTab),
         peopleService.getPromoBanner()
       ]);
+      
+      // Wait for both data and minimum delay
+      await delayPromise;
       
       setPeople(peopleData);
       setBanner(bannerData);
@@ -226,7 +240,9 @@ const PeopleScreen = ({ navigation }) => {
                 outputRange: [20, 0],
               }) 
             }
-          ] 
+          ],
+          paddingHorizontal: 8, // Add consistent padding
+          marginTop: 12 // Add space above the banner
         }}
       >
         <PromoBanner 
@@ -324,8 +340,6 @@ const PeopleScreen = ({ navigation }) => {
       colors={['#FFFFFF', '#F9F5FF']}
       style={styles.container}
     >
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
-      
       <SafeAreaView style={styles.safeArea}>
         {renderHeaderComponent()}
         
@@ -403,7 +417,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 120, // Extra space for tab bar
-    paddingHorizontal: 8,
+    paddingHorizontal: 0, // Remove default padding to control it in individual components
   },
   emptyContainer: {
     flex: 1,

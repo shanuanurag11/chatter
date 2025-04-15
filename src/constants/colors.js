@@ -5,20 +5,20 @@
 
 export default {
   // Primary colors - Purple gradient scheme
-  primary: '#6B46C1',
-  primaryDark: '#4A1D96',
-  primaryDarker: '#371480',
-  primaryLight: '#8B5CF6',
+  primary: '#6C63FF',
+  primaryDark: '#5B54D8',
+  primaryDarker: '#4A45B0',
+  primaryLight: '#8E64FF',
   
   // Background colors
   background: '#FFFFFF',
   backgroundDark: '#F7FAFC',
-  gradientStart: '#6B46C1',
-  gradientMiddle: '#5533AD',
-  gradientEnd: '#4A1D96',
+  gradientStart: '#6C63FF',
+  gradientMiddle: '#7C64EA',
+  gradientEnd: '#8E64FF',
   
   // Text colors
-  textDark: '#1A202C',
+  textDark: '#1A1A1A',
   textMedium: '#4A5568',
   textLight: '#A0AEC0',
   textOnPrimary: '#FFFFFF',
@@ -26,7 +26,7 @@ export default {
   // UI element colors
   inputBackground: 'rgba(255, 255, 255, 0.1)',
   placeholderText: 'rgba(255, 255, 255, 0.6)',
-  buttonText: '#6B46C1',
+  buttonText: '#6C63FF',
   divider: 'rgba(0, 0, 0, 0.1)',
   
   // Semantic colors

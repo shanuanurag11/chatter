@@ -3,8 +3,13 @@ import { StatusBar, View, StyleSheet, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Colors from '../constants/colors';
 
+/**
+ * Custom status bar component that handles proper rendering across platforms
+ * and maintains consistent colors with the app theme
+ */
 const CustomStatusBar = ({ 
-  backgroundColor = Colors.primaryDark, 
+  // Use our main theme color as default
+  backgroundColor = '#6C63FF', 
   barStyle = 'light-content',
   translucent = false 
 }) => {

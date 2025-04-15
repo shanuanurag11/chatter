@@ -163,8 +163,8 @@ const styles = StyleSheet.create({
   },
   statusIndicatorContainer: {
     position: 'absolute',
-    top: 10,
-    left: 10,
+    top: 12,
+    left: 12,
     zIndex: 15,
   },
   statusIndicator: {
@@ -187,8 +187,8 @@ const styles = StyleSheet.create({
   },
   flagContainer: {
     position: 'absolute',
-    top: 8,
-    left: 8,
+    top: 10,
+    right: 10,
     zIndex: 10,
   },
   flag: {
@@ -224,8 +224,8 @@ const styles = StyleSheet.create({
     height: '35%', // Covers more of the avatar for better text visibility
     justifyContent: 'flex-end',
     alignItems: 'flex-end',
-    paddingBottom: 10,
-    paddingRight: 10,
+    paddingBottom: 12,
+    paddingRight: 12,
     zIndex: 5,
   },
   footer: {
@@ -241,14 +241,16 @@ const styles = StyleSheet.create({
   footerTopBorder: {
     position: 'absolute',
     top: 0,
-    left: 10,
-    right: 10,
+    left: 12,
+    right: 12,
     height: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
   nameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
   },
   name: {
     fontSize: 14,
@@ -258,6 +260,7 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
     flex: 1,
+    marginRight: 4,
   },
   videoButton: {
     width: 42,
@@ -266,7 +269,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 6,
+    marginRight: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
@@ -282,7 +286,6 @@ const styles = StyleSheet.create({
     borderRadius: 21,
   },
   verifiedBadge: {
-    marginLeft: 4,
     width: 16,
     height: 16,
     borderRadius: 8,

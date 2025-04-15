@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Screen1 from '../screens/tabs/Screen1';
 import PeopleScreen from '../screens/tabs/PeopleScreen';
 import ChatListScreen from '../screens/ChatListScreen';
-import Screen4 from '../screens/tabs/Screen4';
+import ProfileScreen from '../screens/tabs/ProfileScreen';
 import CustomTabBar from '../components/CustomTabBar';
 
 const Tab = createBottomTabNavigator();
@@ -39,7 +39,7 @@ const TabNavigator = () => {
       />
       <Tab.Screen 
         name="Me" 
-        component={Screen4} 
+        component={ProfileScreen} 
         options={{ 
           title: 'ME',
         }} 
