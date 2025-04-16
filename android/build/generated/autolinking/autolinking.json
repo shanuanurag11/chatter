@@ -107,6 +107,31 @@
         }
       }
     },
+    "react-native-image-picker": {
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker",
+      "name": "react-native-image-picker",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker/react-native-image-picker.podspec",
+          "version": "8.2.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker/android",
+          "packageImportPath": "import com.imagepicker.ImagePickerPackage;",
+          "packageInstance": "new ImagePickerPackage()",
+          "buildTypes": [],
+          "libraryName": "RNImagePickerSpec",
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
     "react-native-linear-gradient": {
       "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-linear-gradient",
       "name": "react-native-linear-gradient",

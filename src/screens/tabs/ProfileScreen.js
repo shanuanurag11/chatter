@@ -12,6 +12,7 @@ import {
   Dimensions
 } from 'react-native';
 import { useDispatch } from 'react-redux';
+import { useNavigation } from '@react-navigation/native';
 import { logout } from '../../store/slices/authSlice';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -51,6 +52,7 @@ const menuItems = [
 
 const ProfileScreen = () => {
   const dispatch = useDispatch();
+  const navigation = useNavigation();
   const [user] = useState(dummyUser); // In real app, this would come from API via Redux or Context
   
   // Animated values for interactions
@@ -120,6 +122,11 @@ const ProfileScreen = () => {
     dispatch(logout());
   };
   
+  // Navigate to edit profile screen
+  const handleEditProfile = () => {
+    navigation.navigate('EditProfile');
+  };
+  
   const copyUserId = () => {
     // In a real app, this would use the Clipboard API and show a toast
     console.log('Copied ID:', user.userId);
@@ -171,6 +178,10 @@ const ProfileScreen = () => {
         
         {/* Header buttons */}
         <View style={styles.headerButtons}>
+          <TouchableOpacity style={styles.iconButton} onPress={handleEditProfile}>
+            <Icon name="create-outline" size={22} color={Colors.white} />
+          </TouchableOpacity>
+          
           <TouchableOpacity style={styles.iconButton}>
             <Icon name="notifications-outline" size={22} color={Colors.white} />
             <View style={styles.notificationBadge} />

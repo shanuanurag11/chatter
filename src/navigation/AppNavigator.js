@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import AuthNavigator from './AuthNavigator';
 import TabNavigator from './TabNavigator';
 import ChatDetailScreen from '../screens/ChatDetailScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 import { checkAuthStatus } from '../store/slices/authSlice';
 import LoadingScreen from '../screens/LoadingScreen';
 import CustomStatusBar from '../components/CustomStatusBar';
@@ -42,6 +43,7 @@ const AppNavigator = () => {
             <>
               <Stack.Screen name="Main" component={TabNavigator} />
               <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             </>
           ) : (
             <Stack.Screen name="Auth" component={AuthNavigator} />
