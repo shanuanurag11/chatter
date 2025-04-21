@@ -138,13 +138,13 @@ const ProfileScreen = () => {
   };
   
   const handleTokenPress = () => {
-    // In a real app, this would navigate to tokens screen
-    console.log('Navigate to tokens screen');
+    // Navigate to tokens screen
+    navigation.navigate('Tokens');
   };
   
   const handleVIPPress = () => {
-    // In a real app, this would navigate to VIP subscription screen
-    console.log('Navigate to VIP subscription screen');
+    // Navigate to VIP subscription screen
+    navigation.navigate('VipSubscription');
   };
   
   const handleMenuItemPress = (id) => {
