@@ -13,6 +13,7 @@ import {
   Animated,
   Image,
   Dimensions,
+  ToastAndroid,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import PeopleHeader from '../../components/PeopleHeader';
@@ -22,6 +23,7 @@ import { tabs } from '../../data/dummyPeople';
 import peopleService from '../../services/peopleService';
 import Colors from '../../constants/colors';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+// import Toast from 'react-native-toast-message';
 
 // Memoized PersonCard component for better performance
 const MemoizedPersonCard = memo(PersonCard);
@@ -139,18 +141,37 @@ const PeopleScreen = ({ navigation }) => {
     Alert.alert('Person Selected', `You selected ${person.name}`);
   }, []);
   
-  const handleVideoPress = useCallback(async (person) => {
+  const handleVideoCallPress = async (person) => {
     try {
-      // Start video call with person
-      const callData = await peopleService.initiateVideoCall(person.id);
-      Alert.alert('Video Call', `Starting video call with ${person.name}`);
+      setLoading(true);
       
-      // Here you would navigate to a video call screen with the callData
-      // navigation.navigate('VideoCall', { callData });
-    } catch (err) {
-      Alert.alert('Error', 'Failed to start video call. Please try again.');
+      // Call the initiateVideoCall method from peopleService
+      const callData = await peopleService.initiateVideoCall(person.id);
+      
+      setLoading(false);
+      
+      // Navigate to the VideoCallScreen with the call data
+      navigation.navigate('VideoCall', {
+        contactName: person.name,
+        contactId: person.id,
+        callID: callData.callId,
+        isIncoming: false
+      });
+    } catch (error) {
+      setLoading(false);
+      
+      // Show error toast or alert
+      ToastAndroid.show({
+        type: 'error',
+        text1: 'Call Failed',
+        text2: error.message || 'Could not start video call',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
+      
+      console.error('Error starting video call:', error);
     }
-  }, []);
+  };
   
   const handleBannerPress = useCallback(() => {
     if (banner?.action === 'OPEN_WALLET') {
@@ -219,11 +240,11 @@ const PeopleScreen = ({ navigation }) => {
         <MemoizedPersonCard 
           person={item} 
           onPress={handlePersonPress}
-          onVideoPress={handleVideoPress}
+          onVideoPress={handleVideoCallPress}
         />
       </Animated.View>
     );
-  }, [fadeAnim, scrollY, handlePersonPress, handleVideoPress]);
+  }, [fadeAnim, scrollY, handlePersonPress, handleVideoCallPress]);
   
   // Optimized header component
   const renderHeader = useCallback(() => {

@@ -13,10 +13,13 @@ import {
   SafeAreaView,
   Modal,
   Pressable,
+  ToastAndroid
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import chatService from '../services/chatService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import peopleService from '../services/peopleService';
+// import Toast from 'react-native-toast-message';
 
 // -------------------- UTILITIES --------------------
 
@@ -637,6 +640,38 @@ const ChatDetailScreen = () => {
     }
   };
   
+  const handleVideoCallPress = async () => {
+    try {
+      setLoading(true);
+      
+      // Call the initiateVideoCall method from peopleService
+      const callData = await peopleService.initiateVideoCall(chatPartner.id);
+      
+      setLoading(false);
+      
+      // Navigate to the VideoCallScreen with the call data
+      navigation.navigate('VideoCall', {
+        contactName: chatPartner.name,
+        contactId: chatPartner.id,
+        callID: callData.callId,
+        isIncoming: false
+      });
+    } catch (error) {
+      setLoading(false);
+      
+      // Show error toast
+      ToastAndroid.show({
+        type: 'error',
+        text1: 'Call Failed',
+        text2: error.message || 'Could not start video call',
+        position: 'bottom',
+        visibilityTime: 4000,
+      });
+      
+      console.error('Error starting video call:', error);
+    }
+  };
+  
   // -------------------- RENDER --------------------
   
   if (loading) {
@@ -650,7 +685,7 @@ const ChatDetailScreen = () => {
         name={name}
         isOnline={isOnline}
         onBackPress={() => navigation.goBack()}
-        onVideoPress={() => console.log('Video call with:', name)}
+        onVideoPress={handleVideoCallPress}
         onAudioPress={() => console.log('Audio call with:', name)}
         onMorePress={() => console.log('More options for:', name)}
       />

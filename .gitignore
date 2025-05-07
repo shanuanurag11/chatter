@@ -1,5 +1,10 @@
 node_modules
 android/app/.cxx
-android/app/src/main
-android/app/build/
+android/app/src/main/res
+android/app/build/intermediates
 vendor
+android/app/build/
+
+# Keep patch files for react-native-sound
+!patches/
+!patches/react-native-sound+0.11.2.patch

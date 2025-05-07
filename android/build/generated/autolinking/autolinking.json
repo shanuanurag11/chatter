@@ -79,6 +79,54 @@
         }
       }
     },
+    "react-native-device-info": {
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-device-info",
+      "name": "react-native-device-info",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-device-info/RNDeviceInfo.podspec",
+          "version": "14.0.4",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-device-info/android",
+          "packageImportPath": "import com.learnium.RNDeviceInfo.RNDeviceInfo;",
+          "packageInstance": "new RNDeviceInfo()",
+          "buildTypes": [],
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-device-info/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "react-native-encrypted-storage": {
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-encrypted-storage",
+      "name": "react-native-encrypted-storage",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-encrypted-storage/react-native-encrypted-storage.podspec",
+          "version": "4.0.3",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-encrypted-storage/android",
+          "packageImportPath": "import com.emeraldsanto.encryptedstorage.RNEncryptedStoragePackage;",
+          "packageInstance": "new RNEncryptedStoragePackage()",
+          "buildTypes": [],
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-encrypted-storage/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
     "react-native-gesture-handler": {
       "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-gesture-handler",
       "name": "react-native-gesture-handler",
@@ -113,7 +161,7 @@
       "platforms": {
         "ios": {
           "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker/react-native-image-picker.podspec",
-          "version": "8.2.0",
+          "version": "8.2.1",
           "configurations": [],
           "scriptPhases": []
         },
@@ -125,6 +173,30 @@
           "libraryName": "RNImagePickerSpec",
           "componentDescriptors": [],
           "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "react-native-keep-awake": {
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-keep-awake",
+      "name": "react-native-keep-awake",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-keep-awake/react-native-keep-awake.podspec",
+          "version": "4.0.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-keep-awake/android",
+          "packageImportPath": "import com.corbt.keepawake.KCKeepAwakePackage;",
+          "packageInstance": "new KCKeepAwakePackage()",
+          "buildTypes": [],
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-keep-awake/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -156,13 +228,38 @@
         }
       }
     },
+    "react-native-permissions": {
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-permissions",
+      "name": "react-native-permissions",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-permissions/RNPermissions.podspec",
+          "version": "5.4.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-permissions/android",
+          "packageImportPath": "import com.zoontek.rnpermissions.RNPermissionsPackage;",
+          "packageInstance": "new RNPermissionsPackage()",
+          "buildTypes": [],
+          "libraryName": "RNPermissionsSpec",
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
     "react-native-reanimated": {
       "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-reanimated",
       "name": "react-native-reanimated",
       "platforms": {
         "ios": {
           "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-reanimated/RNReanimated.podspec",
-          "version": "3.17.2",
+          "version": "3.17.5",
           "configurations": [],
           "scriptPhases": []
         },
@@ -187,7 +284,7 @@
       "platforms": {
         "ios": {
           "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-safe-area-context/react-native-safe-area-context.podspec",
-          "version": "5.3.0",
+          "version": "5.4.0",
           "configurations": [],
           "scriptPhases": []
         },

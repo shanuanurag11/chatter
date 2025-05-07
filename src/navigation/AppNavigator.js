@@ -8,6 +8,7 @@ import ChatDetailScreen from '../screens/ChatDetailScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import TokensScreen from '../screens/TokensScreen';
 import VipSubscriptionScreen from '../screens/VipSubscriptionScreen';
+import VideoCallScreen from '../screens/VideoCallScreen';
 import { checkAuthStatus } from '../store/slices/authSlice';
 import LoadingScreen from '../screens/LoadingScreen';
 import CustomStatusBar from '../components/CustomStatusBar';
@@ -48,6 +49,7 @@ const AppNavigator = () => {
               <Stack.Screen name="EditProfile" component={EditProfileScreen} />
               <Stack.Screen name="Tokens" component={TokensScreen} />
               <Stack.Screen name="VipSubscription" component={VipSubscriptionScreen} />
+              <Stack.Screen name="VideoCallScreen" component={VideoCallScreen} />
             </>
           ) : (
             <Stack.Screen name="Auth" component={AuthNavigator} />

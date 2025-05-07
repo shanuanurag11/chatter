@@ -5,6 +5,7 @@ import PeopleScreen from '../screens/tabs/PeopleScreen';
 import ChatListScreen from '../screens/ChatListScreen';
 import ProfileScreen from '../screens/tabs/ProfileScreen';
 import CustomTabBar from '../components/CustomTabBar';
+import RandomVideoScreen from '../screens/tabs/RandomVideoScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -18,7 +19,7 @@ const TabNavigator = () => {
     >
       <Tab.Screen 
         name="Match" 
-        component={Screen1} 
+        component={RandomVideoScreen} 
         options={{ 
           title: 'MATCH',
         }} 

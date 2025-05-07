@@ -137,3 +137,41 @@ To learn more about React Native, take a look at the following resources:
 - `npm run ios` - Run the app on an iOS device/simulator
 - `npm run clean-android` - Clean Android build cache
 - `npm run build-android` - Build Android release APK
+
+# Chatter App
+
+## Video Calling Feature
+
+The app includes a video calling feature that is designed to work with ZegoCloud. The current implementation provides:
+
+1. **Fallback UI** - The app includes a simulated video calling interface that works without requiring the ZegoCloud packages to be installed. This allows you to test the navigation flow and UI.
+
+2. **Permissions Handling** - The app properly requests and checks for camera and microphone permissions using react-native-permissions.
+
+3. **End-to-End Flow** - Pressing the "GO" button on the RandomVideoScreen will generate a random call ID and navigate to the VideoCallScreen.
+
+### Current Implementation Status
+
+The fallback implementation includes:
+- UI for connecting state with loading indicator
+- Simulated call state with duration timer
+- User interface with remote video, local video preview, and call controls
+- End call confirmation dialog
+- Helpful messages explaining how to implement actual video calling
+
+### Implementing ZegoCloud Video Calling
+
+To implement the actual video calling functionality, follow the instructions in the `ZEGOCLOUD_SETUP.md` file, which includes:
+
+1. Installing the required dependencies
+2. Getting your ZegoCloud credentials
+3. Updating the VideoCallScreen.js file
+4. Testing the implementation
+
+The code is already prepared to automatically detect when ZegoCloud is available and will use the actual implementation instead of the fallback.
+
+### Files Involved
+
+- `src/screens/tabs/RandomVideoScreen.js` - Handles the "GO" button, permissions, and navigation
+- `src/screens/VideoCallScreen.js` - Implements the video call interface with fallback UI
+- `ZEGOCLOUD_SETUP.md` - Detailed instructions for ZegoCloud integration
