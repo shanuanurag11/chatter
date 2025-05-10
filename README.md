@@ -1,177 +1,47 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Call Kit (ZegoUIKitPrebuiltCall)
 
-# Getting Started
+- - -
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+**Call Kit** is a prebuilt feature-rich call component, which enables you to build **one-on-one and group voice/video calls** into your app with only a few lines of code.
 
-## Step 1: Start Metro
+And it includes the business logic with the UI, you can add or remove features accordingly by customizing UI components.
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+|One-on-one call|Group call|
+|---|---|
+|![one](https://storage.zego.im/sdk-doc/Pics/ZegoUIKit/Flutter/_all_close.gif)|![one](https://storage.zego.im/sdk-doc/Pics/ZegoUIKit/conference/8C_little.jpg)|
 
-```sh
-# Using npm
-npm start
 
-# OR using Yarn
-yarn start
-```
+## When do you need the Call Kit
 
-## Step 2: Build and run your app
+- Build apps faster and easier
+  - When you want to prototype 1-on-1 or group voice/video calls **ASAP** 
+  - Consider **speed or efficiency** as the first priority
+  - Call Kit allows you to integrate **in minutes**
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+- Customize UI and features as needed
+  - When you want to customize in-call features **based on actual business needs**
+  - **Less time wasted** developing basic features
+  - Call Kit includes the business logic along with the UI, allows you to **customize features accordingly**
 
-### Android
 
-```sh
-# Using npm
-npm run android
 
-# OR using Yarn
-yarn android
-```
+## Embedded features
 
-### iOS
+- Ready-to-use one-on-one/group calls
+- Customizable UI styles
+- Real-time sound waves display
+- Device management
+- Switch views during a one-on-one call
+- Extendable top/bottom menu bar
+- Participant list
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+## Recommended resources
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+- I want to get started, Follow the steps to get started swiftly: [Quick Start](https://docs.zegocloud.com/article/14822)
 
-```sh
-bundle install
-```
+- To configure prebuilt UI for a custom experience: [Custom Prebuilt UI](https://docs.zegocloud.com/article/14767)
 
-Then, and every time you update your native dependencies, run:
+- To finest-grained build a call, you may try antoher one: [Video Call SDK](https://docs.zegocloud.com/article/6674)
 
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
-
-+++++++++++++++++PROJECT SETUP+++++++++++++++++
-
-/src
-  /api
-    - apiClient.js (API client with axios setup)
-    - authApi.js (Authentication API methods)
-  /components
-    - Button.js (Reusable button component)
-    - Input.js (Reusable text input component)
-    - Card.js (Reusable card component)
-  /navigation
-    - AppNavigator.js (Main navigation container)
-    - AuthNavigator.js (Authentication stack)
-    - TabNavigator.js (Tabs for authenticated users)
-  /screens
-    /auth
-      - LoginScreen.js
-      - SignupScreen.js
-      - ForgotPasswordScreen.js
-    /tabs
-      - Screen1.js (Home)
-      - Screen2.js (Browse)
-      - Screen3.js (Activity)
-      - Screen4.js (Profile)
-    - LoadingScreen.js
-  /store
-    - index.js (Redux store setup)
-    /slices
-      - authSlice.js (Authentication state management)
-  /utils
-    - authUtils.js (JWT handling utilities)
-    - validationUtils.js (Form validation utilities)
-  - App.js (Main app component)
-/index.js (Entry point)
-
-## Development Scripts
-
-- `npm run android` - Run the app on an Android device/emulator
-- `npm run ios` - Run the app on an iOS device/simulator
-- `npm run clean-android` - Clean Android build cache
-- `npm run build-android` - Build Android release APK
-
-# Chatter App
-
-## Video Calling Feature
-
-The app includes a video calling feature that is designed to work with ZegoCloud. The current implementation provides:
-
-1. **Fallback UI** - The app includes a simulated video calling interface that works without requiring the ZegoCloud packages to be installed. This allows you to test the navigation flow and UI.
-
-2. **Permissions Handling** - The app properly requests and checks for camera and microphone permissions using react-native-permissions.
-
-3. **End-to-End Flow** - Pressing the "GO" button on the RandomVideoScreen will generate a random call ID and navigate to the VideoCallScreen.
-
-### Current Implementation Status
-
-The fallback implementation includes:
-- UI for connecting state with loading indicator
-- Simulated call state with duration timer
-- User interface with remote video, local video preview, and call controls
-- End call confirmation dialog
-- Helpful messages explaining how to implement actual video calling
-
-### Implementing ZegoCloud Video Calling
-
-To implement the actual video calling functionality, follow the instructions in the `ZEGOCLOUD_SETUP.md` file, which includes:
-
-1. Installing the required dependencies
-2. Getting your ZegoCloud credentials
-3. Updating the VideoCallScreen.js file
-4. Testing the implementation
-
-The code is already prepared to automatically detect when ZegoCloud is available and will use the actual implementation instead of the fallback.
-
-### Files Involved
-
-- `src/screens/tabs/RandomVideoScreen.js` - Handles the "GO" button, permissions, and navigation
-- `src/screens/VideoCallScreen.js` - Implements the video call interface with fallback UI
-- `ZEGOCLOUD_SETUP.md` - Detailed instructions for ZegoCloud integration
+- If you have any questions regarding bugs and feature requests, visit the [ZEGOCLOUD community](https://discord.gg/EtNRATttyp) or email us at global_support@zegocloud.com.

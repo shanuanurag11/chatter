@@ -1,8 +1,0 @@
-<key>NSCameraUsageDescription</key>
-<string>Please allow camera access for video calls with other users</string>
-<key>NSPhotoLibraryUsageDescription</key>
-<string>$(PRODUCT_NAME) needs access to your photo library to select profile photos</string>
-<key>NSPhotoLibraryAddUsageDescription</key>
-<string>$(PRODUCT_NAME) needs access to save photos to your photo library</string>
-<key>NSMicrophoneUsageDescription</key>
-<string>Please allow microphone access for voice communication during calls</string> 
