@@ -86,7 +86,7 @@ const PeopleScreen = ({ navigation }) => {
       );
       
       // Fetch people and banner data in parallel
-      const [peopleData, bannerData] = await Promise.all([
+      const [peopleResponse, bannerResponse] = await Promise.all([
         peopleService.getPeople(activeTab),
         peopleService.getPromoBanner()
       ]);
@@ -94,8 +94,13 @@ const PeopleScreen = ({ navigation }) => {
       // Wait for both data and minimum delay
       await delayPromise;
       
-      setPeople(peopleData);
-      setBanner(bannerData);
+      // Check if responses are successful
+      if (peopleResponse.success && bannerResponse.success) {
+        setPeople(peopleResponse.data);
+        setBanner(bannerResponse.data);
+      } else {
+        throw new Error('Failed to load data');
+      }
     } catch (err) {
       console.error('Error fetching data:', err);
       setError('Failed to load data. Please try again.');

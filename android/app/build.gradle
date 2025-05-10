@@ -84,6 +84,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionName versName
         versionCode versCode.toInteger()
+        vectorDrawables.useSupportLibrary = true
     }
     signingConfigs {
         debug {
@@ -109,6 +110,17 @@ android {
         jniLibs {
             useLegacyPackaging true
         }
+        resources {
+            excludes += ['META-INF/DEPENDENCIES', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/ASL2.0']
+        }
+    }
+    sourceSets {
+        main {
+            assets.srcDirs += ['src/main/assets/fonts']
+        }
+    }
+    aaptOptions {
+        additionalParameters "--no-version-vectors"
     }
 }
 
@@ -121,4 +133,14 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    implementation project(':react-native-vector-icons')
 }
+
+task copyFonts(type: Copy) {
+    from '../../node_modules/react-native-vector-icons/Fonts'
+    into 'src/main/assets/fonts'
+    include '*.ttf'
+}
+
+preBuild.dependsOn(copyFonts)

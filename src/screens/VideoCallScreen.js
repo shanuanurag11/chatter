@@ -10,7 +10,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import {ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG } from '@zegocloud/zego-uikit-prebuilt-call-rn'
 
 // Replace with your ZegoCloud credentials once you have them
-const ZEGO_APP_ID = 1234567890; // Replace with your actual App ID (as a number)
+const ZEGO_APP_ID = 491825343; // Replace with your actual App ID (as a number)
 const ZEGO_APP_SIGN = 'cdf3b371814568ecee82f84aaa9ba625506d88ebea3d7f5bd20f94da55bc7dd6';
 
 const VideoCallScreen = ({ route, navigation }) => {
@@ -419,7 +419,7 @@ const VideoCallScreen = ({ route, navigation }) => {
                 {{
                     // You can also use ONE_ON_ONE_VOICE_CALL_CONFIG/GROUP_VIDEO_CALL_CONFIG/GROUP_VOICE_CALL_CONFIG to make more types of calls.
                     ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
-                    onCallEnd: (callID, reason, duration) => { navigation.navigate('HomePage')},
+                    onCallEnd: (callID, reason, duration) => { navigation.goBack()},
                 }}
             />
 

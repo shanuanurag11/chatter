@@ -18,12 +18,12 @@ const { width } = Dimensions.get('window');
 const PromoBanner = ({ data, onPress }) => {
   if (!data) return null;
   
-  // Animation values for pulsating effect
+  // Animation values
   const scaleAnim = useRef(new Animated.Value(1)).current;
   const moveAnim = useRef(new Animated.Value(0)).current;
   
   useEffect(() => {
-    // Create a pulsating animation
+    // Pulsating animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(scaleAnim, {
@@ -41,7 +41,7 @@ const PromoBanner = ({ data, onPress }) => {
       ])
     ).start();
     
-    // Create a floating animation for the image
+    // Floating animation
     Animated.loop(
       Animated.sequence([
         Animated.timing(moveAnim, {
@@ -60,7 +60,6 @@ const PromoBanner = ({ data, onPress }) => {
     ).start();
   }, []);
   
-  // Map movement value for floating effect
   const translateY = moveAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [0, -8]
@@ -72,7 +71,6 @@ const PromoBanner = ({ data, onPress }) => {
       onPress={onPress}
       activeOpacity={0.95}
     >
-      {/* Main banner with gradient background */}
       <LinearGradient
         colors={[
           data.backgroundColor || Colors.primary, 
@@ -84,7 +82,7 @@ const PromoBanner = ({ data, onPress }) => {
         end={{x: 1, y: 1}}
         style={styles.container}
       >
-        {/* Enhanced inner shadow gradient for depth */}
+        {/* Background effects */}
         <LinearGradient
           colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0)']}
           start={{x: 0, y: 0}}
@@ -92,40 +90,43 @@ const PromoBanner = ({ data, onPress }) => {
           style={styles.innerShadow}
         />
         
-        {/* Decorative elements */}
         <View style={styles.decorations}>
           <View style={styles.circleLarge} />
           <View style={styles.circleSmall} />
           <View style={styles.circleMedium} />
-          <View style={styles.diamondShape} />
-          <View style={styles.bottomHighlight} />
         </View>
-        
-        {/* Left section with text */}
-        <View style={styles.textContainer}>
-          <View style={styles.shineEffect} />
-          <Text style={styles.title}>{data.title}</Text>
-          <View style={styles.discountContainer}>
-            <Text style={styles.discount}>{data.discount}</Text>
-            <View style={styles.discountHighlight} />
+
+        {/* Main content container */}
+        <View style={styles.contentContainer}>
+          {/* First row - Title */}
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{data.title}</Text>
           </View>
-          
-          {/* Get Now button */}
-          <Animated.View style={{
-            transform: [{ scale: scaleAnim }]
-          }}>
-            <TouchableOpacity style={styles.getButton} onPress={onPress}>
-              <LinearGradient
-                colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.15)']}
-                style={styles.buttonGradient}
-              >
-                <Text style={styles.buttonText}>{data.buttonText || 'Get Now'}</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
+
+          {/* Second row - CTA and Discount */}
+          <View style={styles.actionRow}>
+            <Animated.View style={{
+              transform: [{ scale: scaleAnim }]
+            }}>
+              <TouchableOpacity style={styles.getButton} onPress={onPress}>
+                <LinearGradient
+                  colors={['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.15)']}
+                  style={styles.buttonGradient}
+                >
+                  <Text style={styles.buttonText}>{data.buttonText || 'Get Now'}</Text>
+                  <Icon name="arrow-forward" size={20} color="#FFF" style={styles.buttonIcon} />
+                </LinearGradient>
+              </TouchableOpacity>
+            </Animated.View>
+
+            <View style={styles.discountContainer}>
+              <Text style={styles.discount}>{data.discount}</Text>
+              <View style={styles.discountHighlight} />
+            </View>
+          </View>
         </View>
-        
-        {/* Right section with image */}
+
+        {/* Right side image */}
         <Animated.View style={[
           styles.imageContainer,
           { transform: [{ translateY }] }
@@ -141,15 +142,8 @@ const PromoBanner = ({ data, onPress }) => {
               <Icon name="account-balance-wallet" size={46} color="#fff" />
             </View>
           )}
-          
-          {/* Image highlight effect */}
           <View style={styles.imageHighlight} />
         </Animated.View>
-        
-        {/* Accent elements for visual interest */}
-        <View style={styles.accentDot1} />
-        <View style={styles.accentDot2} />
-        <View style={styles.accentDot3} />
       </LinearGradient>
     </TouchableOpacity>
   );
@@ -192,12 +186,9 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    flexDirection: 'row',
     overflow: 'hidden',
     borderRadius: 24,
     position: 'relative',
-    alignItems: 'center',
-    padding: 4,
   },
   innerShadow: {
     position: 'absolute',
@@ -218,101 +209,58 @@ const styles = StyleSheet.create({
   },
   circleLarge: {
     position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    top: -60,
-    left: -30,
+    top: -70,
+    left: -40,
   },
   circleSmall: {
     position: 'absolute',
-    width: 90,
-    height: 90,
-    borderRadius: 45,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    bottom: -30,
-    left: 50,
+    bottom: -40,
+    left: 60,
   },
   circleMedium: {
     position: 'absolute',
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     top: 20,
-    right: -40,
+    right: -50,
   },
-  diamondShape: {
-    position: 'absolute',
-    width: 70,
-    height: 70,
-    transform: [{ rotate: '45deg' }],
-    backgroundColor: 'rgba(255, 255, 255, 0.07)',
-    bottom: 10,
-    right: 30,
-  },
-  bottomHighlight: {
-    position: 'absolute',
-    height: 30,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  shineEffect: {
-    position: 'absolute',
-    width: 140,
-    height: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    transform: [{ rotate: '-30deg' }],
-    top: 5,
-    left: -30,
-  },
-  textContainer: {
+  contentContainer: {
     flex: 1,
-    paddingLeft: 20,
-    paddingRight: 10,
-    paddingVertical: 16,
-    justifyContent: 'center',
-    alignItems: 'flex-start',
+    padding: 16,
+    justifyContent: 'space-between',
     zIndex: 2,
   },
+  titleRow: {
+    marginBottom: 16,
+  },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 6,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 3,
-  },
-  discountContainer: {
-    position: 'relative',
-    marginBottom: 14,
-  },
-  discount: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: '#fff',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 3,
+    letterSpacing: 0.5,
   },
-  discountHighlight: {
-    position: 'absolute',
-    height: 10,
-    width: '70%',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    bottom: 6,
-    left: 0,
-    zIndex: -1,
-    borderRadius: 5,
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   getButton: {
-    width: 100,
-    height: 36,
-    borderRadius: 18,
+    width: 120,
+    height: 40,
+    borderRadius: 20,
     overflow: 'hidden',
     shadowColor: 'rgba(0, 0, 0, 0.5)',
     shadowOffset: { width: 0, height: 3 },
@@ -323,47 +271,77 @@ const styles = StyleSheet.create({
   buttonGradient: {
     width: '100%',
     height: '100%',
+    flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 18,
+    borderRadius: 20,
+    paddingHorizontal: 16,
   },
   buttonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#fff',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 2,
+    letterSpacing: 0.5,
+  },
+  buttonIcon: {
+    marginLeft: 8,
+  },
+  discountContainer: {
+    position: 'relative',
+    alignItems: 'flex-end',
+  },
+  discount: {
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#fff',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 3,
+    letterSpacing: 1,
+  },
+  discountHighlight: {
+    position: 'absolute',
+    height: 14,
+    width: '85%',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    bottom: 6,
+    left: 0,
+    zIndex: -1,
+    borderRadius: 7,
   },
   imageContainer: {
-    width: '40%',
-    height: '80%',
+    position: 'absolute',
+    width: '35%',
+    height: '90%',
+    right: 16,
+    top: '5%',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 2,
-    marginRight: 16,
-    position: 'relative',
+    zIndex: 1,
   },
   imageHighlight: {
     position: 'absolute',
-    width: '80%',
-    height: 30,
+    width: '90%',
+    height: 40,
     bottom: 0,
-    borderRadius: 15,
+    borderRadius: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
     transform: [{scaleX: 0.7}],
     opacity: 0.5,
   },
   image: {
-    width: '90%',
-    height: '90%',
-    borderRadius: 12,
+    width: '100%',
+    height: '100%',
+    borderRadius: 16,
   },
   placeholderImage: {
-    width: '80%',
-    height: '80%',
+    width: '90%',
+    height: '90%',
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 20,
+    borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: 'rgba(0, 0, 0, 0.3)',
@@ -371,33 +349,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 6,
     elevation: 7,
-  },
-  accentDot1: {
-    position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.4)',
-    bottom: 15,
-    left: '30%',
-  },
-  accentDot2: {
-    position: 'absolute',
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    top: 20,
-    right: '25%',
-  },
-  accentDot3: {
-    position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    top: 50,
-    left: '20%',
   },
 });
 

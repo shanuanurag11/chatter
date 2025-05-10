@@ -10,37 +10,44 @@ const isDev = process.env.NODE_ENV === 'development' || __DEV__;
 
 /**
  * Get people list with optional filter
- * @param {string} filter - Filter criteria
+ * @param {string} filter - Filter criteria ('popular' or 'new')
  * @param {number} page - Page number for pagination
  * @param {number} limit - Number of items per page
  * @returns {Promise<Object>} - People data object
  */
-const getPeople = async (filter = '', page = 1, limit = 20) => {
+const getPeople = async (filter = 'popular', page = 1, limit = 20) => {
   try {
     if (isDev) {
       // Simulate network delay in development
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Mock data for development
-      const mockUsers = Array(limit).fill().map((_, i) => ({
-        id: `user_${(page - 1) * limit + i + 1}`,
-        name: `User ${(page - 1) * limit + i + 1}`,
-        avatar: `https://randomuser.me/api/portraits/${Math.random() > 0.5 ? 'women' : 'men'}/${Math.floor(Math.random() * 99)}.jpg`,
-        online: Math.random() > 0.3,
-        location: ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Miami'][Math.floor(Math.random() * 5)],
-        distance: Math.floor(Math.random() * 50) + ' km away',
-        lastActive: Math.random() > 0.5 ? 'Online now' : `${Math.floor(Math.random() * 60)} mins ago`,
-        coins: Math.floor(Math.random() * 1000) + 100,
-      }));
+      // Use dummyPeople array and filter based on activeTab
+      let filteredPeople = [...dummyPeople];
+      
+      if (filter === 'new') {
+        // For 'new' tab, sort by lastActive in descending order
+        filteredPeople.sort((a, b) => b.lastActive - a.lastActive);
+      } else {
+        // For 'popular' tab, sort by isOnline and isVerified
+        filteredPeople.sort((a, b) => {
+          if (a.isOnline !== b.isOnline) return b.isOnline ? 1 : -1;
+          if (a.isVerified !== b.isVerified) return b.isVerified ? 1 : -1;
+          return 0;
+        });
+      }
+      
+      // Apply pagination
+      const startIndex = (page - 1) * limit;
+      const paginatedPeople = filteredPeople.slice(startIndex, startIndex + limit);
       
       return {
         success: true,
-        data: mockUsers,
+        data: paginatedPeople,
         pagination: {
-          total: 100,
+          total: filteredPeople.length,
           page,
           limit,
-          hasMore: page * limit < 100
+          hasMore: startIndex + limit < filteredPeople.length
         }
       };
     }
