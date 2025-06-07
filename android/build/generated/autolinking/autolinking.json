@@ -1,20 +1,73 @@
 {
-  "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call",
-  "reactNativePath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native",
+  "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter",
+  "reactNativePath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native",
   "reactNativeVersion": "0.75",
   "dependencies": {
+    "@react-native-community/datetimepicker": {
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-community/datetimepicker",
+      "name": "@react-native-community/datetimepicker",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-community/datetimepicker/RNDateTimePicker.podspec",
+          "version": "8.4.1",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-community/datetimepicker/android",
+          "packageImportPath": "import com.reactcommunity.rndatetimepicker.RNDateTimePickerPackage;",
+          "packageInstance": "new RNDateTimePickerPackage()",
+          "buildTypes": [],
+          "libraryName": "RNDateTimePickerCGen",
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-community/datetimepicker/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
+    "@react-native-picker/picker": {
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-picker/picker",
+      "name": "@react-native-picker/picker",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-picker/picker/RNCPicker.podspec",
+          "version": "2.11.0",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-picker/picker/android",
+          "packageImportPath": "import com.reactnativecommunity.picker.RNCPickerPackage;",
+          "packageInstance": "new RNCPickerPackage()",
+          "buildTypes": [],
+          "libraryName": "rnpicker",
+          "componentDescriptors": [
+            "RNCAndroidDialogPickerComponentDescriptor",
+            "RNCAndroidDropdownPickerComponentDescriptor"
+          ],
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-picker/picker/android/src/main/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
     "react-native-gesture-handler": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-gesture-handler",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-gesture-handler",
       "name": "react-native-gesture-handler",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-gesture-handler/RNGestureHandler.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-gesture-handler/RNGestureHandler.podspec",
           "version": "2.25.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-gesture-handler/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-gesture-handler/android",
           "packageImportPath": "import com.swmansion.gesturehandler.RNGestureHandlerPackage;",
           "packageInstance": "new RNGestureHandlerPackage()",
           "buildTypes": [],
@@ -23,7 +76,7 @@
             "RNGestureHandlerButtonComponentDescriptor",
             "RNGestureHandlerRootViewComponentDescriptor"
           ],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-gesture-handler/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -32,23 +85,23 @@
       }
     },
     "@react-native-async-storage/async-storage": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-async-storage/async-storage",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-async-storage/async-storage",
       "name": "@react-native-async-storage/async-storage",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-async-storage/async-storage/RNCAsyncStorage.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-async-storage/async-storage/RNCAsyncStorage.podspec",
           "version": "1.24.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-async-storage/async-storage/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-async-storage/async-storage/android",
           "packageImportPath": "import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;",
           "packageInstance": "new AsyncStoragePackage()",
           "buildTypes": [],
           "libraryName": "rnasyncstorage",
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-async-storage/async-storage/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-async-storage/async-storage/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -57,22 +110,22 @@
       }
     },
     "@react-native-community/masked-view": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-community/masked-view",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-community/masked-view",
       "name": "@react-native-community/masked-view",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-community/masked-view/RNCMaskedView.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-community/masked-view/RNCMaskedView.podspec",
           "version": "0.1.11",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-community/masked-view/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-community/masked-view/android",
           "packageImportPath": "import org.reactnative.maskedview.RNCMaskedViewPackage;",
           "packageInstance": "new RNCMaskedViewPackage()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-community/masked-view/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-community/masked-view/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -81,17 +134,17 @@
       }
     },
     "@react-native-google-signin/google-signin": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-google-signin/google-signin",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-google-signin/google-signin",
       "name": "@react-native-google-signin/google-signin",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-google-signin/google-signin/RNGoogleSignin.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-google-signin/google-signin/RNGoogleSignin.podspec",
           "version": "13.3.1",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-google-signin/google-signin/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-google-signin/google-signin/android",
           "packageImportPath": "import com.reactnativegooglesignin.RNGoogleSigninPackage;",
           "packageInstance": "new RNGoogleSigninPackage()",
           "buildTypes": [],
@@ -99,7 +152,7 @@
           "componentDescriptors": [
             "RNGoogleSigninButtonComponentDescriptor"
           ],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@react-native-google-signin/google-signin/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-google-signin/google-signin/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -108,23 +161,23 @@
       }
     },
     "@zegocloud/zego-uikit-prebuilt-call-rn": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@zegocloud/zego-uikit-prebuilt-call-rn",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@zegocloud/zego-uikit-prebuilt-call-rn",
       "name": "@zegocloud/zego-uikit-prebuilt-call-rn",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@zegocloud/zego-uikit-prebuilt-call-rn/zego-uikit-prebuilt-call-rn.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@zegocloud/zego-uikit-prebuilt-call-rn/zego-uikit-prebuilt-call-rn.podspec",
           "version": "6.3.2",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@zegocloud/zego-uikit-prebuilt-call-rn/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@zegocloud/zego-uikit-prebuilt-call-rn/android",
           "packageImportPath": "import com.zegouikitprebuiltcallrn.ZegoUIKitPrebuiltCallRNPackage;",
           "packageInstance": "new ZegoUIKitPrebuiltCallRNPackage()",
           "buildTypes": [],
           "libraryName": "ZegoUIKitPrebuiltCall",
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@zegocloud/zego-uikit-prebuilt-call-rn/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@zegocloud/zego-uikit-prebuilt-call-rn/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -133,23 +186,23 @@
       }
     },
     "@zegocloud/zego-uikit-rn": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@zegocloud/zego-uikit-rn",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@zegocloud/zego-uikit-rn",
       "name": "@zegocloud/zego-uikit-rn",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@zegocloud/zego-uikit-rn/zego-uikit-rn.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@zegocloud/zego-uikit-rn/zego-uikit-rn.podspec",
           "version": "2.17.4",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@zegocloud/zego-uikit-rn/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@zegocloud/zego-uikit-rn/android",
           "packageImportPath": "import com.zegouikitrn.ZegoUIKitRNPackage;",
           "packageInstance": "new ZegoUIKitRNPackage()",
           "buildTypes": [],
           "libraryName": "ZegoUikitRn",
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/@zegocloud/zego-uikit-rn/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@zegocloud/zego-uikit-rn/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -158,22 +211,22 @@
       }
     },
     "react-native-device-info": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-device-info",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-device-info",
       "name": "react-native-device-info",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-device-info/RNDeviceInfo.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-device-info/RNDeviceInfo.podspec",
           "version": "11.1.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-device-info/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-device-info/android",
           "packageImportPath": "import com.learnium.RNDeviceInfo.RNDeviceInfo;",
           "packageInstance": "new RNDeviceInfo()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-device-info/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-device-info/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -182,22 +235,22 @@
       }
     },
     "react-native-encrypted-storage": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-encrypted-storage",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-encrypted-storage",
       "name": "react-native-encrypted-storage",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-encrypted-storage/react-native-encrypted-storage.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-encrypted-storage/react-native-encrypted-storage.podspec",
           "version": "4.0.3",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-encrypted-storage/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-encrypted-storage/android",
           "packageImportPath": "import com.emeraldsanto.encryptedstorage.RNEncryptedStoragePackage;",
           "packageInstance": "new RNEncryptedStoragePackage()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-encrypted-storage/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-encrypted-storage/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -206,23 +259,23 @@
       }
     },
     "react-native-image-picker": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-image-picker",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker",
       "name": "react-native-image-picker",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-image-picker/react-native-image-picker.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker/react-native-image-picker.podspec",
           "version": "8.2.1",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-image-picker/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker/android",
           "packageImportPath": "import com.imagepicker.ImagePickerPackage;",
           "packageInstance": "new ImagePickerPackage()",
           "buildTypes": [],
           "libraryName": "RNImagePickerSpec",
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-image-picker/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-image-picker/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -231,22 +284,22 @@
       }
     },
     "react-native-keep-awake": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-keep-awake",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-keep-awake",
       "name": "react-native-keep-awake",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-keep-awake/react-native-keep-awake.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-keep-awake/react-native-keep-awake.podspec",
           "version": "4.0.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-keep-awake/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-keep-awake/android",
           "packageImportPath": "import com.corbt.keepawake.KCKeepAwakePackage;",
           "packageInstance": "new KCKeepAwakePackage()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-keep-awake/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-keep-awake/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -255,22 +308,22 @@
       }
     },
     "react-native-linear-gradient": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-linear-gradient",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-linear-gradient",
       "name": "react-native-linear-gradient",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-linear-gradient/BVLinearGradient.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-linear-gradient/BVLinearGradient.podspec",
           "version": "2.8.3",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-linear-gradient/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-linear-gradient/android",
           "packageImportPath": "import com.BV.LinearGradient.LinearGradientPackage;",
           "packageInstance": "new LinearGradientPackage()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-linear-gradient/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-linear-gradient/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -279,22 +332,22 @@
       }
     },
     "react-native-orientation-locker": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-orientation-locker",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-orientation-locker",
       "name": "react-native-orientation-locker",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-orientation-locker/react-native-orientation-locker.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-orientation-locker/react-native-orientation-locker.podspec",
           "version": "1.7.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-orientation-locker/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-orientation-locker/android",
           "packageImportPath": "import org.wonday.orientation.OrientationPackage;",
           "packageInstance": "new OrientationPackage()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-orientation-locker/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-orientation-locker/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -303,23 +356,23 @@
       }
     },
     "react-native-permissions": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-permissions",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-permissions",
       "name": "react-native-permissions",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-permissions/RNPermissions.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-permissions/RNPermissions.podspec",
           "version": "5.4.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-permissions/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-permissions/android",
           "packageImportPath": "import com.zoontek.rnpermissions.RNPermissionsPackage;",
           "packageInstance": "new RNPermissionsPackage()",
           "buildTypes": [],
           "libraryName": "RNPermissionsSpec",
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-permissions/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -328,23 +381,23 @@
       }
     },
     "react-native-reanimated": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-reanimated",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-reanimated",
       "name": "react-native-reanimated",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-reanimated/RNReanimated.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-reanimated/RNReanimated.podspec",
           "version": "3.17.5",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-reanimated/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-reanimated/android",
           "packageImportPath": "import com.swmansion.reanimated.ReanimatedPackage;",
           "packageInstance": "new ReanimatedPackage()",
           "buildTypes": [],
           "libraryName": "rnreanimated",
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-reanimated/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-reanimated/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -353,17 +406,17 @@
       }
     },
     "react-native-safe-area-context": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-safe-area-context",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-safe-area-context",
       "name": "react-native-safe-area-context",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-safe-area-context/react-native-safe-area-context.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-safe-area-context/react-native-safe-area-context.podspec",
           "version": "4.14.1",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-safe-area-context/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-safe-area-context/android",
           "packageImportPath": "import com.th3rdwave.safeareacontext.SafeAreaContextPackage;",
           "packageInstance": "new SafeAreaContextPackage()",
           "buildTypes": [],
@@ -372,7 +425,7 @@
             "RNCSafeAreaProviderComponentDescriptor",
             "RNCSafeAreaViewComponentDescriptor"
           ],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-safe-area-context/android/src/main/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -381,17 +434,17 @@
       }
     },
     "react-native-screens": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-screens",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-screens",
       "name": "react-native-screens",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-screens/RNScreens.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-screens/RNScreens.podspec",
           "version": "3.37.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-screens/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-screens/android",
           "packageImportPath": "import com.swmansion.rnscreens.RNScreensPackage;",
           "packageInstance": "new RNScreensPackage()",
           "buildTypes": [],
@@ -407,7 +460,7 @@
             "RNSScreenComponentDescriptor",
             "RNSModalScreenComponentDescriptor"
           ],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -416,22 +469,22 @@
       }
     },
     "react-native-sound": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-sound",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-sound",
       "name": "react-native-sound",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-sound/RNSound.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-sound/RNSound.podspec",
           "version": "0.11.2",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-sound/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-sound/android",
           "packageImportPath": "import com.zmxv.RNSound.RNSoundPackage;",
           "packageInstance": "new RNSoundPackage()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-sound/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-sound/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -440,23 +493,23 @@
       }
     },
     "react-native-vector-icons": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-vector-icons",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-vector-icons",
       "name": "react-native-vector-icons",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-vector-icons/RNVectorIcons.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-vector-icons/RNVectorIcons.podspec",
           "version": "10.2.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-vector-icons/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-vector-icons/android",
           "packageImportPath": "import com.oblador.vectoricons.VectorIconsPackage;",
           "packageInstance": "new VectorIconsPackage()",
           "buildTypes": [],
           "libraryName": "RNVectorIconsSpec",
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/react-native-vector-icons/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-vector-icons/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -465,22 +518,22 @@
       }
     },
     "zego-express-engine-reactnative": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/zego-express-engine-reactnative",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-express-engine-reactnative",
       "name": "zego-express-engine-reactnative",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/zego-express-engine-reactnative/react-native-zego-express-engine.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-express-engine-reactnative/react-native-zego-express-engine.podspec",
           "version": "3.20.2",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/zego-express-engine-reactnative/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-express-engine-reactnative/android",
           "packageImportPath": "import im.zego.reactnative.RCTZegoExpressEnginePackage;",
           "packageInstance": "new RCTZegoExpressEnginePackage()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/zego-express-engine-reactnative/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-express-engine-reactnative/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -489,22 +542,22 @@
       }
     },
     "zego-zim-react-native": {
-      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/zego-zim-react-native",
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-zim-react-native",
       "name": "zego-zim-react-native",
       "platforms": {
         "ios": {
-          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/zego-zim-react-native/react-native-zego-zim.podspec",
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-zim-react-native/react-native-zego-zim.podspec",
           "version": "2.19.0",
           "configurations": [],
           "scriptPhases": []
         },
         "android": {
-          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/zego-zim-react-native/android",
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-zim-react-native/android",
           "packageImportPath": "import im.zego.RNZimReactnativeSdkPackage;",
           "packageInstance": "new RNZimReactnativeSdkPackage()",
           "buildTypes": [],
           "componentDescriptors": [],
-          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/node_modules/zego-zim-react-native/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-zim-react-native/android/build/generated/source/codegen/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
           "cxxModuleCMakeListsPath": null,
           "cxxModuleHeaderName": null,
@@ -674,7 +727,7 @@
         {
           "name": "--path <path>",
           "description": "Path to the React Native project root.",
-          "default": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call"
+          "default": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter"
         },
         {
           "name": "--platform <string>",
@@ -961,7 +1014,7 @@
   "assets": [],
   "project": {
     "ios": {
-      "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/ios",
+      "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/ios",
       "xcodeProject": {
         "name": "ZegoCall.xcworkspace",
         "path": ".",
@@ -970,7 +1023,7 @@
       "assets": []
     },
     "android": {
-      "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/zego_uikit_prebuilt_call_example_rn/call/android",
+      "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/android",
       "appName": "app",
       "packageName": "com.zegocloud.zegouikit.example.prebuiltcall",
       "applicationId": "com.zegocloud.zegouikit.example.prebuiltcall",

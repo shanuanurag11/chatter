@@ -42,6 +42,7 @@ const AppNavigator = () => {
       <CustomStatusBar backgroundColor={STATUS_BAR_COLOR} />
       <NavigationContainer>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {console.log("isAuthenticated-->",isAuthenticated)}
           {isAuthenticated ? (
             <>
               <Stack.Screen name="Main" component={TabNavigator} />

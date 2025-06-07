@@ -15,6 +15,13 @@ const Input = ({
   keyboardType = 'default',
   autoCapitalize = 'none',
   style,
+  containerStyle,
+  inputStyle,
+  labelStyle,
+  leftComponent,
+  multiline,
+  numberOfLines,
+  textAlignVertical,
   icon,
   isDark = false,
 }) => {
@@ -33,15 +40,25 @@ const Input = ({
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={[styles.label, isDark && styles.labelDark]}>{label}</Text>}
+      {label && (
+        <Text style={[
+          styles.label, 
+          isDark && styles.labelDark,
+          labelStyle
+        ]}>
+          {label}
+        </Text>
+      )}
       <View
         style={[
           styles.inputContainer,
           isDark ? styles.inputContainerDark : styles.inputContainerLight,
           isFocused && (isDark ? styles.focusedDark : styles.focusedLight),
           error && styles.errorInput,
+          containerStyle,
         ]}
       >
+        {leftComponent}
         {icon && (
           <Icon 
             name={icon} 
@@ -53,7 +70,9 @@ const Input = ({
         <TextInput
           style={[
             styles.input, 
-            isDark && styles.inputDark
+            isDark && styles.inputDark,
+            multiline && styles.multilineInput,
+            inputStyle,
           ]}
           value={value}
           onChangeText={onChangeText}
@@ -64,6 +83,9 @@ const Input = ({
           onBlur={handleBlur}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
+          textAlignVertical={textAlignVertical}
         />
         {secureTextEntry && (
           <TouchableOpacity
@@ -86,6 +108,7 @@ const Input = ({
 const styles = StyleSheet.create({
   container: {
     marginBottom: Theme.spacing.md,
+    width: '100%',
   },
   label: {
     marginBottom: Theme.spacing.xs,
@@ -94,41 +117,52 @@ const styles = StyleSheet.create({
     color: Colors.textDark,
   },
   labelDark: {
-    color: Colors.white,
+    color: Colors.lightGray,
+    fontSize: 14,
+    marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: Theme.borderRadius.md,
-    height: 50,
+    borderRadius: Theme.borderRadius.lg,
+    minHeight: 56,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
   inputContainerLight: {
-    borderWidth: 1,
     borderColor: '#E0E0E0',
     backgroundColor: '#F9F9F9',
   },
   inputContainerDark: {
-    backgroundColor: Colors.inputBackground,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   iconStyle: {
     marginLeft: Theme.spacing.md,
   },
   input: {
     flex: 1,
-    height: 50,
+    minHeight: 56,
     paddingHorizontal: Theme.spacing.md,
-    fontSize: Theme.fontSize.md,
+    fontSize: 16,
     color: Colors.textDark,
+    fontWeight: '400',
   },
   inputDark: {
     color: Colors.white,
+  },
+  multilineInput: {
+    paddingTop: Theme.spacing.md,
+    paddingBottom: Theme.spacing.md,
+    textAlignVertical: 'top',
   },
   focusedLight: {
     borderColor: Colors.primary,
     backgroundColor: Colors.white,
   },
   focusedDark: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: Colors.primary,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
   },
   errorInput: {
     borderColor: Colors.error,
@@ -137,9 +171,10 @@ const styles = StyleSheet.create({
     color: Colors.error,
     fontSize: Theme.fontSize.xs,
     marginTop: Theme.spacing.xs,
+    marginLeft: Theme.spacing.xs,
   },
   eyeIcon: {
-    padding: Theme.spacing.sm,
+    padding: Theme.spacing.md,
     marginRight: Theme.spacing.xs,
   },
 });

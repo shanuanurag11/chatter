@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../../api/authApi';
 import dummyAuthApi from '../../api/dummyAuthApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 // Async thunks
 export const login = createAsyncThunk(
@@ -173,7 +174,63 @@ export const checkAuthStatus = createAsyncThunk(
   'auth/checkStatus',
   async (_, { rejectWithValue }) => {
     try {
-      return await authApi.checkAuthStatus();
+      // Try to get the stored tokens
+      const userToken = await EncryptedStorage.getItem('user_token');
+      const refreshToken = await EncryptedStorage.getItem('refresh_token');
+
+      if (userToken && refreshToken) {
+        // Validate token with backend if needed
+        // For now, just return the tokens
+        return {
+          isAuthenticated: true,
+          access: userToken,
+          refresh: refreshToken
+        };
+      }
+
+      return {
+        isAuthenticated: false
+      };
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+export const register = createAsyncThunk(
+  'auth/register',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const response = await authApi.post('/api/v1/register/', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      if (response.data.status) {
+        // Store the tokens
+        await EncryptedStorage.setItem('user_token', response.data.data.access);
+        await EncryptedStorage.setItem('refresh_token', response.data.data.refresh);
+        return response.data.data;
+      } else {
+        return rejectWithValue(response.data.message);
+      }
+    } catch (error) {
+      console.log("error-->",error);
+      return rejectWithValue(error.response?.data?.message || 'Registration failed');
+    }
+  }
+);
+
+// Add a new thunk to handle logout and clear storage
+export const logoutUser = createAsyncThunk(
+  'auth/logoutUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      // Clear the stored tokens
+      await EncryptedStorage.removeItem('user_token');
+      await EncryptedStorage.removeItem('refresh_token');
+      return null;
     } catch (error) {
       return rejectWithValue(error);
     }
@@ -186,6 +243,7 @@ const authSlice = createSlice({
   initialState: {
     user: null,
     token: null,
+    refreshToken: null,
     isAuthenticated: false,
     isLoading: false,
     otpSent: false,
@@ -373,9 +431,10 @@ const authSlice = createSlice({
       })
       
       // Logout
-      .addCase(logout.fulfilled, (state) => {
+      .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.token = null;
+        state.refreshToken = null;
         state.isAuthenticated = false;
         state.otpSent = false;
         state.otpVerified = false;
@@ -385,8 +444,25 @@ const authSlice = createSlice({
       .addCase(checkAuthStatus.fulfilled, (state, action) => {
         state.isAuthenticated = action.payload.isAuthenticated;
         if (action.payload.isAuthenticated) {
-          state.user = action.payload.user;
+          state.token = action.payload.access;
+          state.refreshToken = action.payload.refresh;
         }
+      })
+      
+      // Registration
+      .addCase(register.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(register.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload;
+        state.token = action.payload.access;
+      })
+      .addCase(register.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Registration failed';
       });
   },
 });

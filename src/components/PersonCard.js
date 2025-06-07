@@ -26,32 +26,38 @@ const PersonCard = ({ person, onPress, onVideoPress }) => {
       />
       
       {/* Online status indicator with pulse animation */}
-      {person.isOnline && (
+      {person.active && (
         <View style={styles.statusIndicatorContainer}>
           <View style={[
             styles.statusIndicator, 
-            { backgroundColor: person.isOnline ? '#4CD964' : '#FF3B30' }
+            { backgroundColor: person.active ? '#4CD964' : '#FF3B30' }
           ]} />
           <View style={styles.statusPulse} />
         </View>
       )}
       
       {/* Country flag if available */}
-      {person.country && (
+      {person.country_code && (
         <View style={styles.flagContainer}>
           <Text style={styles.flag}>
-            {getFlagEmoji(person.country)}
+            {getFlagEmoji(person.country_code)}
           </Text>
         </View>
       )}
       
       {/* User avatar with subtle border and gradient overlay */}
       <View style={styles.avatarContainer}>
-        <Image 
-          source={{ uri: person.avatar }} 
+        {console.log("person-12121->" ,person)     }
+        {person?.profile_picture ?<Image 
+          source={{ uri: person.profile_picture || 'https://via.placeholder.com/150' }} 
           style={styles.avatar}
           resizeMode="cover"
-        />
+        />:<Image 
+        source={require('../assets/images/user.png')} 
+        style={styles.avatar}
+        resizeMode="cover"
+      />}
+        
         
         {/* Inner shadow for better depth */}
         <LinearGradient
@@ -66,21 +72,19 @@ const PersonCard = ({ person, onPress, onVideoPress }) => {
         locations={[0, 0.6, 1]}
         style={styles.gradientOverlay}
       >
-        {person.hasVideo && (
-          <TouchableOpacity 
-            style={styles.videoButton}
-            onPress={() => onVideoPress && onVideoPress(person)}
+        <TouchableOpacity 
+          style={styles.videoButton}
+          onPress={() => onVideoPress && onVideoPress(person)}
+        >
+          <LinearGradient
+            colors={[Colors.gradientStart, Colors.gradientEnd]}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 1}}
+            style={styles.videoButtonGradient}
           >
-            <LinearGradient
-              colors={[Colors.gradientStart, Colors.gradientEnd]}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}
-              style={styles.videoButtonGradient}
-            >
-              <Icon name="videocam" size={20} color="#fff" />
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
+            <Icon name="videocam" size={20} color="#fff" />
+          </LinearGradient>
+        </TouchableOpacity>
       </LinearGradient>
       
       {/* Enhanced username footer with stronger gradient */}
@@ -95,11 +99,11 @@ const PersonCard = ({ person, onPress, onVideoPress }) => {
         
         <View style={styles.nameContainer}>
           <Text style={styles.name} numberOfLines={1}>
-            {person.name}
+            {person.name || person.username || 'Anonymous'}
           </Text>
           
           {/* Add a subtle indicator if verified */}
-          {person.isVerified && (
+          {person.is_verified && (
             <View style={styles.verifiedBadge}>
               <Icon name="verified" size={12} color="#fff" />
             </View>
@@ -118,23 +122,30 @@ const PersonCard = ({ person, onPress, onVideoPress }) => {
 const getFlagEmoji = (countryCode) => {
   if (!countryCode) return '';
   
-  // For India (in)
-  if (countryCode.toLowerCase() === 'in') {
-    return '🇮🇳';
-  }
+  // Extract country code from phone code (e.g. +91 -> in)
+  const code = countryCode.replace('+', '');
   
-  // For Pakistan (pk)
-  if (countryCode.toLowerCase() === 'pk') {
-    return '🇵🇰';
-  }
+  // Common country codes mapping
+  const countryMapping = {
+    '91': 'in', // India
+    '92': 'pk', // Pakistan
+    '1': 'us',  // USA
+    '44': 'gb', // UK
+    '86': 'cn', // China
+    '81': 'jp', // Japan
+    // Add more mappings as needed
+  };
   
-  // For USA (us)
-  if (countryCode.toLowerCase() === 'us') {
-    return '🇺🇸';
-  }
+  const country = countryMapping[code];
+  if (!country) return '';
   
-  // Default to empty if country code not recognized
-  return '';
+  // Convert country code to flag emoji
+  const codePoints = country
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt());
+  
+  return String.fromCodePoint(...codePoints);
 };
 
 const styles = StyleSheet.create({

@@ -1,9 +1,10 @@
 import axios from 'axios';
 import callService from './callService';
-import { dummyPeople, bannerData } from '../data/dummyPeople';
+import { dummyPeople } from '../data/dummyPeople';
+import apiClient from './api/client';
 
-// API base URL - replace with your actual API in production
-const API_BASE_URL = 'https://api.example.com/v1';
+// Remove unused API_BASE_URL since we're using apiClient
+// const API_BASE_URL = 'https://api.example.com/v1';
 
 // Environment detection
 const isDev = process.env.NODE_ENV === 'development' || __DEV__;
@@ -11,90 +12,21 @@ const isDev = process.env.NODE_ENV === 'development' || __DEV__;
 /**
  * Get people list with optional filter
  * @param {string} filter - Filter criteria ('popular' or 'new')
- * @param {number} page - Page number for pagination
- * @param {number} limit - Number of items per page
  * @returns {Promise<Object>} - People data object
  */
-const getPeople = async (filter = 'popular', page = 1, limit = 20) => {
+const getPeople = async (filter = 'popular') => {
   try {
-    if (isDev) {
-      // Simulate network delay in development
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
-      // Use dummyPeople array and filter based on activeTab
-      let filteredPeople = [...dummyPeople];
-      
-      if (filter === 'new') {
-        // For 'new' tab, sort by lastActive in descending order
-        filteredPeople.sort((a, b) => b.lastActive - a.lastActive);
-      } else {
-        // For 'popular' tab, sort by isOnline and isVerified
-        filteredPeople.sort((a, b) => {
-          if (a.isOnline !== b.isOnline) return b.isOnline ? 1 : -1;
-          if (a.isVerified !== b.isVerified) return b.isVerified ? 1 : -1;
-          return 0;
-        });
-      }
-      
-      // Apply pagination
-      const startIndex = (page - 1) * limit;
-      const paginatedPeople = filteredPeople.slice(startIndex, startIndex + limit);
-      
-      return {
-        success: true,
-        data: paginatedPeople,
-        pagination: {
-          total: filteredPeople.length,
-          page,
-          limit,
-          hasMore: startIndex + limit < filteredPeople.length
-        }
-      };
-    }
-    
-    // Make actual API call in production
-    const response = await axios.get(`${API_BASE_URL}/people`, {
-      params: { filter, page, limit }
+    const response = await apiClient.get('/api/v1/get_all_customers/', {
+      params: { filter }
     });
-    
-    return response.data;
+   console.log("response-12921->",response);
+    return {
+      success: true,
+      data: response.data.data.active_users || []
+    };
   } catch (error) {
     console.error('Error fetching people:', error);
     throw new Error(error.response?.data?.message || 'Failed to load people');
-  }
-};
-
-/**
- * Get current promo banner
- * @returns {Promise<Object>} - Promo banner data
- */
-const getPromoBanner = async () => {
-  try {
-    if (isDev) {
-      // Simulate network delay in development
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Mock promo data
-      return {
-        success: true,
-        data: {
-          id: 'promo_1',
-          title: 'Summer Special',
-          discount: '60% OFF',
-          timeLeft: 1800, // 30 minutes in seconds
-          imageUrl: 'https://example.com/promos/summer.jpg',
-          actionUrl: '/promo/summer',
-          isActive: true
-        }
-      };
-    }
-    
-    // Make actual API call in production
-    const response = await axios.get(`${API_BASE_URL}/promos/current`);
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching promo banner:', error);
-    throw new Error(error.response?.data?.message || 'Failed to load promo banner');
   }
 };
 
@@ -174,7 +106,6 @@ const initiateVideoCall = async (userId) => {
 
 export default {
   getPeople,
-  getPromoBanner,
   getUserProfile,
   initiateVideoCall
 }; 

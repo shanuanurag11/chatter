@@ -7,9 +7,12 @@
     "ios": "react-native run-ios",
     "lint": "eslint .",
     "start": "react-native start",
-    "test": "jest"
+    "test": "jest",
+    "react-devtools": "react-devtools"
   },
   "dependencies": {
+    "@react-native-community/datetimepicker": "^8.4.1",
+    "@react-native-picker/picker": "^2.11.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "react": "18.3.1",
     "react-native": "0.75.4",
@@ -41,9 +44,10 @@
     "jwt-decode": "^4.0.0",
     "prettier": "2.8.8",
     "react-delegate-component": "^1.0.0",
+    "react-devtools": "^6.1.2",
     "react-native-device-info": "^11.1.0",
     "react-native-encrypted-storage": "^4.0.3",
-    "react-native-image-picker": "^8.2.0",
+    "react-native-image-picker": "^8.2.1",
     "react-native-keep-awake": "4.0.0",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-orientation-locker": "^1.6.0",

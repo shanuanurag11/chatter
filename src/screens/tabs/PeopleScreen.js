@@ -34,19 +34,14 @@ const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 // Constants for FlatList optimization
 const ITEM_HEIGHT = 230; // Approximate height of a Person Card with margin
 const NUM_COLUMNS = 2;
-const INITIAL_ITEMS = 12;
-const BATCH_SIZE = 12;
 
 const { width } = Dimensions.get('window');
 const ITEM_WIDTH = width / 2 - 16; // 2 columns with some margin
-const BANNER_ANIMATION_DURATION = 800;
-const DELAYED_LOADING_TIMEOUT = 500; // Minimum loading time for better UX
 
 const PeopleScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [people, setPeople] = useState([]);
-  const [banner, setBanner] = useState(null);
   const [activeTab, setActiveTab] = useState('popular');
   const [error, setError] = useState(null);
   
@@ -74,30 +69,20 @@ const PeopleScreen = ({ navigation }) => {
     }
   }, [loading, people]);
   
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    fadeAnim.setValue(0);
-    
+  const fetchData = async (isRefreshing = false) => {
     try {
-      // Create a delay promise for minimum loading time
-      const delayPromise = new Promise(resolve => 
-        setTimeout(resolve, DELAYED_LOADING_TIMEOUT)
-      );
+      if (isRefreshing) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      setError(null);
+      fadeAnim.setValue(0);
       
-      // Fetch people and banner data in parallel
-      const [peopleResponse, bannerResponse] = await Promise.all([
-        peopleService.getPeople(activeTab),
-        peopleService.getPromoBanner()
-      ]);
+      const peopleResponse = await peopleService.getPeople(activeTab);
       
-      // Wait for both data and minimum delay
-      await delayPromise;
-      
-      // Check if responses are successful
-      if (peopleResponse.success && bannerResponse.success) {
+      if (peopleResponse.success) {
         setPeople(peopleResponse.data);
-        setBanner(bannerResponse.data);
       } else {
         throw new Error('Failed to load data');
       }
@@ -106,13 +91,12 @@ const PeopleScreen = ({ navigation }) => {
       setError('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
-  
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
+
+  const handleRefresh = () => {
+    fetchData(true);
   };
   
   const handleTabChange = (tabId) => {
@@ -183,7 +167,7 @@ const PeopleScreen = ({ navigation }) => {
       Alert.alert('Promotion', 'Opening wallet to add funds with 50% discount');
       // navigation.navigate('Wallet', { discount: banner.discount });
     }
-  }, [banner]);
+  }, []);
   
   const handleLocationPress = useCallback(() => {
     Alert.alert('Location', 'Opening location settings');
@@ -277,7 +261,7 @@ const PeopleScreen = ({ navigation }) => {
         />
       </Animated.View>
     );
-  }, [banner, fadeAnim, handleBannerPress]);
+  }, [ fadeAnim, handleBannerPress]);
   
   // Header with animation for subtle parallax effect
   const renderHeaderComponent = useCallback(() => {
@@ -316,51 +300,6 @@ const PeopleScreen = ({ navigation }) => {
   // Key extractor for FlatList
   const keyExtractor = useCallback((item) => item.id, []);
   
-  // Loading state
-  if (loading && !refreshing) {
-    return (
-      <LinearGradient
-        colors={['#FFFFFF', '#F9F5FF']}
-        style={styles.container}
-      >
-        <SafeAreaView style={styles.safeArea}>
-          {renderHeaderComponent()}
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={Colors.primary} />
-            <Text style={styles.loadingText}>Loading people...</Text>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-    );
-  }
-  
-  // Error state
-  if (error && !refreshing) {
-    return (
-      <LinearGradient
-        colors={['#FFFFFF', '#F9F5FF']}
-        style={styles.container}
-      >
-        <SafeAreaView style={styles.safeArea}>
-          {renderHeaderComponent()}
-          <View style={styles.errorContainer}>
-            <Icon name="error-outline" size={50} color={Colors.error} style={styles.errorIcon} />
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity 
-              style={styles.retryButton} 
-              onPress={fetchData}
-            >
-              <Text style={styles.retryText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </LinearGradient>
-    );
-  }
-  
-  // Empty state
-  const isEmpty = !loading && people.length === 0;
-  
   return (
     <LinearGradient
       colors={['#FFFFFF', '#F9F5FF']}
@@ -369,13 +308,29 @@ const PeopleScreen = ({ navigation }) => {
       <SafeAreaView style={styles.safeArea}>
         {renderHeaderComponent()}
         
-        {isEmpty ? (
+        {loading && !refreshing ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Loading people...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Icon name="error-outline" size={50} color={Colors.error} style={styles.errorIcon} />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity 
+              style={styles.retryButton} 
+              onPress={() => fetchData()}
+            >
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : people.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Icon name="search-off" size={60} color={Colors.textLight} style={styles.emptyIcon} />
             <Text style={styles.emptyText}>No people found</Text>
             <TouchableOpacity 
               style={styles.refreshButton} 
-              onPress={fetchData}
+              onPress={() => fetchData()}
             >
               <Text style={styles.refreshText}>Refresh</Text>
             </TouchableOpacity>
@@ -388,7 +343,6 @@ const PeopleScreen = ({ navigation }) => {
             keyExtractor={keyExtractor}
             numColumns={NUM_COLUMNS}
             contentContainerStyle={styles.listContent}
-            ListHeaderComponent={renderHeader}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -404,10 +358,6 @@ const PeopleScreen = ({ navigation }) => {
             )}
             scrollEventThrottle={16}
             removeClippedSubviews={true}
-            initialNumToRender={INITIAL_ITEMS}
-            maxToRenderPerBatch={BATCH_SIZE}
-            windowSize={21} // ~10 items above, current item, ~10 items below
-            updateCellsBatchingPeriod={50}
             getItemLayout={getItemLayout}
             bounces={true}
             bouncesZoom={true}
@@ -502,7 +452,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     fontWeight: '500',
-  },
+  }
 });
 
 export default PeopleScreen; 
