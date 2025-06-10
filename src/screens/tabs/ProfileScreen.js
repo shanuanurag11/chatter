@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
-import { logout } from '../../store/slices/authSlice';
+import { logout, logoutUser } from '../../store/slices/authSlice';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
@@ -119,7 +119,10 @@ const ProfileScreen = () => {
   
   // In a real app, these functions would make API calls
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(logoutUser()).then(() => {
+      // After successful logout, dispatch the regular logout action
+      dispatch(logout());
+    });
   };
   
   // Navigate to edit profile screen

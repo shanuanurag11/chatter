@@ -25,13 +25,18 @@ import { register } from '../../redux/authSlice';
 
 const { width } = Dimensions.get('window');
 
-const SignupScreen = ({ navigation }) => {
+const SignupScreen = ({ navigation, route }) => {
+  console.log("route-121->",route);
   const dispatch = useDispatch();
   const { isLoading, error } = useSelector((state) => state.auth);
 
+  // Get phone number from navigation params if available
+  const initialPhoneNumber = route.params?.phoneNumber || '';
+  const initialCountryCode = route.params?.countryCode || '+91';
+
   const [formData, setFormData] = useState({
-    country_code: '+91',
-    mobile_number: '',
+    country_code: initialCountryCode,
+    mobile_number: initialPhoneNumber,
     user_email: '',
     username: '',
     profile_picture: null,
@@ -136,40 +141,40 @@ const SignupScreen = ({ navigation }) => {
   };
 
   const handleSubmit = async () => {
-    try{
-    if (validateForm()) {
-      const registrationData = new FormData();
+    try {
+      if (validateForm()) {
+        const registrationData = new FormData();
 
-      // Append all required fields
-      Object.keys(formData).forEach(key => {
-        if (key === 'profile_picture' && formData[key]) {
-          registrationData.append('profile_picture', {
-            uri: formData[key].uri,
-            type: formData[key].type || 'image/jpeg',
-            name: formData[key].fileName || 'profile.jpg'
-          });
-        } else if (key === 'images' && formData[key].length > 0) {
-          formData[key].forEach((image, index) => {
-            registrationData.append('images[]', {
-              uri: image.uri,
-              type: image.type || 'image/jpeg',
-              name: image.fileName || `image${index}.jpg`
+        // Append all required fields
+        Object.keys(formData).forEach(key => {
+          if (key === 'profile_picture' && formData[key]) {
+            registrationData.append('profile_picture', {
+              uri: formData[key].uri,
+              type: formData[key].type || 'image/jpeg',
+              name: formData[key].fileName || 'profile.jpg'
             });
-          });
-        } else if (key === 'videos' && formData[key].length > 0) {
-          formData[key].forEach((video, index) => {
-            registrationData.append('videos[]', {
-              uri: video.uri,
-              type: video.type || 'video/mp4',
-              name: video.fileName || `video${index}.mp4`
+          } else if (key === 'images' && formData[key].length > 0) {
+            formData[key].forEach((image, index) => {
+              registrationData.append('images[]', {
+                uri: image.uri,
+                type: image.type || 'image/jpeg',
+                name: image.fileName || `image${index}.jpg`
+              });
             });
-          });
-        } else if (key === 'date_of_birth') {
-          registrationData.append(key, formData[key].toISOString().split('T')[0]);
-        } else if (formData[key] !== null && formData[key] !== '') {
-          registrationData.append(key, formData[key]);
-        }
-      });
+          } else if (key === 'videos' && formData[key].length > 0) {
+            formData[key].forEach((video, index) => {
+              registrationData.append('videos[]', {
+                uri: video.uri,
+                type: video.type || 'video/mp4',
+                name: video.fileName || `video${index}.mp4`
+              });
+            });
+          } else if (key === 'date_of_birth') {
+            registrationData.append(key, formData[key].toISOString().split('T')[0]);
+          } else if (formData[key] !== null && formData[key] !== '') {
+            registrationData.append(key, formData[key]);
+          }
+        });
 
       try {
         await dispatch(register(registrationData)).unwrap();
@@ -179,15 +184,16 @@ const SignupScreen = ({ navigation }) => {
           [
             {
               text: 'OK',
-              onPress: () => navigation.replace('MainApp')
+              onPress: null
             }
           ]
         );
-      } catch (error) {
-        Alert.alert(
-          'Registration Failed',
-          typeof error === 'string' ? error : 'Failed to create account. Please try again.'
-        );
+    } catch (error) {
+      console.log("error-->", error);
+      Alert.alert(
+        'Registration Failed',
+        typeof error === 'string' ? error : 'Failed to create account. Please try again.'
+      );
       }
     }
     }

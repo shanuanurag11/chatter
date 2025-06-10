@@ -3,6 +3,7 @@ import { authApi } from '../../api/authApi';
 import dummyAuthApi from '../../api/dummyAuthApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EncryptedStorage from 'react-native-encrypted-storage';
+import apiClient from '../../services/api/client';
 
 // Async thunks
 export const login = createAsyncThunk(
@@ -32,11 +33,7 @@ export const loginWithGoogle = createAsyncThunk(
   async (googleData, { rejectWithValue }) => {
     try {
       const response = await dummyAuthApi.loginWithGoogle(googleData);
-      
-      // Store auth tokens in secure storage
       await AsyncStorage.setItem('authToken', response.token);
-      
-      // Return user data to be stored in Redux state
       return {
         user: response.user,
         token: response.token
@@ -89,10 +86,17 @@ export const loginWithApple = createAsyncThunk(
 
 export const requestOTP = createAsyncThunk(
   'auth/requestOTP',
-  async (phone, { rejectWithValue }) => {
+  async ({ countryCode, mobileNumber, hasConsent }, { rejectWithValue }) => {
     try {
-      return await dummyAuthApi.requestOTP(phone);
+      const response = await apiClient.post('/api/v1/send_otp/', {
+        country_code: countryCode,
+        mobile_number: mobileNumber,
+        consent: hasConsent
+      });
+      console.log("response-121->",response);
+      return response.data;
     } catch (error) {
+      console.log("error-121->",error);
       return rejectWithValue(error);
     }
   }
@@ -101,10 +105,28 @@ export const requestOTP = createAsyncThunk(
 export const verifyOTP = createAsyncThunk(
   'auth/verifyOTP',
   async ({ phone, otp }, { rejectWithValue }) => {
+    console.log("111response-1verifyotp1->phone, otp",phone, otp);
     try {
-      return await dummyAuthApi.verifyOTP(phone, otp);
+      const response = await apiClient.post('/api/v1/verify_otp/', {
+        mobile_number: phone.toString(),
+        otp_code: otp,
+        country_code: '+91'
+      });
+
+     console.log("response.data1verifyotp1->",response.data);
+      if (response.data.status) {
+        if (response.data.data.is_signed_in) {
+          // Store the tokens securely only if user is signed in
+          await EncryptedStorage.setItem('user_token', response.data.data.access);
+          await EncryptedStorage.setItem('refresh_token', response.data.data.refresh);
+        }
+        return response.data.data;
+      } else {
+        return rejectWithValue(response.data.message || response.data.errors?.mobile_number || 'Login failed');
+      }
     } catch (error) {
-      return rejectWithValue(error);
+      console.log("Login error:", error);
+      return rejectWithValue(error?.response?.data?.message || error?.response?.data?.errors?.mobile_number || 'Login failed');
     }
   }
 );
@@ -114,7 +136,6 @@ export const signup = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await authApi.signup(userData);
-      // If it's Google signup, we'll get back user and token
       if (userData.googleId) {
         return response;
       }
@@ -249,15 +270,34 @@ const authSlice = createSlice({
     otpSent: false,
     otpVerified: false,
     error: null,
+    userId: null,
+    userProfile: null,
+    phoneNumber: '',
+    countryCode: '+91'
   },
   reducers: {
-    clearError: (state) => {
+    logoutAction: (state) => {
+      state.isAuthenticated = false;
+      state.user = null;
+      state.token = null;
+      state.refreshToken = null;
+      state.userId = null;
+      state.userProfile = null;
       state.error = null;
+      state.otpSent = false;
+      state.otpVerified = false;
+    },
+    clearAuthError: (state) => {
+      state.error = null;
+    },
+    updateUserProfile: (state, action) => {
+      state.userProfile = { ...state.userProfile, ...action.payload };
     },
     resetOTPStatus: (state) => {
       state.otpSent = false;
       state.otpVerified = false;
-    },
+      state.error = null;
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -329,13 +369,18 @@ const authSlice = createSlice({
       .addCase(requestOTP.pending, (state) => {
         state.isLoading = true;
         state.error = null;
+        state.otpSent = false;
       })
-      .addCase(requestOTP.fulfilled, (state) => {
+      .addCase(requestOTP.fulfilled, (state, action) => {
         state.isLoading = false;
         state.otpSent = true;
+        state.error = null;
+        state.phoneNumber = action.meta.arg.mobileNumber;
+        state.countryCode = action.meta.arg.countryCode;
       })
       .addCase(requestOTP.rejected, (state, action) => {
         state.isLoading = false;
+        state.otpSent = false;
         state.error = action.payload?.message || 'Failed to send OTP';
       })
       
@@ -344,13 +389,19 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(verifyOTP.fulfilled, (state) => {
+      .addCase(verifyOTP.fulfilled, (state, action) => {
         state.isLoading = false;
         state.otpVerified = true;
+        if (action.payload && action.payload.is_signed_in === true) {
+          state.isAuthenticated = true;
+          state.user = action.payload;
+          state.token = action.payload.access;
+          state.refreshToken = action.payload.refresh;
+        }
       })
       .addCase(verifyOTP.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload?.message || 'OTP verification failed';
+        state.error = action.payload || 'Login failed';
       })
       
       // Register with Phone
@@ -389,7 +440,6 @@ const authSlice = createSlice({
       })
       .addCase(signup.fulfilled, (state, action) => {
         state.isLoading = false;
-        // If it's Google signup, set the user and token
         if (action.payload.token) {
           state.isAuthenticated = true;
           state.user = action.payload.user;
@@ -467,5 +517,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, resetOTPStatus } = authSlice.actions;
+export const { clearAuthError, updateUserProfile, resetOTPStatus, logoutAction } = authSlice.actions;
 export default authSlice.reducer; 

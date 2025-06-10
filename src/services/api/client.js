@@ -116,6 +116,7 @@ apiClient.interceptors.response.use(
     }
 
     // Extract and return error message
+    console.log("error-1291->",error);
     const errorMessage = getErrorMessage(error);
     console.error('API Error:', errorMessage);
     return Promise.reject(errorMessage);

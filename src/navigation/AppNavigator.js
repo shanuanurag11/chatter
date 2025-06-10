@@ -14,6 +14,7 @@ import LoadingScreen from '../screens/LoadingScreen';
 import CustomStatusBar from '../components/CustomStatusBar';
 import Colors from '../constants/colors';
 import { View, StyleSheet } from 'react-native';
+import { navigationRef } from '../services/navigationService';
 
 const Stack = createStackNavigator();
 
@@ -40,7 +41,7 @@ const AppNavigator = () => {
   return (
     <View style={styles.container}>
       <CustomStatusBar backgroundColor={STATUS_BAR_COLOR} />
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {console.log("isAuthenticated-->",isAuthenticated)}
           {isAuthenticated ? (

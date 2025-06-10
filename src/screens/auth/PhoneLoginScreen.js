@@ -13,10 +13,9 @@ import {
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
-  loginWithPhone, 
   requestOTP, 
   verifyOTP, 
-  clearError, 
+  clearAuthError, 
   resetOTPStatus 
 } from '../../store/slices/authSlice';
 import Colors from '../../constants/colors';
@@ -25,23 +24,36 @@ import AnimatedBackground from '../../components/AnimatedBackground';
 import PhoneInput from '../../components/PhoneInput';
 import Button from '../../components/Button';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import CheckBox from '@react-native-community/checkbox';
+import { navigate } from '../../services/navigationService';
 
 const PhoneLoginScreen = ({ navigation }) => {
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  // Add navigation debug log
+  console.log('Navigation prop:', navigation);
+
+  const [countryCode, setCountryCode] = useState('+91');
+  const [mobileNumber, setMobileNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [phoneError, setPhoneError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [otpError, setOtpError] = useState('');
-  const [useOtp, setUseOtp] = useState(false);
+  const [hasConsent, setHasConsent] = useState(false);
   
   const dispatch = useDispatch();
-  const { isLoading, error, otpSent, otpVerified } = useSelector((state) => state.auth);
+  const { 
+    isLoading, 
+    error, 
+    otpSent, 
+    otpVerified,
+    phoneNumber: savedPhoneNumber,
+    countryCode: savedCountryCode 
+  } = useSelector((state) => state.auth);
+
+  // Use saved values when showing OTP section
+  const displayPhoneNumber = otpSent ? savedPhoneNumber : mobileNumber;
+  const displayCountryCode = otpSent ? savedCountryCode : countryCode;
   
   useEffect(() => {
-    // Clear any previous auth errors when mounting the component
-    dispatch(clearError());
-    dispatch(resetOTPStatus());
+    dispatch(clearAuthError());
     
     return () => {
       dispatch(resetOTPStatus());
@@ -49,26 +61,14 @@ const PhoneLoginScreen = ({ navigation }) => {
   }, [dispatch]);
   
   const validatePhone = () => {
-    if (!phone.trim()) {
+    if (!mobileNumber.trim()) {
       setPhoneError('Phone number is required');
       return false;
-    } else if (!/^\d{10}$/.test(phone)) {
+    } else if (!/^\d{10}$/.test(mobileNumber)) {
       setPhoneError('Enter a valid 10-digit phone number');
       return false;
     }
     setPhoneError('');
-    return true;
-  };
-  
-  const validatePassword = () => {
-    if (!password) {
-      setPasswordError('Password is required');
-      return false;
-    } else if (password.length < 6) {
-      setPasswordError('Password must be at least 6 characters');
-      return false;
-    }
-    setPasswordError('');
     return true;
   };
   
@@ -84,55 +84,57 @@ const PhoneLoginScreen = ({ navigation }) => {
     return true;
   };
   
-  const handlePasswordLogin = () => {
-    if (validatePhone() && validatePassword()) {
-      dispatch(loginWithPhone({ phone, password }))
-        .unwrap()
-        .catch((error) => {
-          console.log('Login error:', error);
-        });
-    }
-  };
-  
   const handleRequestOtp = () => {
+    if (!hasConsent) {
+      Alert.alert('Consent Required', 'Please provide consent to receive OTP messages.');
+      return;
+    }
+
     if (validatePhone()) {
-      dispatch(requestOTP(phone))
+      dispatch(requestOTP({ countryCode, mobileNumber, hasConsent }))
         .unwrap()
-        .then((response) => {
-          // For demo purposes, show the OTP
-          if (response.otp) {
-            Alert.alert(
-              'Development Mode', 
-              `OTP for testing: ${response.otp}`,
-              [{ text: 'OK' }]
-            );
-          }
+        .then(() => {
+          setOtp('');
         })
         .catch((error) => {
+          Alert.alert('Error', error || 'Failed to send OTP');
           console.log('OTP request error:', error);
         });
     }
   };
   
   const handleVerifyOtp = () => {
-    if (validatePhone() && validateOtp()) {
-      dispatch(verifyOTP({ phone, otp }))
+    if (validateOtp()) {
+      dispatch(verifyOTP({ 
+        phone: savedPhoneNumber || mobileNumber, 
+        otp 
+      }))
         .unwrap()
-        .then(() => {
-          // If OTP verification is successful, attempt login without password
-          dispatch(loginWithPhone({ phone, password: 'password123' })); // Using a hardcoded password for demo
+        .then((response) => {
+          console.log("response-1verifyotp1->", response);
+          if (response) {
+            if (response.is_signed_in === true) {
+              console.log("User is signed in, auth state will handle navigation");
+            } else {
+              // navigate('Auth');
+              navigate('Signup', {
+                phoneNumber: (savedPhoneNumber || mobileNumber).toString(),
+                countryCode: '+91'
+              });
+            }
+          } else {
+            Alert.alert('Error', 'Invalid response from server');
+          }
         })
         .catch((error) => {
-          console.log('OTP verification error:', error);
+          console.error('Verification error:', error);
+          Alert.alert('Error', error?.message || 'Login failed');
         });
     }
   };
   
-  const toggleLoginMethod = () => {
-    setUseOtp(!useOtp);
-    dispatch(clearError());
-    dispatch(resetOTPStatus());
-  };
+  // Add console log in render to check values
+  console.log('Render values:', { otpSent, countryCode, mobileNumber });
   
   return (
     <SafeAreaView style={styles.container}>
@@ -151,9 +153,9 @@ const PhoneLoginScreen = ({ navigation }) => {
                 <Icon name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
               
-              <Text style={styles.title}>Welcome Back!</Text>
+              <Text style={styles.title}>Welcome!</Text>
               <Text style={styles.subtitle}>
-                Log in to continue to TenderU
+                Enter Mobile number to continue.
               </Text>
             </View>
             
@@ -164,105 +166,99 @@ const PhoneLoginScreen = ({ navigation }) => {
               </View>
             )}
             
-            <PhoneInput
-              value={phone}
-              onChangeText={setPhone}
-              error={phoneError}
-              onBlur={validatePhone}
-              isDark={true}
-            />
-            
-            {!useOtp && !otpSent ? (
+            {otpSent ? (
               <>
+                <View style={styles.phoneDisplayContainer}>
+                  <Icon 
+                    name="phone" 
+                    size={20} 
+                    color={Colors.white} 
+                    style={styles.inputIcon} 
+                  />
+                  <Text style={styles.phoneDisplayText}>
+                    OTP sent to{' '}
+                    <Text style={styles.phoneNumberHighlight}>
+                      {displayCountryCode} {displayPhoneNumber}
+                    </Text>
+                  </Text>
+                </View>
+
                 <View style={styles.inputContainer}>
                   <Icon 
-                    name="lock" 
+                    name="sms" 
                     size={20} 
                     color={Colors.placeholderText} 
                     style={styles.inputIcon} 
                   />
                   <TextInput
                     style={styles.input}
-                    value={password}
-                    onChangeText={setPassword}
-                    placeholder="Enter your password"
+                    value={otp}
+                    onChangeText={setOtp}
+                    placeholder="Enter 6-digit OTP"
                     placeholderTextColor={Colors.placeholderText}
-                    secureTextEntry
-                    onBlur={validatePassword}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                    onBlur={validateOtp}
                   />
                 </View>
-                {passwordError ? <Text style={styles.fieldError}>{passwordError}</Text> : null}
+                {otpError ? <Text style={styles.fieldError}>{otpError}</Text> : null}
                 
                 <Button
-                  title="Log In"
-                  onPress={handlePasswordLogin}
+                  title="Verify OTP"
+                  onPress={handleVerifyOtp}
                   loading={isLoading}
                   style={styles.loginButton}
                   variant="white"
                 />
                 
-                <TouchableOpacity
-                  style={styles.forgotPassword}
-                  onPress={() => navigation.navigate('ForgotPassword')}
-                >
-                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                <TouchableOpacity style={styles.resendOtp} onPress={handleRequestOtp}>
+                  <Text style={styles.resendOtpText}>Resend OTP</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
-                {otpSent && (
-                  <>
-                    <View style={styles.inputContainer}>
-                      <Icon 
-                        name="sms" 
-                        size={20} 
-                        color={Colors.placeholderText} 
-                        style={styles.inputIcon} 
-                      />
-                      <TextInput
-                        style={styles.input}
-                        value={otp}
-                        onChangeText={setOtp}
-                        placeholder="Enter 6-digit OTP"
-                        placeholderTextColor={Colors.placeholderText}
-                        keyboardType="number-pad"
-                        maxLength={6}
-                        onBlur={validateOtp}
-                      />
-                    </View>
-                    {otpError ? <Text style={styles.fieldError}>{otpError}</Text> : null}
-                    
-                    <Button
-                      title="Verify OTP"
-                      onPress={handleVerifyOtp}
-                      loading={isLoading}
-                      style={styles.loginButton}
-                      variant="white"
-                    />
-                    
-                    <TouchableOpacity style={styles.resendOtp} onPress={handleRequestOtp}>
-                      <Text style={styles.resendOtpText}>Resend OTP</Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-                
-                {!otpSent && (
-                  <Button
-                    title="Request OTP"
-                    onPress={handleRequestOtp}
-                    loading={isLoading}
-                    style={styles.loginButton}
-                    variant="white"
+                <View style={styles.phoneInputContainer}>
+                  <View style={styles.countryCodeContainer}>
+                    <Text style={styles.countryCodeText}>{countryCode}</Text>
+                  </View>
+                  <TextInput
+                    style={styles.phoneInput}
+                    value={mobileNumber}
+                    onChangeText={setMobileNumber}
+                    placeholder="Enter mobile number"
+                    placeholderTextColor={Colors.placeholderText}
+                    keyboardType="phone-pad"
+                    maxLength={10}
+                    onBlur={validatePhone}
                   />
-                )}
+                </View>
+                {phoneError ? <Text style={styles.fieldError}>{phoneError}</Text> : null}
+
+                <View style={styles.consentContainer}>
+                  <CheckBox
+                    value={hasConsent}
+                    onValueChange={setHasConsent}
+                    tintColors={{ true: Colors.primary, false: Colors.white }}
+                    style={styles.checkbox}
+                  />
+                  <Text style={styles.consentText}>
+                    I consent to receive OTP messages for authentication purposes.
+                  </Text>
+                </View>
+                
+                <Button
+                  title="Request OTP"
+                  onPress={handleRequestOtp}
+                  loading={isLoading}
+                  style={[
+                    styles.loginButton,
+                    !hasConsent && styles.disabledButton
+                  ]}
+                  disabled={!hasConsent}
+                  variant="white"
+                />
               </>
             )}
-            
-            <TouchableOpacity style={styles.toggleMethod} onPress={toggleLoginMethod}>
-              <Text style={styles.toggleMethodText}>
-                {useOtp ? 'Use Password Instead' : 'Use OTP Instead'}
-              </Text>
-            </TouchableOpacity>
             
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
@@ -270,23 +266,22 @@ const PhoneLoginScreen = ({ navigation }) => {
               <View style={styles.dividerLine} />
             </View>
             
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.googleButton}
               onPress={() => {
-                // Dummy Google login for now
                 Alert.alert('Google Login', 'Google login will be implemented here.');
               }}
             >
               <Icon name="login" size={24} color="#DB4437" style={styles.googleIcon} />
               <Text style={styles.googleText}>Sign in with Google</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             
-            <View style={styles.footer}>
+             <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account?</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
                 <Text style={styles.signupText}>Sign Up</Text>
               </TouchableOpacity>
-            </View>
+            </View> 
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -307,67 +302,93 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     padding: Theme.spacing.lg,
-    paddingTop: Theme.spacing.xl,
   },
   header: {
     marginBottom: Theme.spacing.xl,
   },
   backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: Theme.spacing.md,
   },
   title: {
-    ...Theme.titleLight,
-    marginBottom: Theme.spacing.xs,
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: Colors.white,
+    marginBottom: Theme.spacing.sm,
   },
   subtitle: {
-    ...Theme.subtitleLight,
+    fontSize: 16,
+    color: Colors.white,
+    opacity: 0.8,
   },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(245, 101, 101, 0.1)',
+    backgroundColor: Colors.errorLight,
+    padding: Theme.spacing.md,
     borderRadius: Theme.borderRadius.md,
-    padding: Theme.spacing.sm,
-    marginBottom: Theme.spacing.md,
+    marginBottom: Theme.spacing.lg,
   },
   errorText: {
     color: Colors.error,
-    marginLeft: Theme.spacing.xs,
-    fontSize: Theme.fontSize.sm,
+    marginLeft: Theme.spacing.sm,
+    flex: 1,
+  },
+  phoneInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.md,
+  },
+  countryCodeContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    borderRadius: Theme.borderRadius.sm,
+    marginRight: Theme.spacing.sm,
+  },
+  countryCodeText: {
+    color: Colors.white,
+    fontSize: 16,
+  },
+  phoneInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: Theme.borderRadius.sm,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.sm,
+    color: Colors.white,
+    fontSize: 16,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.inputBackground,
-    borderRadius: Theme.borderRadius.md,
-    marginBottom: Theme.spacing.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: Theme.borderRadius.sm,
+    paddingHorizontal: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
   },
   inputIcon: {
-    marginLeft: Theme.spacing.md,
     marginRight: Theme.spacing.sm,
   },
   input: {
     flex: 1,
-    height: 50,
     color: Colors.white,
-    fontSize: Theme.fontSize.md,
+    fontSize: 16,
+    paddingVertical: Theme.spacing.sm,
   },
   fieldError: {
     color: Colors.error,
-    fontSize: Theme.fontSize.xs,
+    fontSize: 12,
+    marginTop: -Theme.spacing.sm,
     marginBottom: Theme.spacing.md,
   },
   loginButton: {
     marginTop: Theme.spacing.md,
-  },
-  forgotPassword: {
-    alignSelf: 'center',
-    marginTop: Theme.spacing.md,
-    marginBottom: Theme.spacing.sm,
-  },
-  forgotPasswordText: {
-    color: Colors.white,
-    fontSize: Theme.fontSize.sm,
   },
   resendOtp: {
     alignSelf: 'center',
@@ -378,20 +399,10 @@ const styles = StyleSheet.create({
     fontSize: Theme.fontSize.sm,
     textDecorationLine: 'underline',
   },
-  toggleMethod: {
-    alignSelf: 'center',
-    marginTop: Theme.spacing.md,
-  },
-  toggleMethodText: {
-    color: Colors.white,
-    fontSize: Theme.fontSize.sm,
-    textDecorationLine: 'underline',
-  },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: Theme.spacing.xl,
-    marginBottom: Theme.spacing.xl,
+    marginVertical: Theme.spacing.xl,
   },
   dividerLine: {
     flex: 1,
@@ -400,7 +411,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     color: Colors.white,
-    paddingHorizontal: Theme.spacing.md,
+    marginHorizontal: Theme.spacing.md,
     fontSize: Theme.fontSize.sm,
   },
   googleButton: {
@@ -408,35 +419,69 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.white,
-    borderRadius: Theme.borderRadius.md,
+    borderRadius: Theme.borderRadius.sm,
     paddingVertical: Theme.spacing.md,
-    marginBottom: Theme.spacing.md,
-    ...Theme.shadows.medium,
+    marginBottom: Theme.spacing.xl,
   },
   googleIcon: {
     marginRight: Theme.spacing.sm,
   },
   googleText: {
     color: Colors.textDark,
-    fontSize: Theme.fontSize.md,
+    fontSize: 16,
     fontWeight: '500',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Theme.spacing.xl,
   },
   footerText: {
-    fontSize: Theme.fontSize.sm,
     color: Colors.white,
+    fontSize: Theme.fontSize.sm,
   },
   signupText: {
-    fontSize: Theme.fontSize.sm,
     color: Colors.white,
+    fontSize: Theme.fontSize.sm,
     fontWeight: 'bold',
     marginLeft: Theme.spacing.xs,
-    textDecorationLine: 'underline',
+  },
+  phoneDisplayContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom:20
+    // backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    // borderRadius: Theme.borderRadius.sm,
+    // paddingHorizontal: Theme.spacing.md,
+    // paddingVertical: Theme.spacing.sm,
+    // marginBottom: Theme.spacing.lg,
+  },
+  phoneDisplayText: {
+    color: Colors.white,
+    fontSize: 16,
+    marginLeft: Theme.spacing.sm,
+  },
+  phoneNumberHighlight: {
+    color: Colors.white,
+    fontWeight: 'bold',
+  },
+  consentContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.lg,
+    paddingHorizontal: Theme.spacing.sm,
+  },
+  checkbox: {
+    marginRight: Theme.spacing.sm,
+  },
+  consentText: {
+    color: Colors.white,
+    fontSize: 14,
+    flex: 1,
+    opacity: 0.9,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });
 
