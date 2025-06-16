@@ -19,6 +19,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import chatService from '../services/chatService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import peopleService from '../services/peopleService';
+import { launchImageLibrary } from 'react-native-image-picker';
 // import Toast from 'react-native-toast-message';
 
 // -------------------- UTILITIES --------------------
@@ -118,9 +119,9 @@ const MessageBubble = ({ message, isUser, onLongPress }) => {
   const messageContent = typeof message.content === 'string' 
     ? message.content 
     : typeof message.text === 'string' ? message.text : '';
-  
   const messageStatus = typeof message.status === 'string' ? message.status : '';
-    
+  const isImage = message.message_type === 'image' || message.type === 'image';
+
   return (
     <TouchableOpacity
       onLongPress={onLongPress}
@@ -142,12 +143,20 @@ const MessageBubble = ({ message, isUser, onLongPress }) => {
             styles.messageBubble,
             isUser ? styles.userMessage : styles.otherMessage
           ]}>
-            <Text style={[
-              styles.messageText,
-              isUser ? styles.userMessageText : styles.otherMessageText
-            ]}>
-              {messageContent}
-            </Text>
+            {isImage ? (
+              <Image
+                source={{ uri: message.imageUrl || message.fileUrl || message.content }}
+                style={styles.chatImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <Text style={[
+                styles.messageText,
+                isUser ? styles.userMessageText : styles.otherMessageText
+              ]}>
+                {messageContent}
+              </Text>
+            )}
           </View>
           <View style={[
             styles.messageTimeContainer,
@@ -250,23 +259,22 @@ const ChatHeader = ({ avatar, name, isOnline, onBackPress, onVideoPress, onAudio
   );
 };
 
-const ChatInput = ({ inputText, onChangeText, onSend, sending }) => {
+const ChatInput = ({ inputText, onChangeText, onSend, sending, onAttachImage }) => {
   return (
     <View style={styles.inputContainer}>
-      <TouchableOpacity style={styles.attachButton}>
+      <TouchableOpacity style={styles.attachButton} onPress={onAttachImage}>
         <Ionicons name="image" size={24} color="#888" />
       </TouchableOpacity>
-      
       <View style={styles.textInputContainer}>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, { color: '#6C63FF' }]}
           placeholder="Message"
+          placeholderTextColor="#888"
           value={inputText}
           onChangeText={onChangeText}
           multiline
         />
       </View>
-      
       {inputText.trim() ? (
         <TouchableOpacity 
           style={styles.sendButton} 
@@ -300,259 +308,216 @@ const LoadingView = () => (
 const ChatDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  const { chat } = route.params;  // Get the complete chat object
   
-  // Extract params with safety checks
-  const conversationId = route.params?.conversationId || '';
-  const name = route.params?.name || 'Chat';
-  const avatar = route.params?.avatar || 'https://randomuser.me/api/portraits/women/44.jpg';
-  const isOnline = route.params?.isOnline || false;
-  
-  console.log('ChatDetailScreen initialized with params:', route.params);
-  
-  // State
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState(null);
-  const [showMessageOptions, setShowMessageOptions] = useState(false);
-  const [initialScrollDone, setInitialScrollDone] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [imageSending, setImageSending] = useState(false);
   
-  // Refs
   const flatListRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
-  const hasFetchedRef = useRef(false);
+  const messageListenerUnsubscribe = useRef(null);
+  const typingTimeoutRef = useRef(null);  // Changed from state to ref
   
-  // -------------------- EFFECTS --------------------
-
-  // Initial load
-  useEffect(() => {
-    console.log('ChatDetailScreen params received:', {
-      conversationId,
-      name,
-      avatar,
-      isOnline
-    });
-    
-    // Prevent multiple fetches on remounts
-    if (!hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      
-      // Load message history
-      loadChatHistory();
-      
-      // Set up message listener
-      const unsubscribe = setupMessageListener();
-      return () => unsubscribe();
-    }
-  }, []);
-  
-  // Update if conversation ID changes
-  useEffect(() => {
-    if (hasFetchedRef.current && conversationId) {
-      console.log('Conversation ID changed, reloading messages');
-      loadChatHistory();
-    }
-  }, [conversationId]);
-  
-  // Add effect to scroll to bottom when messages change
-  useEffect(() => {
-    if (messages.length > 0 && !initialScrollDone) {
-      setInitialScrollDone(true);
-      setTimeout(() => {
-        scrollToBottom(false);
-      }, 300);
-    }
-  }, [messages]);
-  
-  // -------------------- DATA OPERATIONS --------------------
-
+  // Load chat history
   const loadChatHistory = async () => {
     try {
-      // Handle both id and conversationId for compatibility
-      const chatId = conversationId || '';
-      console.log('Loading chat history for ID:', chatId);
-      
-      const history = await chatService.getChatHistory(chatId);
-      
-      // Process messages to ensure all values are strings
-      const processedHistory = history.map(msg => {
-        const processed = messageUtils.processMessage(msg);
-        // Add avatar for non-user messages
-        if (processed.senderId !== 'me') {
-          processed.avatar = avatar;
-        }
-        return processed;
-      });
-      
-      // Reverse to show latest at bottom
-      setMessages(processedHistory.reverse());
-      setLoading(false);
-      
-      // Schedule scrolling to bottom after messages render
-      setTimeout(() => {
-        scrollToBottom(false);
-      }, 300);
+      setLoading(true);
+      const history = await chatService.getChatHistory(chat.id);
+      // Process messages to ensure all values are strings and sort by timestamp
+      const processedHistory = history
+        .map(msg => ({
+          ...msg,
+          content: msg.content || msg.message || '',
+          senderId: msg.senderId || msg.from_user_id || '',
+          timestamp: msg.timestamp || new Date().toISOString(),
+          status: msg.status || 'sent',
+          is_my_message: msg.isMyMessage || false
+        }))
+        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+      setMessages(processedHistory);
     } catch (error) {
-      console.error('Failed to load messages:', error, conversationId);
+      console.error('Error loading chat history:', error);
+    } finally {
       setLoading(false);
-      
-      // Use dummy data if there's an error
-      const dummyMessages = generateDummyMessages();
-      setMessages(dummyMessages);
-      
-      // Scroll to bottom with dummy messages as well
-      setTimeout(() => {
-        scrollToBottom(false);
-      }, 300);
     }
   };
-  
-  // Generate dummy messages for testing
-  const generateDummyMessages = () => {
-    const dummyMessages = [
-      {
-        id: '1',
-        content: 'hi',
-        timestamp: '2023-07-20T23:21:00.000Z',
-        senderId: conversationId,
-        avatar: avatar
-      },
-      {
-        id: '2',
-        content: 'kya kar rahe ho',
-        timestamp: '2023-07-20T23:23:00.000Z',
-        senderId: conversationId,
-        avatar: avatar
-      },
-      {
-        id: '3',
-        content: 'Just working on some code. How about you?',
-        timestamp: '2023-07-20T23:30:00.000Z',
-        senderId: 'me',
-        status: 'read'
-      },
-      {
-        id: '4',
-        content: "I\'m free this weekend. Want to catch up?",
-        timestamp: '2023-07-20T23:35:00.000Z',
-        senderId: conversationId,
-        avatar: avatar
-      },
-      {
-        id: '5',
-        content: 'Sure! How about Saturday afternoon?',
-        timestamp: '2023-07-20T23:40:00.000Z',
-        senderId: 'me',
-        status: 'delivered'
-      }
-    ];
+
+  // Send message
+  const sendMessage = async () => {
+    if (!inputText.trim()) return;
     
-    return dummyMessages;
-  };
-  
-  const setupMessageListener = () => {
-    return chatService.addMessageListener(handleIncomingEvent);
-  };
-  
-  const handleIncomingEvent = (event) => {
-    if (event.type === 'message' && event.data && event.data.senderId === conversationId) {
-      handleIncomingMessage(event);
-    } else if (event.type === 'typing' && event.data && event.data.userId === conversationId) {
-      setIsTyping(Boolean(event.data.isTyping));
-    } else if (event.type === 'status' && event.data && event.data.messageId) {
-      handleStatusUpdate(event);
-    }
-  };
-  
-  const handleIncomingMessage = (event) => {
     try {
-      // Extract message data, using defaults for missing values
-      const messageData = event.data.message || event.data;
+      setSending(true);
+      const message = inputText.trim();
+      setInputText('');
       
-      // Process the message to ensure all values are strings
-      const processedMessage = messageUtils.processMessage(
-        messageData, 
-        ''
-      );
-      processedMessage.senderId = messageData.senderId || conversationId;
-      processedMessage.avatar = avatar;
+      // Create a temporary message object for immediate display
+      const tempMessage = {
+        id: `temp_${Date.now()}`,
+        content: message,
+        senderId: chatService.userId,
+        timestamp: new Date().toISOString(),
+        status: 'sending',
+        is_my_message: true
+      };
       
-      // Add new message to the list
-      setMessages(prevMessages => [...prevMessages, processedMessage]);
+      // Add message to local state immediately at the end
+      setMessages(prevMessages => [...prevMessages, tempMessage]);
       
-      // Scroll to bottom with a slight delay to allow rendering
-      setTimeout(() => {
-        scrollToBottom(true);
-      }, 100);
-    } catch (error) {
-      console.error('Error processing incoming message:', error);
-    }
-  };
-  
-  const handleStatusUpdate = (event) => {
-    try {
+      // Send message using the complete chat data
+      const response = await chatService.sendMessage(chat.id, message, chat);
+      
+      // Update the temporary message with the server response
       setMessages(prevMessages => 
         prevMessages.map(msg => 
-          msg.id === event.data.messageId 
-            ? { 
-                ...msg, 
-                status: typeof event.data.status === 'string' ? event.data.status : msg.status || '' 
-              } 
+          msg.id === tempMessage.id 
+            ? {
+                ...msg,
+                id: response.message_id || response.messageId,
+                status: 'sent',
+                timestamp: response.timestamp || new Date().toISOString(),
+                is_my_message: true
+              }
             : msg
         )
       );
+      
+      // Scroll to bottom after sending
+      scrollToBottom();
     } catch (error) {
-      console.error('Error updating message status:', error);
-    }
-  };
-  
-  const sendMessage = async () => {
-    if (inputText.trim() === '') return;
-    
-    const messageText = inputText.trim();
-    setInputText('');
-    setSending(true);
-    
-    try {
-      const newMessage = await chatService.sendMessage(
-        conversationId, 
-        messageText
+      console.error('Error sending message:', error);
+      // Show error toast
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Failed to send message', ToastAndroid.SHORT);
+      }
+      // Update message status to failed
+      setMessages(prevMessages => 
+        prevMessages.map(msg => 
+          msg.status === 'sending' 
+            ? { ...msg, status: 'failed' }
+            : msg
+        )
       );
-      
-      // Process new message
-      const processedMessage = messageUtils.processMessage(
-        newMessage,
-        messageText
-      );
-      processedMessage.senderId = 'me';
-      
-      // Add the new message to the list
-      setMessages(prevMessages => [...prevMessages, processedMessage]);
-      
-      // Scroll to bottom immediately for sent messages
-      scrollToBottom(true);
-    } catch (error) {
-      console.error('Failed to send message:', error);
-      
-      // Fallback to add message locally if API fails
-      const localMessage = {
-        id: `local_${Date.now()}`,
-        content: messageText,
-        senderId: 'me',
-        timestamp: new Date().toISOString(),
-        status: 'sent'
-      };
-      
-      setMessages(prevMessages => [...prevMessages, localMessage]);
-      
-      // Scroll to bottom
-      scrollToBottom(true);
     } finally {
       setSending(false);
     }
   };
+
+  // Send image message
+  const sendImageMessage = async (imageUri) => {
+    if (!imageUri) return;
+    try {
+      setImageSending(true);
+      // Create a temporary image message
+      const tempMessage = {
+        id: `temp_img_${Date.now()}`,
+        content: imageUri,
+        senderId: chatService.userId,
+        timestamp: new Date().toISOString(),
+        status: 'sending',
+        is_my_message: true,
+        message_type: 'image',
+        imageUrl: imageUri
+      };
+      setMessages(prevMessages => [...prevMessages, tempMessage]);
+      // Send image as a message (simulate upload, or upload if you have an endpoint)
+      // For now, we send the local uri as content
+      const response = await chatService.sendMessage(chat.id, imageUri, chat, 'image');
+      setMessages(prevMessages =>
+        prevMessages.map(msg =>
+          msg.id === tempMessage.id
+            ? {
+                ...msg,
+                id: response.message_id || response.messageId,
+                status: 'sent',
+                timestamp: response.timestamp || new Date().toISOString(),
+                is_my_message: true,
+                message_type: 'image',
+                imageUrl: imageUri
+              }
+            : msg
+        )
+      );
+      scrollToBottom();
+    } catch (error) {
+      console.error('Error sending image:', error);
+      setMessages(prevMessages =>
+        prevMessages.map(msg =>
+          msg.status === 'sending' && msg.message_type === 'image'
+            ? { ...msg, status: 'failed' }
+            : msg
+        )
+      );
+    } finally {
+      setImageSending(false);
+    }
+  };
+
+  // Image picker handler
+  const handleAttachImage = () => {
+    launchImageLibrary({ mediaType: 'photo', quality: 0.8 }, (response) => {
+      if (response.didCancel) return;
+      if (response.errorCode) {
+        console.error('ImagePicker Error: ', response.errorMessage);
+        return;
+      }
+      const asset = response.assets && response.assets[0];
+      if (asset && asset.uri) {
+        sendImageMessage(asset.uri);
+      }
+    });
+  };
+
+  // Set up message listener
+  useEffect(() => {
+    const unsubscribe = chatService.addMessageListener((event, data) => {
+      if (event === 'message_received' && data.room_id === chat.id) {
+        const newMessage = {
+          id: data.message_id || data.messageId,
+          content: data.message,
+          senderId: data.from_user_id,
+          timestamp: data.timestamp || new Date().toISOString(),
+          status: 'received',
+          is_my_message: data.from_user_id === chatService.userId
+        };
+        // Add new message at the end of the list
+        setMessages(prevMessages => [...prevMessages, newMessage]);
+        scrollToBottom();
+      } else if (event === 'message_sent' && data.room_id === chat.id) {
+        // Update message status if it was sent by current user
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.status === 'sending' && msg.content === data.message
+              ? {
+                  ...msg,
+                  id: data.message_id || data.messageId,
+                  status: 'sent',
+                  timestamp: data.timestamp || new Date().toISOString(),
+                  is_my_message: true
+                }
+              : msg
+          )
+        );
+      }
+    });
+
+    messageListenerUnsubscribe.current = unsubscribe;
+    return () => {
+      if (messageListenerUnsubscribe.current) {
+        messageListenerUnsubscribe.current();
+      }
+    };
+  }, [chat.id]);
+
+  // Load initial chat history
+  useEffect(() => {
+    loadChatHistory();
+  }, [chat.id]);
   
   // -------------------- UI HELPERS --------------------
   
@@ -582,7 +547,7 @@ const ChatDetailScreen = () => {
   
   const handleMessageLongPress = (message) => {
     setSelectedMessage(message);
-    setShowMessageOptions(true);
+    setShowOptions(true);
   };
   
   const handleMessageOptions = {
@@ -624,7 +589,7 @@ const ChatDetailScreen = () => {
     }
     
     // Determine if this message is from the current user
-    const isUser = item.senderId === 'me';
+    const isUser = item.is_my_message;
     
     try {
       return (
@@ -645,14 +610,14 @@ const ChatDetailScreen = () => {
       setLoading(true);
       
       // Call the initiateVideoCall method from peopleService
-      const callData = await peopleService.initiateVideoCall(chatPartner.id);
+      const callData = await peopleService.initiateVideoCall(chat.id);
       
       setLoading(false);
       
       // Navigate to the VideoCallScreen with the call data
       navigation.navigate('VideoCall', {
-        contactName: chatPartner.name,
-        contactId: chatPartner.id,
+        contactName: chat.name,
+        contactId: chat.id,
         callID: callData.callId,
         isIncoming: false
       });
@@ -681,13 +646,13 @@ const ChatDetailScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ChatHeader
-        avatar={avatar}
-        name={name}
-        isOnline={isOnline}
+        avatar={chat.avatar}
+        name={chat.name}
+        isOnline={chat.isOnline}
         onBackPress={() => navigation.goBack()}
         onVideoPress={handleVideoCallPress}
-        onAudioPress={() => console.log('Audio call with:', name)}
-        onMorePress={() => console.log('More options for:', name)}
+        onAudioPress={() => console.log('Audio call with:', chat.name)}
+        onMorePress={() => console.log('More options for:', chat.name)}
       />
       
       <KeyboardAvoidingView
@@ -699,23 +664,16 @@ const ChatDetailScreen = () => {
           <FlatList
             ref={flatListRef}
             data={messages}
-            keyExtractor={messageUtils.generateSafeKey}
-            renderItem={renderMessageItem}
-            contentContainerStyle={styles.messagesList}
-            onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
-            showsVerticalScrollIndicator={false}
-            maintainVisibleContentPosition={{ 
-              minIndexForVisible: 0,
-              autoscrollToTopThreshold: 10
-            }}
-            onContentSizeChange={() => {
-              if (messages.length > 0) {
-                flatListRef.current?.scrollToEnd({ animated: false });
-              }
-            }}
-            initialNumToRender={15}
-            maxToRenderPerBatch={10}
-            removeClippedSubviews={false}
+            keyExtractor={(item) => item.id || item.messageId || `msg_${Date.now()}`}
+            renderItem={({ item }) => (
+              <MessageBubble
+                message={item}
+                isUser={item.is_my_message}
+                onLongPress={() => handleMessageLongPress(item)}
+              />
+            )}
+            onContentSizeChange={() => scrollToBottom()}
+            onLayout={() => scrollToBottom()}
           />
           
           {isTyping && <TypingIndicator />}
@@ -725,13 +683,14 @@ const ChatDetailScreen = () => {
           inputText={inputText}
           onChangeText={handleInputChange}
           onSend={sendMessage}
-          sending={sending}
+          sending={sending || imageSending}
+          onAttachImage={handleAttachImage}
         />
       </KeyboardAvoidingView>
       
       <MessageOptionsMenu 
-        visible={showMessageOptions}
-        onClose={() => setShowMessageOptions(false)}
+        visible={showOptions}
+        onClose={() => setShowOptions(false)}
         options={messageOptions}
       />
     </SafeAreaView>
@@ -823,9 +782,19 @@ const styles = StyleSheet.create({
   },
   userMessage: {
     backgroundColor: '#6C63FF',
+    marginLeft: 'auto',
+    borderTopRightRadius: 4,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 4,
+    borderTopLeftRadius: 16,
   },
   otherMessage: {
     backgroundColor: '#FFFFFF',
+    marginRight: 'auto',
+    borderTopLeftRadius: 4,
+    borderBottomRightRadius: 16,
+    borderBottomLeftRadius: 4,
+    borderTopRightRadius: 16,
   },
   messageText: {
     fontSize: 16,
@@ -885,6 +854,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     fontSize: 16,
     maxHeight: 100,
+    color: '#6C63FF',
   },
   sendButton: {
     backgroundColor: '#6C63FF',
@@ -960,6 +930,13 @@ const styles = StyleSheet.create({
   messageOptionText: {
     fontSize: 16,
     color: '#333333',
+  },
+  chatImage: {
+    width: 180,
+    height: 180,
+    borderRadius: 12,
+    marginBottom: 4,
+    backgroundColor: '#EEE',
   },
 });
 

@@ -28,8 +28,6 @@ import CheckBox from '@react-native-community/checkbox';
 import { navigate } from '../../services/navigationService';
 
 const PhoneLoginScreen = ({ navigation }) => {
-  // Add navigation debug log
-  console.log('Navigation prop:', navigation);
 
   const [countryCode, setCountryCode] = useState('+91');
   const [mobileNumber, setMobileNumber] = useState('');

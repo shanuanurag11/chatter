@@ -36,7 +36,7 @@ export const loginWithOTP = createAsyncThunk(
       
       // Then login the user (in a real app, we would get a token from the verify endpoint)
       // For demo purposes, we'll just find a user with that phone number
-      const response = await dummyAuthApi.loginWithPhone(phone, 'password123');
+      // const response = await dummyAuthApi.loginWithPhone(phone, 'password123');
       return response;
     } catch (error) {
       return rejectWithValue(error.message || 'OTP verification failed');

@@ -1,149 +1,13 @@
 import { Platform } from 'react-native';
-
-// Dummy data for testing
-import { DUMMY_MESSAGES, DUMMY_CHATS } from '../data/dummyChats';
+import apiClient from './api/client';
+import socketService from './socketService';
 
 // Configuration
 const API_BASE_URL = 'https://api.example.com';
 const SOCKET_URL = 'wss://api.example.com/ws/chat';
 
-// Mock API for chat functionality
-import { getRandomInt } from '../utils/helpers';
-
-// In-memory data for demo purposes
-const DUMMY_CHAT_THREADS = [
-  {
-    id: 'user1',
-    name: 'Sarah Johnson',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-    lastMessage: {
-      text: "Yes, I\'m free tomorrow afternoon. Let's meet at 2pm.",
-      timestamp: new Date(Date.now() - 25 * 60000).toISOString(),
-    },
-    unread: 2,
-    isOnline: true,
-    hasVideo: true,
-  },
-  {
-    id: 'user2',
-    name: 'Mike Peterson',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-    lastMessage: {
-      text: 'I\'ll send you the project files later today.',
-      timestamp: new Date(Date.now() - 3 * 3600000).toISOString(),
-    },
-    unread: 0,
-    isOnline: true,
-    hasVideo: false,
-  },
-  {
-    id: 'user3',
-    name: 'Jessica Williams',
-    avatar: 'https://randomuser.me/api/portraits/women/55.jpg',
-    lastMessage: {
-      text: 'Did you check the latest designs?',
-      timestamp: new Date(Date.now() - 1 * 86400000).toISOString(),
-    },
-    unread: 4,
-    isOnline: false,
-    hasVideo: true,
-  },
-  {
-    id: 'user4',
-    name: 'David Chen',
-    avatar: 'https://randomuser.me/api/portraits/men/67.jpg',
-    lastMessage: {
-      text: 'Looking forward to the conference next week!',
-      timestamp: new Date(Date.now() - 2 * 86400000).toISOString(),
-    },
-    unread: 0,
-    isOnline: false,
-    hasVideo: true,
-  },
-  {
-    id: 'user5',
-    name: 'Emily Rodriguez',
-    avatar: 'https://randomuser.me/api/portraits/women/28.jpg',
-    lastMessage: {
-      text: 'Thanks for helping with that task.',
-      timestamp: new Date(Date.now() - 3 * 86400000).toISOString(),
-    },
-    unread: 1,
-    isOnline: true,
-    hasVideo: false,
-  },
-];
-
-// Mock message history for each chat
-const MESSAGE_HISTORY = {
-  user1: generateMessages('user1', 15),
-  user2: generateMessages('user2', 8),
-  user3: generateMessages('user3', 20),
-  user4: generateMessages('user4', 5),
-  user5: generateMessages('user5', 12),
-};
-
-// Generate random messages for demo
-function generateMessages(userId, count) {
-  const messages = [];
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - 5);
-  
-  for (let i = 0; i < count; i++) {
-    const isUser = Math.random() > 0.5;
-    const hoursAgo = count - i + Math.random() * 2;
-    const timestamp = new Date(startDate.getTime() + (i * 3600000));
-    
-    messages.push({
-      id: `msg_${userId}_${i}`,
-      content: getRandomMessage(isUser),
-      senderId: isUser ? 'me' : userId,
-      timestamp: timestamp.toISOString(),
-      status: getRandomStatus(),
-    });
-  }
-  
-  return messages.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-}
-
-// Random message content for demo
-function getRandomMessage(isUser) {
-  const userMessages = [
-    "Hey, how are you?",
-    "Can we meet tomorrow to discuss the project?",
-    "I've finished the task you assigned me.",
-    "What do you think about the new design?",
-    "Are you free this weekend?",
-    "I'll send you the files in a moment.",
-    "Let me know when you're available for a call."
-  ];
-  
-  const otherMessages = [
-    "I\'m doing well, thanks for asking!",
-    "Yes, I\'m available tomorrow. What time works for you?",
-    "Great job on completing that task!",
-    "The new design looks fantastic.",
-    "I\'m free on Saturday, but busy on Sunday.",
-    "Thanks, I'll review them as soon as possible.",
-    "I can talk now if you're free."
-  ];
-  
-  const messages = isUser ? userMessages : otherMessages;
-  return messages[getRandomInt(0, messages.length - 1)];
-}
-
-// Random message status
-function getRandomStatus() {
-  const statuses = ['sent', 'delivered', 'read'];
-  return statuses[getRandomInt(0, statuses.length - 1)];
-}
-
-// WebSocket message listeners
-const messageListeners = [];
-
 class ChatService {
   constructor() {
-    this.socket = null;
     this.messageListeners = [];
     this.connectionListeners = [];
     this.isConnected = false;
@@ -151,59 +15,137 @@ class ChatService {
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
     this.deviceId = Platform.OS === 'ios' ? 'ios_device' : 'android_device';
+    this.chats = [];
     
-    // Clone and normalize the chat threads
-    this.chats = DUMMY_CHAT_THREADS.map(chat => ({
-      ...chat,
-      // Ensure both id and conversationId exist
-      id: chat.id || chat.conversationId,
-      conversationId: chat.conversationId || chat.id,
-      // Normalize other required fields
-      name: chat.name || chat.userName,
-      avatar: chat.avatar || chat.userAvatar,
-    }));
+    // Initialize socket listeners
+    this.initializeSocketListeners();
+  }
+
+  // Initialize socket listeners
+  initializeSocketListeners() {
+    console.log('Initializing socket listeners');
     
-    // Initialize MESSAGE_HISTORY from DUMMY_CHATS
-    DUMMY_CHATS.forEach(chat => {
-      if (!MESSAGE_HISTORY[chat.conversationId]) {
-        MESSAGE_HISTORY[chat.conversationId] = chat.messages || [];
+    // Add message listener
+    this.socketMessageUnsubscribe = socketService.addMessageListener((event, data) => {
+      console.log('Socket message event received:', event, data);
+      
+      if (event === 'message_sent') {
+        this.handleMessageSent(data);
+      } else if (event === 'message_received') {
+        this.handleMessageReceived(data);
+      } else if (event === 'message_read') {
+        this.handleMessageRead(data);
       }
     });
+
+    // Add error listener
+    this.socketErrorUnsubscribe = socketService.addErrorListener((error) => {
+      console.error('Socket error:', error);
+      this.notifyListeners({
+        type: 'error',
+        data: error
+      });
+    });
+  }
+
+  // Handle sent message
+  handleMessageSent(data) {
+    console.log('Handling sent message:', data);
+    const { conversationId, message } = data;
     
-    // Simulate periodic online status changes
-    setInterval(() => {
-      this._updateRandomUserStatus();
-    }, 30000); // Every 30 seconds
+    // Notify listeners
+    this.notifyListeners({
+      type: 'message_sent',
+      data
+    });
+  }
+
+  // Handle received message
+  handleMessageReceived(data) {
+    console.log('Handling received message:', data);
+    const { conversationId, message } = data;
     
-    // Simulate incoming messages occasionally
-    setInterval(() => {
-      this._simulateIncomingMessage();
-    }, 60000); // Every minute
+    // Notify listeners
+    this.notifyListeners({
+      type: 'message_received',
+      data: {
+        id: data.messageId,
+        content: message,
+        senderId: data.from_user_id,
+        timestamp: new Date().toISOString(),
+        status: 'received',
+        conversationId
+      }
+    });
+  }
+
+  // Handle message read
+  handleMessageRead(data) {
+    console.log('Handling message read:', data);
+    const { conversationId, messageIds } = data;
+    
+    // Notify listeners
+    this.notifyListeners({
+      type: 'message_read',
+      data
+    });
+  }
+
+  // Cleanup socket listeners
+  cleanupSocketListeners() {
+    console.log('Cleaning up socket listeners');
+    if (this.socketMessageUnsubscribe) {
+      this.socketMessageUnsubscribe();
+    }
+    if (this.socketErrorUnsubscribe) {
+      this.socketErrorUnsubscribe();
+    }
   }
 
   // ---------- Message List Methods ----------
 
   // Get all message threads (conversations)
   async getMessageThreads() {
-    // Simulate API delay
-    await this.delay(800);
-    return [...this.chats];
+    try {
+      const response = await apiClient.get('/api/v1/user/chats/');
+      if (response.data.status) {
+        return response.data.data.conversations.map(chat => ({
+          id: chat.id,
+          name: chat.other_participant?.name || 'Unknown',
+          avatar: chat.other_participant?.profile_picture,
+          lastMessage: {
+            text: chat.latest_message?.content || '',
+            timestamp: chat.last_message_at,
+            messageType: chat.latest_message?.message_type || 'text',
+            fileUrl: chat.latest_message?.file_url,
+            fileName: chat.latest_message?.file_name,
+            fileSize: chat.latest_message?.file_size,
+            hasFile: chat.latest_message?.has_file || false
+          },
+          unread: chat.unread_count,
+          isOnline: false,
+          timestamp: chat.last_message_at,
+          created_at: chat.created_at,
+          updated_at: chat.updated_at,
+          other_participant: chat.other_participant
+        }));
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+      throw error;
+    }
   }
 
   // Mark a conversation as read
   async markConversationAsRead(conversationId) {
-    // Simulate API delay
-    await this.delay(300);
-    
-    const chatIndex = this.chats.findIndex(chat => chat.id === conversationId);
-    if (chatIndex !== -1) {
-      this.chats[chatIndex] = {
-        ...this.chats[chatIndex],
-        unread: 0,
-      };
+    try {
+      await apiClient.post(`/api/v1/user/chats/${conversationId}/read/`);
+      return true;
+    } catch (error) {
+      console.error('Error marking conversation as read:', error);
+      throw error;
     }
-    
-    return true;
   }
 
   // Mark all conversations as read
@@ -298,95 +240,53 @@ class ChatService {
 
   // Get chat history for a conversation
   async getChatHistory(conversationId) {
-    // Simulate API delay
-    await this.delay(1000);
-    
-    console.log(`Fetching chat history for ${conversationId}`);
-    
-    // Handle case where conversationId is empty/missing
-    if (!conversationId) {
-      console.error('No conversation ID provided');
-      return [];
-    }
-    
-    // Check both direct ID and in DUMMY_CHATS
-    if (!MESSAGE_HISTORY[conversationId]) {
-      console.log('Conversation not found in MESSAGE_HISTORY, trying to find in DUMMY_CHATS');
-      
-      // Look for it in DUMMY_CHATS and initialize if found
-      const dummyChat = DUMMY_CHATS.find(chat => 
-        chat.conversationId === conversationId || chat.userId === conversationId
-      );
-      
-      if (dummyChat && dummyChat.messages) {
-        MESSAGE_HISTORY[conversationId] = [...dummyChat.messages];
-        console.log(`Found messages in DUMMY_CHATS for ${conversationId}`);
-      } else {
-        console.error(`Conversation ${conversationId} not found in any data source`);
-        return [];
+    try {
+      const response = await apiClient.get(`/api/v1/user/chats/${conversationId}/messages/`);
+      if (response.data.status) {
+        // Transform the API response to match our app's data structure
+        return response.data.data.messages.map(message => ({
+          id: message.id,
+          content: message.content,
+          senderId: message.sender,
+          timestamp: message.created_at,
+          messageType: message.message_type,
+          fileUrl: message.file_url,
+          fileName: message.file_name,
+          fileSize: message.file_size,
+          isRead: message.is_read,
+          isDeleted: message.is_deleted,
+          isMyMessage: message.is_my_message,
+          conversationId
+        }));
       }
+      return [];
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+      throw error;
     }
-    
-    return [...MESSAGE_HISTORY[conversationId]];
   }
 
   // Send a message
-  async sendMessage(conversationId, content) {
-    // Simulate API delay
-    await this.delay(500);
-    
-    // Handle missing MESSAGE_HISTORY
-    if (!MESSAGE_HISTORY[conversationId]) {
-      console.log(`Initializing new message history for ${conversationId}`);
-      MESSAGE_HISTORY[conversationId] = [];
-    }
-    
-    const newMessage = {
-      id: `msg_${conversationId}_${Date.now()}`,
-      content,
-      senderId: 'me',
-      timestamp: new Date().toISOString(),
-      status: 'sent',
-    };
-    
-    // Add to message history
-    MESSAGE_HISTORY[conversationId].push(newMessage);
-    
-    // Update last message in thread list
-    const threadIndex = this.chats.findIndex(t => t.id === conversationId);
-    if (threadIndex !== -1) {
-      this.chats[threadIndex].lastMessage = {
-        text: content,
-        timestamp: newMessage.timestamp,
-      };
-      this.chats[threadIndex].unread = 0;
-    }
-    
-    // Simulate message delivery after a delay
-    setTimeout(() => {
-      newMessage.status = 'delivered';
-      this.notifyListeners({
-        type: 'status_update',
-        data: {
-          messageId: newMessage.id,
-          status: 'delivered',
-        },
-      });
+  async sendMessage(conversationId, content, chatData = null) {
+    try {
+      let otherParticipantId;
       
-      // Simulate message read after another delay
-      setTimeout(() => {
-        newMessage.status = 'read';
-        this.notifyListeners({
-          type: 'status_update',
-          data: {
-            messageId: newMessage.id,
-            status: 'read',
-          },
-        });
-      }, 2000);
-    }, 1000);
-    
-    return newMessage;
+      if (chatData && chatData.other_participant) {
+        // Use the chat data passed from ChatListScreen
+        otherParticipantId = chatData.other_participant.id;
+      } 
+      
+      if (!otherParticipantId) {
+        throw new Error('Other participant ID not found');
+      }
+
+      // Send message through socket service with both IDs
+      const socketResponse = await socketService.sendMessage(conversationId, otherParticipantId, content);
+      return socketResponse;
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
   }
 
   // ---------- WebSocket Methods ----------
@@ -559,84 +459,18 @@ class ChatService {
   
   // Add listener for incoming messages
   addMessageListener(callback) {
-    messageListeners.push(callback);
-    
-    // Simulate occasional new messages and typing indicators
-    const intervalId = setInterval(() => {
-      // Randomly decide whether to send a message or typing indicator
-      if (Math.random() > 0.7) {
-        const randomUserId = `user${getRandomInt(1, 5)}`;
-        
-        if (Math.random() > 0.5) {
-          // Simulate typing indicator
-          this.notifyListeners({
-            type: 'typing',
-            data: {
-              userId: randomUserId,
-              isTyping: true,
-            },
-          });
-          
-          // Stop typing after a while
-          setTimeout(() => {
-            this.notifyListeners({
-              type: 'typing',
-              data: {
-                userId: randomUserId,
-                isTyping: false,
-              },
-            });
-          }, getRandomInt(2000, 5000));
-        } else {
-          // Simulate new message
-          const newMessage = {
-            id: `msg_${randomUserId}_${Date.now()}`,
-            content: getRandomMessage(false),
-            senderId: randomUserId,
-            timestamp: new Date().toISOString(),
-            status: 'sent',
-          };
-          
-          // Add to message history
-          if (MESSAGE_HISTORY[randomUserId]) {
-            MESSAGE_HISTORY[randomUserId].push(newMessage);
-          }
-          
-          // Update thread data
-          const threadIndex = this.chats.findIndex(t => t.id === randomUserId);
-          if (threadIndex !== -1) {
-            this.chats[threadIndex].lastMessage = {
-              text: newMessage.content,
-              timestamp: newMessage.timestamp,
-            };
-            this.chats[threadIndex].unread += 1;
-          }
-          
-          // Notify listeners
-          this.notifyListeners({
-            type: 'message',
-            data: {
-              senderId: randomUserId,
-              message: newMessage,
-            },
-          });
-        }
-      }
-    }, 15000); // Every 15 seconds
-    
-    // Return unsubscribe function
+    this.messageListeners.push(callback);
     return () => {
-      const index = messageListeners.indexOf(callback);
+      const index = this.messageListeners.indexOf(callback);
       if (index !== -1) {
-        messageListeners.splice(index, 1);
+        this.messageListeners.splice(index, 1);
       }
-      clearInterval(intervalId);
     };
   }
   
   // Notify all listeners
   notifyListeners(event) {
-    messageListeners.forEach(listener => {
+    this.messageListeners.forEach(listener => {
       try {
         listener(event);
       } catch (error) {

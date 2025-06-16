@@ -13,8 +13,11 @@ import {
 } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import chatService from '../services/chatService';
+import socketService from '../services/socketService';
+import userService from '../services/userService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
 // Format timestamp function
 const formatTimeAgo = (timestamp) => {
@@ -55,13 +58,81 @@ const formatTimeAgo = (timestamp) => {
   }
 };
 
+// Add helper function to get file icon
+const getFileIcon = (messageType) => {
+  switch (messageType?.toLowerCase()) {
+    case 'image':
+      return 'image-outline';
+    case 'file':
+      return 'document-outline';
+    case 'reaction':
+      return 'heart-outline';
+    default:
+      return 'chatbubble-outline';
+  }
+};
+
+// Add emoji mapping
+const EMOJI_MAP = {
+  'star': '⭐',
+  'think': '🤔',
+  'smile': '😊',
+  'heart': '❤️',
+  'laugh': '😂',
+  'wink': '😉',
+  'sad': '😢',
+  'angry': '😠',
+  'thumbsup': '👍',
+  'thumbsdown': '👎',
+  'clap': '👏',
+  'fire': '🔥',
+  'party': '🎉',
+  'eyes': '👀',
+  'ok': '👌',
+};
+
+// Helper function to convert emoji codes to actual emojis
+const convertEmojiCodes = (text) => {
+  if (!text) return '';
+  
+  console.log('Converting emoji for text:', text); // Debug log
+  
+  // If the text is just an emoji code (e.g., ":star:")
+  if (text.startsWith(':') && text.endsWith(':')) {
+    const emojiCode = text.slice(1, -1).toLowerCase();
+    const emoji = EMOJI_MAP[emojiCode];
+    console.log('Found emoji code:', emojiCode, 'Converting to:', emoji); // Debug log
+    return emoji || text;
+  }
+  
+  // If emoji codes are part of a larger text
+  return text.replace(/:([a-z0-9_]+):/g, (match, code) => {
+    const emoji = EMOJI_MAP[code.toLowerCase()];
+    console.log('Found emoji in text:', code, 'Converting to:', emoji); // Debug log
+    return emoji || match;
+  });
+};
+
 // Chat Item Component
 const ChatItem = ({ chat, onPress }) => {
-  // Format timestamp - check if timestamp is in lastMessage or at chat level
   const timestamp = chat.lastMessage && chat.lastMessage.timestamp 
     ? chat.lastMessage.timestamp 
     : chat.timestamp;
   const formattedTime = formatTimeAgo(timestamp);
+  
+  // Get message type and icon
+  const messageType = chat.lastMessage?.messageType || 'text';
+  const fileIcon = getFileIcon(messageType);
+  
+  // Get message status
+  const isMyMessage = chat.lastMessage?.isMyMessage;
+  const isRead = chat.lastMessage?.isRead;
+  
+  // Convert emoji codes in message text
+  const originalText = chat.lastMessage?.text || '';
+  console.log('Original message:', originalText, 'Type:', messageType); // Debug log
+  const messageText = convertEmojiCodes(originalText);
+  console.log('Converted message:', messageText); // Debug log
   
   return (
     <TouchableOpacity
@@ -81,9 +152,34 @@ const ChatItem = ({ chat, onPress }) => {
         </View>
         
         <View style={styles.chatFooter}>
-          <Text style={styles.chatLastMessage} numberOfLines={1}>
-            {typeof chat.lastMessage === 'object' ? chat.lastMessage.text : chat.lastMessage}
-          </Text>
+          <View style={styles.lastMessageContainer}>
+            {isMyMessage && (
+              <Ionicons 
+                name={isRead ? "checkmark-done" : "checkmark"} 
+                size={16} 
+                color={isRead ? "#4CD964" : "#8E8E93"} 
+                style={styles.messageStatusIcon} 
+              />
+            )}
+            {messageType !== 'text' && messageType !== 'reaction' && (
+              <Ionicons 
+                name={fileIcon} 
+                size={16} 
+                color="#8E8E93" 
+                style={styles.messageTypeIcon} 
+              />
+            )}
+            <Text 
+              style={[
+                styles.chatLastMessage,
+                isMyMessage && styles.myMessage,
+                messageType === 'reaction' && styles.emojiMessage
+              ]} 
+              numberOfLines={1}
+            >
+              {messageText}
+            </Text>
+          </View>
           
           {chat.unread > 0 && (
             <View style={styles.unreadBadge}>
@@ -115,11 +211,118 @@ const ChatListScreen = () => {
   const [error, setError] = useState(null);
   const navigation = useNavigation();
   
+  // Initialize socket connection
+  useEffect(() => {
+    const initializeSocket = async () => {
+      try {
+        setError(null);
+        // Get user data from UserService
+        const userData = await userService.getUserData();
+        console.log("User data from service:", userData);
+
+        if (!userData) {
+          console.log("No user data found, attempting to fetch from API...");
+          // If no user data in storage, try to get from API
+          const currentUser = await userService.getCurrentUser();
+          console.log("Current user from API:", currentUser);
+          
+          if (!currentUser) {
+            console.error('No user data available, please login again');
+            setError('Please login again to continue');
+            return;
+          }
+        }
+
+        // Initialize socket with user_id
+        const userId = await userData?.id;
+        console.log("Initializing socket with user_id:", userId);
+        
+        if (!userId) {
+          console.error('No user_id available');
+          setError('Unable to initialize chat. Please try again.');
+          return;
+        }
+
+        try {
+          const initialized = await socketService.initialize(userId);
+          if (!initialized) {
+            throw new Error('Failed to initialize socket');
+          }
+          
+          // Add socket listeners
+          const messageUnsubscribe = socketService.addMessageListener((event, data) => {
+            console.log('Socket message event in ChatListScreen:', event, data);
+            if (event === 'message_received' || event === 'message_sent') {
+              loadChats(); // Refresh chat list when new message arrives
+            }
+          });
+          
+          const statusUnsubscribe = socketService.addStatusListener((data) => {
+            console.log('Socket status event in ChatListScreen:', data);
+            // Update online status in chat list
+            setChats(prevChats => 
+              prevChats.map(chat => 
+                chat.other_participant?.id === data.user_id
+                  ? { ...chat, isOnline: data.is_online }
+                  : chat
+              )
+            );
+          });
+
+          const errorUnsubscribe = socketService.addErrorListener((error) => {
+            console.error('Socket error received:', error);
+            if (error.message === 'Failed to create user') {
+              // Try to reinitialize socket with fresh user data
+              userService.getCurrentUser().then(async (freshUserData) => {
+                if (freshUserData) {
+                  await userService.saveUserData(freshUserData);
+                  const newUserId = freshUserData.id;
+                  if (newUserId) {
+                    socketService.disconnect();
+                    const reinitialized = await socketService.initialize(newUserId);
+                    if (!reinitialized) {
+                      setError('Authentication failed. Please try logging in again.');
+                    }
+                  }
+                } else {
+                  setError('Authentication failed. Please try logging in again.');
+                }
+              }).catch(() => {
+                setError('Authentication failed. Please try logging in again.');
+              });
+            } else {
+              setError('Connection error. Please try again.');
+            }
+          });
+          
+          // Cleanup listeners on unmount
+          return () => {
+            messageUnsubscribe();
+            statusUnsubscribe();
+            errorUnsubscribe();
+            socketService.disconnect();
+          };
+        } catch (error) {
+          console.error('Socket initialization error:', error);
+          setError('Unable to connect to chat server. Please try again.');
+          return;
+        }
+      } catch (error) {
+        console.error('Socket setup error:', error);
+        setError('Failed to setup chat. Please try again.');
+      }
+    };
+    
+    initializeSocket();
+  }, []);
+  
   // Function to load chat data
   const loadChats = async () => {
     try {
       setError(null);
+      setLoading(true);
       const data = await chatService.getMessageThreads();
+      console.log("Chat list data:", data);
       setChats(data);
     } catch (err) {
       console.error('Failed to load chats:', err);
@@ -133,25 +336,6 @@ const ChatListScreen = () => {
   // Initial load
   useEffect(() => {
     loadChats();
-    
-    // Set up websocket listener for updates
-    const unsubscribe = chatService.addMessageListener((event) => {
-      if (event.type === 'message') {
-        // Refresh the chat list when a new message arrives
-        loadChats();
-      } else if (event.type === 'status_change') {
-        // Update the specific chat's online status
-        setChats((prevChats) => 
-          prevChats.map(chat => 
-            chat.id === event.data.userId 
-              ? { ...chat, isOnline: event.data.isOnline }
-              : chat
-          )
-        );
-      }
-    });
-    
-    return () => unsubscribe();
   }, []);
   
   // Refresh when screen is focused
@@ -169,9 +353,8 @@ const ChatListScreen = () => {
   
   // Navigate to chat detail screen
   const handleChatPress = (chat) => {
+    console.log("Selected chat:", chat);
     try {
-      console.log('Chat pressed with data:', chat);
-      
       if (!chat || !chat.id) {
         console.error('Invalid chat object:', chat);
         return;
@@ -187,20 +370,13 @@ const ChatListScreen = () => {
         )
       );
       
-      // Prepare navigation params
-      const params = {
-        conversationId: chat.id,
-        name: chat.name,
-        avatar: chat.avatar,
-        isOnline: chat.isOnline
-      };
-      
-      console.log('Navigating to ChatDetail with params:', params);
-      
-      // Navigate to chat detail screen
-      navigation.navigate('ChatDetail', params);
+      // Pass the complete chat object to ChatDetail screen
+      navigation.navigate('ChatDetail', {
+        chat: chat  // Pass the entire chat object
+      });
     } catch (error) {
       console.error('Error navigating to chat:', error);
+      setError('Failed to open chat. Please try again.');
     }
   };
   
@@ -439,6 +615,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  lastMessageContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  messageTypeIcon: {
+    marginRight: 4,
+  },
   chatLastMessage: {
     fontSize: 14,
     color: '#8E8E93',
@@ -516,6 +700,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#8E8E93',
     textAlign: 'center',
+  },
+  messageStatusIcon: {
+    marginRight: 4,
+  },
+  myMessage: {
+    color: '#666666',
+  },
+  emojiMessage: {
+    fontSize: 18, // Increased font size for better emoji visibility
+    lineHeight: 22,
   },
 });
 
