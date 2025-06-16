@@ -21,6 +21,7 @@ import Colors from '../../constants/colors';
 import callService from '../../services/callService';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import apiClient from '../../services/api/client.js';
 
 const { width, height } = Dimensions.get('window');
 
@@ -108,6 +109,8 @@ const RandomVideoScreen = () => {
   const coinCountRef = useRef(3);
   const offerPercentRef = useRef(60);
   const [timeLeft, setTimeLeft] = useState(1797); // 29:57 in seconds
+  const pollingIntervalRef = useRef(null);
+  const pollingAttemptsRef = useRef(0);
   
   // Fix: create pure Animated.Value objects instead of using .current on them
   const buttonPulseAnim = new Animated.Value(0);
@@ -320,6 +323,71 @@ const RandomVideoScreen = () => {
            message.includes('device settings');
   };
 
+  const pollForMatch = async () => {
+    try {
+      const response = await apiClient.get('/api/v1/match/');
+      console.log('[RandomVideoScreen] Match API response:', response.data);
+      
+      if (response.data.status === 'matched') {
+        // Clear polling interval
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        
+        // Navigate to video call with matched data
+        const callData = {
+          callId: response.data.caller_id,
+          recipientId: response.data.matched_with,
+          recipientName: 'Anonymous', // You can update this if API provides name
+          isRandom: true
+        };
+        
+        console.log('[RandomVideoScreen] Match found, navigating with data:', callData);
+        setIsLoading(false);
+        navigation.navigate('VideoCallScreen', callData);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('[RandomVideoScreen] Error polling for match:', error);
+      setIsLoading(false);
+      return false;
+    }
+  };
+
+  const startPolling = () => {
+    // Reset polling attempts
+    pollingAttemptsRef.current = 0;
+    
+    // Start polling
+    pollingIntervalRef.current = setInterval(async () => {
+      pollingAttemptsRef.current++;
+      
+      const isMatched = await pollForMatch();
+      
+      // If matched or max attempts reached, stop polling
+      if (isMatched || pollingAttemptsRef.current >= 10) {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        
+        // If max attempts reached without match
+        if (!isMatched && pollingAttemptsRef.current >= 10) {
+          setIsLoading(false);
+          setError('No match found. Please try again.');
+          Alert.alert(
+            'No Match Found',
+            'Unable to find a match. Please try again.',
+            [{ text: 'OK' }]
+          );
+        }
+      }
+    }, 500); // Poll every 0.3 seconds
+  };
+
   const handleGoPress = async () => {
     // Prevent double clicks
     if (isLoading) {
@@ -334,25 +402,11 @@ const RandomVideoScreen = () => {
     setError(null);  // Clear any previous errors
     
     try {
-      // Short delay to show the loading animation (gives visual feedback)
+      // Short delay to show the loading animation
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Use static call ID for video calls
-      const staticCallData = {
-        callId: '9999888822',
-        recipientId: 'user_' + Math.floor(Math.random() * 1000),
-        recipientName: ['Jessica', 'Emma', 'Sophia', 'Olivia'][Math.floor(Math.random() * 4)],
-        isRandom: true
-      };
-      
-      console.log('[RandomVideoScreen] Using static call data:', staticCallData);
-      
-      // Turn off loading indicator before navigation
-      setIsLoading(false);
-      
-      // Navigate directly to video call screen with static data
-      console.log('[RandomVideoScreen] Navigating to VideoCallScreen with static call ID');
-      navigation.navigate('VideoCallScreen', staticCallData);
+      // Start polling for match
+      startPolling();
       
     } catch (error) {
       console.error('[RandomVideoScreen] Error in Go button flow:', error);
@@ -370,6 +424,16 @@ const RandomVideoScreen = () => {
       );
     }
   };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, []);
 
   // Format seconds to MM:SS
   const formatTime = (seconds) => {

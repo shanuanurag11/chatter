@@ -10,8 +10,8 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import {ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG } from '@zegocloud/zego-uikit-prebuilt-call-rn'
 
 // Replace with your ZegoCloud credentials once you have them
-const ZEGO_APP_ID = 491825343; // Replace with your actual App ID (as a number)
-const ZEGO_APP_SIGN = 'cdf3b371814568ecee82f84aaa9ba625506d88ebea3d7f5bd20f94da55bc7dd6';
+const ZEGO_APP_ID = 1765584231; // Replace with your actual App ID (as a number)
+const ZEGO_APP_SIGN = '5187d0a49871d478f21df4a71737fc84255f33c0095b8d1dd160ac333b10802d';
 
 const VideoCallScreen = ({ route, navigation }) => {
   console.log('[VideoCallScreen] Mounted');
