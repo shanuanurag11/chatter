@@ -16,6 +16,7 @@ class SocketService {
     this.authPromise = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
+    this.dns="ws://sakooneqalb.com'"
   }
 
   // Initialize socket connection
@@ -29,7 +30,7 @@ class SocketService {
       this.userId = userId;
 
       // Initialize socket with basic configuration
-      this.socket = io('ws://69.62.85.193:8001', {
+      this.socket = io(this.dns, {
         transports: ['websocket'],
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
