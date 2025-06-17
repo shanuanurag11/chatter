@@ -9,7 +9,8 @@ import {
   Image, 
   StatusBar,
   Animated,
-  Dimensions
+  Dimensions,
+  ActivityIndicator
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -17,80 +18,79 @@ import { logout, logoutUser } from '../../store/slices/authSlice';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import profileService from '../../services/profileService';
 
 // Import colors from constants 
 import Colors from '../../constants/colors';
 
 const { width } = Dimensions.get('window');
 
-// Dummy API URL for later replacement
-const API_BASE_URL = 'https://api.example.com/v1';
-
-// Dummy user data - this would be fetched from the API in a real app
-const dummyUser = {
-  username: 'user3lGhMk98',
-  userId: '109943032',
-  tokens: 3,
-  isVerified: false,
-  avatar: 'https://randomuser.me/api/portraits/lego/1.jpg',
-  credits: 0,
-  level: {
-    current: 1,
-    progress: 30
-  }
-};
-
-// Menu items data
-const menuItems = [
-  { id: 'daily', icon: 'gift-outline', title: 'Daily Bonus', type: 'ionicons', badge: 'New' },
-  { id: 'credits', icon: 'star-outline', title: 'Credits', count: 0, type: 'ionicons' },
-  { id: 'package', icon: 'cube-outline', title: 'Package', type: 'ionicons' },
-  { id: 'level', icon: 'shield-outline', title: 'My Level', type: 'ionicons' },
-  { id: 'invite', icon: 'mail-outline', title: 'Invite to get bonus', type: 'ionicons' },
-  { id: 'bind', icon: 'mail-outline', title: 'Bind invitation code', type: 'ionicons' }
-];
-
 const ProfileScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
-  const [user] = useState(dummyUser); // In real app, this would come from API via Redux or Context
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [user, setUser] = useState(null);
   
   // Animated values for interactions
   const cardScale = useRef(new Animated.Value(1)).current;
   const avatarAnim = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(0)).current;
   
+  // Fetch user profile
+  const fetchUserProfile = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const profileData = await profileService.getUserProfile();
+      console.log('Profile data:', profileData);
+      setUser(profileData);
+    } catch (err) {
+      setError(err.message || 'Failed to load profile');
+      console.error('Profile fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load profile on mount
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
+  
   // Animate elements when component mounts
   useEffect(() => {
-    Animated.sequence([
-      Animated.timing(avatarAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(contentOpacity, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      })
-    ]).start();
-    
-    // Start pulsating animation for cards
-    Animated.loop(
+    if (!loading && user) {
       Animated.sequence([
-        Animated.timing(cardScale, {
-          toValue: 1.03,
-          duration: 1500,
+        Animated.timing(avatarAnim, {
+          toValue: 1,
+          duration: 800,
           useNativeDriver: true,
         }),
-        Animated.timing(cardScale, {
+        Animated.timing(contentOpacity, {
           toValue: 1,
-          duration: 1500,
+          duration: 600,
           useNativeDriver: true,
         })
-      ])
-    ).start();
-  }, []);
+      ]).start();
+      
+      // Start pulsating animation for cards
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(cardScale, {
+            toValue: 1.03,
+            duration: 1500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(cardScale, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+          })
+        ])
+      ).start();
+    }
+  }, [loading, user]);
   
   // Animation styles
   const avatarAnimStyle = {
@@ -117,43 +117,53 @@ const ProfileScreen = () => {
     ]
   };
   
-  // In a real app, these functions would make API calls
   const handleLogout = () => {
     dispatch(logoutUser()).then(() => {
-      // After successful logout, dispatch the regular logout action
       dispatch(logout());
     });
   };
   
-  // Navigate to edit profile screen
   const handleEditProfile = () => {
     navigation.navigate('EditProfile');
   };
   
-  const copyUserId = () => {
-    // In a real app, this would use the Clipboard API and show a toast
-    console.log('Copied ID:', user.userId);
-  };
-  
-  const handleVerify = () => {
-    // In a real app, this would navigate to verification screen
-    console.log('Starting verification process');
-  };
-  
   const handleTokenPress = () => {
-    // Navigate to tokens screen
     navigation.navigate('Tokens');
   };
   
   const handleVIPPress = () => {
-    // Navigate to VIP subscription screen
     navigation.navigate('VipSubscription');
   };
-  
-  const handleMenuItemPress = (id) => {
-    // In a real app, this would handle different menu actions
-    console.log(`Menu item pressed: ${id}`);
-  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchUserProfile}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
+  if (!user) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <Text style={styles.errorText}>No profile data available</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={fetchUserProfile}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
   
   return (
     <SafeAreaView style={styles.container}>
@@ -163,196 +173,266 @@ const ProfileScreen = () => {
         animated={true}
       />
       
-      {/* Enhanced curved header background */}
+      {/* Header with gradient background */}
       <View style={styles.headerContainer}>
         <LinearGradient
           colors={[Colors.gradientStart, Colors.gradientEnd]}
           style={styles.headerGradient}
           start={{x: 0, y: 0}}
           end={{x: 1, y: 0}}
-        />
-        
-        {/* Top decorative circles */}
-        <View style={styles.headerDecorationContainer}>
-          <View style={styles.headerDecoration1} />
-          <View style={styles.headerDecoration2} />
-          <View style={styles.headerDecoration3} />
-        </View>
+        >
+          <View style={styles.headerPattern} />
+        </LinearGradient>
         
         {/* Header buttons */}
         <View style={styles.headerButtons}>
-          <TouchableOpacity style={styles.iconButton} onPress={handleEditProfile}>
+          <TouchableOpacity 
+            style={[styles.iconButton, styles.editButton]} 
+            onPress={handleEditProfile}
+          >
             <Icon name="create-outline" size={22} color={Colors.white} />
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.iconButton}>
-            <Icon name="notifications-outline" size={22} color={Colors.white} />
-            <View style={styles.notificationBadge} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={[styles.iconButton, styles.settingsButton]}>
             <Icon name="settings-outline" size={22} color={Colors.white} />
           </TouchableOpacity>
         </View>
       </View>
       
-      {/* Profile section with animated avatar */}
-      <View style={styles.profileContainer}>
-        <Animated.View style={[styles.avatarWrapper, avatarAnimStyle]}>
-          <View style={styles.avatarContainer}>
-            <Image 
-              source={{ uri: user.avatar }} 
-              style={styles.avatar} 
-              resizeMode="cover"
-            />
-            <LinearGradient
-              colors={['transparent', 'rgba(0,0,0,0.1)']}
-              style={styles.avatarOverlay}
-            />
-          </View>
-          <View style={styles.avatarRing} />
-        </Animated.View>
-        
-        {/* Username and ID */}
-        <Animated.View style={[styles.userInfoContainer, contentAnimStyle]}>
-          <View style={styles.usernameContainer}>
-            <Text style={styles.username}>{user.username}</Text>
-            {user.isVerified ? (
-              <View style={styles.verifiedBadge}>
-                <Icon name="checkmark-circle" size={16} color={Colors.primary} />
-              </View>
-            ) : (
-              <TouchableOpacity 
-                style={styles.verifyButton}
-                onPress={handleVerify}
-              >
-                <Text style={styles.verifyText}>Go Verify</Text>
-                <Icon name="chevron-forward" size={14} color={Colors.white} />
-              </TouchableOpacity>
-            )}
-          </View>
-          
-          <TouchableOpacity 
-            style={styles.idContainer}
-            onPress={copyUserId}
-          >
-            <Text style={styles.idText}>ID: {user.userId}</Text>
-            <Icon name="copy-outline" size={14} color="#999999" style={styles.copyIcon} />
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-      
-      {/* Enhanced Tokens and VIP Cards with subtle animation */}
-      <Animated.View style={[styles.cardsContainer, {transform: [{scale: cardScale}]}]}>
-        <TouchableOpacity 
-          style={styles.tokenCard}
-          onPress={handleTokenPress}
-          activeOpacity={0.85}
-        >
-          <LinearGradient
-            colors={[Colors.primaryLight, Colors.primary]}
-            style={styles.cardGradient}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-          >
-            <View style={styles.cardPattern} />
-            <View style={styles.cardContent}>
-              <View style={styles.cardIconContainer}>
-                <Icon name="key" size={22} color="#FFC107" />
-              </View>
-              <Text style={styles.tokenAmount}>{user.tokens}</Text>
-              <Text style={styles.cardLabel}>Tokens</Text>
-              <Icon name="chevron-forward" size={18} color={Colors.white} style={styles.cardArrow} />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.vipCard}
-          onPress={handleVIPPress}
-          activeOpacity={0.85}
-        >
-          <LinearGradient
-            colors={['#FF9D80', '#FF7D6B']}
-            style={styles.cardGradient}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-          >
-            <View style={styles.cardPattern} />
-            <View style={styles.cardContent}>
-              <View style={styles.cardIconContainer}>
-                <Icon name="crown" size={22} color="#FFC107" />
-              </View>
-              <Text style={styles.cardLabel}>VIP</Text>
-              <Text style={styles.vipText}>Get VIP</Text>
-              <Icon name="chevron-forward" size={18} color={Colors.white} style={styles.cardArrow} />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>
-      
-      {/* Animated level progress bar */}
-      <Animated.View style={[styles.levelContainer, contentAnimStyle]}>
-        <View style={styles.levelHeader}>
-          <Text style={styles.levelTitle}>Level {user.level.current}</Text>
-          <Text style={styles.levelPercent}>{user.level.progress}%</Text>
-        </View>
-        <View style={styles.progressContainer}>
-          <View style={[styles.progressBar, {width: `${user.level.progress}%`}]} />
-        </View>
-      </Animated.View>
-      
-      {/* Enhanced Menu Items */}
       <ScrollView 
-        style={styles.menuContainer}
+        style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.menuContentContainer}
+        contentContainerStyle={styles.scrollContent}
       >
-        {menuItems.map((item, index) => (
-          <TouchableOpacity 
-            key={item.id}
-            style={[
-              styles.menuItem, 
-              index === menuItems.length - 1 ? styles.lastMenuItem : null
-            ]}
-            onPress={() => handleMenuItemPress(item.id)}
-            activeOpacity={0.7}
-          >
-            <View style={[
-              styles.menuIconContainer,
-              item.id === 'daily' ? styles.menuIconHighlighted : null
-            ]}>
-              {item.type === 'ionicons' ? (
-                <Icon name={item.icon} size={22} color={item.id === 'daily' ? Colors.white : Colors.textDark} />
-              ) : (
-                <MaterialIcons name={item.icon} size={22} color={item.id === 'daily' ? Colors.white : Colors.textDark} />
-              )}
+        {/* Profile section */}
+        <View style={styles.profileContainer}>
+          <Animated.View style={[styles.avatarWrapper, avatarAnimStyle]}>
+            <View style={styles.avatarContainer}>
+              <Image 
+                source={{ uri: user.profile_picture || 'https://randomuser.me/api/portraits/lego/1.jpg' }} 
+                style={styles.avatar} 
+                resizeMode="cover"
+              />
+              <LinearGradient
+                colors={['transparent', 'rgba(0,0,0,0.1)']}
+                style={styles.avatarOverlay}
+              />
+            </View>
+            <View style={styles.avatarRing} />
+            {user.is_verified && (
+              <View style={styles.verifiedBadge}>
+                <Icon name="checkmark-circle" size={20} color={Colors.primary} />
+              </View>
+            )}
+          </Animated.View>
+          
+          {/* User Info */}
+          <Animated.View style={[styles.userInfoContainer, contentAnimStyle]}>
+            <View style={styles.nameContainer}>
+              <Text style={styles.username}>{user.username}</Text>
+              <Text style={styles.userId}>ID: {user.id}</Text>
             </View>
             
-            <View style={styles.menuTextContainer}>
-              <Text style={styles.menuText}>{item.title}</Text>
-              {item.badge && (
-                <View style={styles.menuBadge}>
-                  <Text style={styles.menuBadgeText}>{item.badge}</Text>
+            {user.bio && (
+              <View style={styles.bioContainer}>
+                <Icon name="chatbubble-outline" size={16} color={Colors.textDark} style={styles.bioIcon} />
+                <Text style={styles.bioText}>{user.bio}</Text>
+              </View>
+            )}
+          </Animated.View>
+
+          {/* Tokens and VIP Cards */}
+          <Animated.View style={[styles.cardsContainer, {transform: [{scale: cardScale}]}]}>
+            <TouchableOpacity 
+              style={styles.tokenCard}
+              onPress={handleTokenPress}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={[Colors.primaryLight, Colors.primary]}
+                style={styles.cardGradient}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+              >
+                <View style={styles.cardPattern} />
+                <View style={styles.cardContent}>
+                  <View style={styles.cardIconContainer}>
+                    <Icon name="key" size={24} color="#FFC107" />
+                  </View>
+                  <View style={{flex: 1}}>
+                    <Text style={styles.tokenAmount}>0</Text>
+                    <Text style={styles.cardLabel}>Tokens</Text>
+                  </View>
+                  <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.vipCard}
+              onPress={handleVIPPress}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={['#FF9D80', '#FF7D6B']}
+                style={styles.cardGradient}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+              >
+                <View style={styles.cardPattern} />
+                <View style={styles.cardContent}>
+                  <View style={styles.cardIconContainer}>
+                    <Icon name="crown" size={24} color="#FFC107" />
+                  </View>
+                  <View style={{flex: 1}}>
+                    <Text style={styles.cardLabel}>VIP</Text>
+                    <Text style={styles.vipText}>Get VIP</Text>
+                  </View>
+                  <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+
+          {/* User Details */}
+          <View style={styles.userDetailsContainer}>
+            {user.name && (
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconContainer}>
+                  <Icon name="person-outline" size={18} color={Colors.primary} />
+                </View>
+                <Text style={styles.detailText}>{user.name}</Text>
+              </View>
+            )}
+            
+            {user.mobile_number && (
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconContainer}>
+                  <Icon name="call-outline" size={18} color={Colors.primary} />
+                </View>
+                <Text style={styles.detailText}>{user.mobile_number}</Text>
+              </View>
+            )}
+            
+            {user.gender && (
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconContainer}>
+                  <Icon name="male-female-outline" size={18} color={Colors.primary} />
+                </View>
+                <Text style={styles.detailText}>{user.gender}</Text>
+              </View>
+            )}
+            
+            {user.address && (
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconContainer}>
+                  <Icon name="location-outline" size={18} color={Colors.primary} />
+                </View>
+                <Text style={styles.detailText}>{user.address}, {user.city}</Text>
+              </View>
+            )}
+
+            {user.selected_age && (
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconContainer}>
+                  <Icon name="calendar-outline" size={18} color={Colors.primary} />
+                </View>
+                <Text style={styles.detailText}>Age: {user.selected_age}</Text>
+              </View>
+            )}
+
+            {user.created_at && (
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconContainer}>
+                  <Icon name="time-outline" size={18} color={Colors.primary} />
+                </View>
+                <Text style={styles.detailText}>Joined: {new Date(user.created_at).toLocaleDateString()}</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Media Section */}
+          {(user.images?.length > 0 || user.videos?.length > 0) && (
+            <View style={styles.mediaSection}>
+              <Text style={styles.sectionTitle}>Media</Text>
+              
+              {/* Images Grid */}
+              {user.images?.length > 0 && (
+                <View style={styles.mediaContainer}>
+                  <Text style={styles.mediaSubtitle}>Photos</Text>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.mediaScrollView}
+                  >
+                    {user.images.map((image, index) => (
+                      <TouchableOpacity 
+                        key={index}
+                        style={styles.mediaItem}
+                        onPress={() => {
+                          console.log('Preview image:', image);
+                        }}
+                      >
+                        <Image 
+                          source={{ uri: image }} 
+                          style={styles.mediaImage}
+                          resizeMode="cover"
+                        />
+                        <LinearGradient
+                          colors={['transparent', 'rgba(0,0,0,0.3)']}
+                          style={styles.mediaOverlay}
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* Videos Grid */}
+              {user.videos?.length > 0 && (
+                <View style={styles.mediaContainer}>
+                  <Text style={styles.mediaSubtitle}>Videos</Text>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.mediaScrollView}
+                  >
+                    {user.videos.map((video, index) => (
+                      <TouchableOpacity 
+                        key={index}
+                        style={styles.mediaItem}
+                        onPress={() => {
+                          console.log('Preview video:', video);
+                        }}
+                      >
+                        <View style={styles.videoThumbnail}>
+                          <Icon name="play-circle" size={40} color={Colors.white} />
+                        </View>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
                 </View>
               )}
             </View>
-            
-            {item.id === 'credits' && (
-              <View style={styles.creditsContainer}>
-                <Text style={styles.creditsText}>{user.credits}</Text>
-              </View>
-            )}
-            
-            <Icon name="chevron-forward" size={18} color="#CCCCCC" style={styles.menuArrow} />
-          </TouchableOpacity>
-        ))}
+          )}
+        </View>
       </ScrollView>
       
       {/* Logout button */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Icon name="log-out-outline" size={22} color={Colors.primary} style={styles.logoutIcon} />
-        <Text style={styles.logoutText}>Logout</Text>
+      <TouchableOpacity 
+        style={styles.logoutButton} 
+        onPress={handleLogout}
+        activeOpacity={0.8}
+      >
+        <LinearGradient
+          colors={['#F5F5F5', '#EEEEEE']}
+          style={styles.logoutGradient}
+          start={{x: 0, y: 0}}
+          end={{x: 1, y: 0}}
+        >
+          <Icon name="log-out-outline" size={22} color={Colors.primary} style={styles.logoutIcon} />
+          <Text style={styles.logoutText}>Logout</Text>
+        </LinearGradient>
       </TouchableOpacity>
     </SafeAreaView>
   );
@@ -363,9 +443,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  scrollView: {
+    flex: 1,
+    zIndex: 2,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
   headerContainer: {
-    height: 160,
+    height: 180,
     position: 'relative',
+    zIndex: 1,
   },
   headerGradient: {
     position: 'absolute',
@@ -375,91 +463,82 @@ const styles = StyleSheet.create({
     bottom: 0,
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
+    zIndex: 1,
   },
-  headerDecorationContainer: {
+  headerPattern: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    overflow: 'hidden',
-  },
-  headerDecoration1: {
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  headerDecoration2: {
-    position: 'absolute',
-    bottom: -60,
-    left: -30,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  headerDecoration3: {
-    position: 'absolute',
-    top: 40,
-    left: width * 0.3,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    opacity: 0.15,
+    backgroundColor: 'transparent',
+    borderTopWidth: 120,
+    borderLeftWidth: 120,
+    borderStyle: 'solid',
+    borderTopColor: 'white',
+    borderLeftColor: 'transparent',
+    zIndex: 1,
   },
   headerButtons: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    paddingTop: 12,
-    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingHorizontal: 15,
+    zIndex: 2,
   },
   iconButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 12,
-    position: 'relative',
+    marginLeft: 14,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
   },
-  notificationBadge: {
-    position: 'absolute',
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FF5252',
-    top: 8,
-    right: 8,
+  editButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderWidth: 1.5,
-    borderColor: Colors.primary,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+  },
+  settingsButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   profileContainer: {
-    marginTop: -70,
-    paddingHorizontal: 20,
+    marginTop: -50,
+    paddingHorizontal: 15,
+    zIndex: 2,
+    position: 'relative',
+    backgroundColor: Colors.background,
   },
   avatarWrapper: {
     alignItems: 'center',
     position: 'relative',
+    marginBottom: 24,
+    zIndex: 3,
+    elevation: 8,
   },
   avatarContainer: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
     backgroundColor: '#F0F0F0',
     overflow: 'hidden',
-    elevation: 8,
+    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
     borderWidth: 4,
     borderColor: '#FFFFFF',
     position: 'relative',
+    zIndex: 3,
   },
   avatarOverlay: {
     position: 'absolute',
@@ -467,105 +546,136 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
+    zIndex: 3,
   },
   avatar: {
     width: '100%',
     height: '100%',
+    zIndex: 3,
   },
   avatarRing: {
     position: 'absolute',
-    width: 124,
-    height: 124,
-    borderRadius: 62,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    width: 144,
+    height: 144,
+    borderRadius: 72,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.6)',
     top: -7,
+    zIndex: 3,
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 5,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    zIndex: 4,
   },
   userInfoContainer: {
     alignItems: 'center',
-    marginTop: 14,
+    marginTop: 24,
   },
-  usernameContainer: {
-    flexDirection: 'row',
+  nameContainer: {
     alignItems: 'center',
   },
   username: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333333',
-    textShadowColor: 'rgba(0,0,0,0.05)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 3,
+    color: '#2C2C2C',
+    textShadowColor: 'rgba(0,0,0,0.08)',
+    textShadowOffset: {width: 0, height: 2},
+    textShadowRadius: 4,
   },
-  verifiedBadge: {
-    marginLeft: 8,
-  },
-  verifyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 16,
-    marginLeft: 8,
-    elevation: 3,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  verifyText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginRight: 2,
-  },
-  idContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  userId: {
+    fontSize: 15,
+    color: '#666666',
     marginTop: 6,
-    paddingVertical: 3,
-    paddingHorizontal: 12,
+    letterSpacing: 0.5,
+  },
+  bioContainer: {
+    marginTop: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(0,0,0,0.04)',
+    borderRadius: 20,
+    maxWidth: '92%',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  bioIcon: {
+    marginRight: 10,
+  },
+  bioText: {
+    fontSize: 15,
+    color: '#444444',
+    textAlign: 'center',
+    flex: 1,
+    lineHeight: 22,
+  },
+  userDetailsContainer: {
+    marginTop: 28,
+    width: '100%',
+    paddingHorizontal: 15,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
     backgroundColor: 'rgba(0,0,0,0.03)',
-    borderRadius: 12,
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
   },
-  idText: {
-    fontSize: 14,
-    color: '#777777',
+  detailIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(108, 99, 255, 0.12)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
   },
-  copyIcon: {
-    marginLeft: 4,
+  detailText: {
+    fontSize: 16,
+    color: '#333333',
+    flex: 1,
+    letterSpacing: 0.3,
   },
   cardsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginTop: 22,
+    paddingHorizontal: 15,
+    marginTop: 28,
+    marginBottom: 24,
+    gap: 12,
   },
   tokenCard: {
     flex: 1,
-    marginRight: 10,
-    borderRadius: 16,
+    borderRadius: 24,
     overflow: 'hidden',
-    height: 80,
-    elevation: 4,
+    height: 100,
+    elevation: 8,
     shadowColor: '#6C63FF',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    position: 'relative',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
   },
   vipCard: {
     flex: 1,
-    marginLeft: 10,
-    borderRadius: 16,
+    borderRadius: 24,
     overflow: 'hidden',
-    height: 80,
-    elevation: 4,
+    height: 100,
+    elevation: 8,
     shadowColor: '#FF7D6B',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    position: 'relative',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
   },
   cardGradient: {
     flex: 1,
@@ -573,10 +683,9 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    padding: 12,
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
     position: 'relative',
     zIndex: 2,
   },
@@ -586,171 +695,139 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: 0.05,
+    opacity: 0.15,
     zIndex: 1,
     backgroundColor: 'transparent',
-    borderTopWidth: 80,
-    borderLeftWidth: 80,
+    borderTopWidth: 120,
+    borderLeftWidth: 120,
     borderStyle: 'solid',
     borderTopColor: 'white',
     borderLeftColor: 'transparent',
   },
   cardIconContainer: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    marginRight: 12,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
   tokenAmount: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginRight: 5,
+    marginBottom: 2,
+    textShadowColor: 'rgba(0,0,0,0.25)',
+    textShadowOffset: {width: 0, height: 2},
+    textShadowRadius: 4,
+  },
+  cardLabel: {
+    fontSize: 17,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
     textShadowColor: 'rgba(0,0,0,0.2)',
     textShadowOffset: {width: 0, height: 1},
     textShadowRadius: 3,
   },
-  cardLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    flex: 1,
-  },
   vipText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#FFFFFF',
-    flex: 1,
+    opacity: 0.9,
+    marginTop: 1,
   },
   cardArrow: {
-    marginLeft: 'auto',
-    opacity: 0.8,
+    position: 'absolute',
+    right: 14,
+    top: '50%',
+    transform: [{ translateY: -8 }],
+    opacity: 0.9,
   },
-  levelContainer: {
-    marginTop: 24,
-    paddingHorizontal: 20,
+  mediaSection: {
+    marginTop: 28,
+    paddingHorizontal: 15,
   },
-  levelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#2C2C2C',
+    marginBottom: 22,
+    letterSpacing: 0.5,
   },
-  levelTitle: {
-    fontSize: 16,
+  mediaContainer: {
+    marginBottom: 28,
+  },
+  mediaSubtitle: {
+    fontSize: 17,
     fontWeight: '600',
-    color: '#555555',
+    color: '#444444',
+    marginBottom: 18,
+    letterSpacing: 0.3,
   },
-  levelPercent: {
-    fontSize: 14,
-    color: '#888888',
-  },
-  progressContainer: {
-    height: 8,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: Colors.primary,
-    borderRadius: 4,
-  },
-  menuContainer: {
-    flex: 1,
-    marginTop: 24,
-  },
-  menuContentContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 100,
-  },
-  menuItem: {
+  mediaScrollView: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
   },
-  lastMenuItem: {
-    borderBottomWidth: 0,
+  mediaItem: {
+    width: 150,
+    height: 150,
+    marginRight: 18,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: '#F0F0F0',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
   },
-  menuIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#F5F5F5',
+  mediaImage: {
+    width: '100%',
+    height: '100%',
+  },
+  mediaOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  videoThumbnail: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0,0,0,0.45)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
-  },
-  menuIconHighlighted: {
-    backgroundColor: Colors.primary,
-  },
-  menuTextContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  menuText: {
-    fontSize: 16,
-    color: '#333333',
-  },
-  menuBadge: {
-    backgroundColor: '#FF5252',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    marginLeft: 8,
-  },
-  menuBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  creditsContainer: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: '#F0F0F0',
-    borderRadius: 12,
-    marginRight: 12,
-  },
-  creditsText: {
-    fontSize: 14,
-    color: Colors.primary,
-    fontWeight: '600',
-  },
-  menuArrow: {
-    marginLeft: 'auto',
-    opacity: 0.6,
   },
   logoutButton: {
     position: 'absolute',
-    bottom: 20,
-    left: width / 2 - 70,
+    bottom: 24,
+    left: width / 2 - 90,
+    width: 180,
+    height: 52,
+    borderRadius: 26,
+    overflow: 'hidden',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+  },
+  logoutGradient: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5F5F5',
-    width: 140,
-    height: 44,
-    borderRadius: 22,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   logoutIcon: {
-    marginRight: 6,
+    marginRight: 10,
   },
   logoutText: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: 17,
+    fontWeight: '600',
     color: Colors.primary,
+    letterSpacing: 0.5,
   },
 });
 
