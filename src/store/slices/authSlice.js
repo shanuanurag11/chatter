@@ -4,6 +4,7 @@ import dummyAuthApi from '../../api/dummyAuthApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import apiClient from '../../services/api/client';
+import userService from '../../services/userService';
 
 // Async thunks
 export const login = createAsyncThunk(
@@ -113,12 +114,14 @@ export const verifyOTP = createAsyncThunk(
         country_code: '+91'
       });
 
-     console.log("response.data1verifyotp1->",response.data);
+      console.log("response.data1verifyotp1->",response.data);
       if (response.data.status) {
         if (response.data.data.is_signed_in) {
           // Store the tokens securely only if user is signed in
           await EncryptedStorage.setItem('user_token', response.data.data.access);
           await EncryptedStorage.setItem('refresh_token', response.data.data.refresh);
+          const userData = response.data.data;
+          await userService.saveUserData(userData);
         }
         return response.data.data;
       } else {
@@ -232,6 +235,9 @@ export const register = createAsyncThunk(
         // Store the tokens
         await EncryptedStorage.setItem('user_token', response.data.data.access);
         await EncryptedStorage.setItem('refresh_token', response.data.data.refresh);
+        const userData = response.data.data;
+        await userService.saveUserData(userData);
+        return userData;
         return response.data.data;
       } else {
         return rejectWithValue(response.data.message);

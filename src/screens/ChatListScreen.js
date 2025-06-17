@@ -216,33 +216,20 @@ const ChatListScreen = () => {
     const initializeSocket = async () => {
       try {
         setError(null);
-        // Get user data from UserService
+        // Get user data directly from storage
         const userData = await userService.getUserData();
-        console.log("User data from service:", userData);
+        console.log("User data from storage:", userData);
 
-        if (!userData) {
-          console.log("No user data found, attempting to fetch from API...");
-          // If no user data in storage, try to get from API
-          const currentUser = await userService.getCurrentUser();
-          console.log("Current user from API:", currentUser);
-          
-          if (!currentUser) {
-            console.error('No user data available, please login again');
-            setError('Please login again to continue');
-            return;
-          }
-        }
-
-        // Initialize socket with user_id
-        const userId = await userData?.id;
-        console.log("Initializing socket with user_id:", userId);
-        
-        if (!userId) {
-          console.error('No user_id available');
-          setError('Unable to initialize chat. Please try again.');
+        if (!userData || !userData.id) {
+          console.error('No valid user data found in storage');
+          setError('Please login again to continue');
           return;
         }
 
+        // Initialize socket with user_id
+        const userId = userData.id;
+        console.log("Initializing socket with user_id:", userId);
+        
         try {
           const initialized = await socketService.initialize(userId);
           if (!initialized) {
@@ -272,24 +259,6 @@ const ChatListScreen = () => {
           const errorUnsubscribe = socketService.addErrorListener((error) => {
             console.error('Socket error received:', error);
             if (error.message === 'Failed to create user') {
-              // Try to reinitialize socket with fresh user data
-              userService.getCurrentUser().then(async (freshUserData) => {
-                if (freshUserData) {
-                  await userService.saveUserData(freshUserData);
-                  const newUserId = freshUserData.id;
-                  if (newUserId) {
-                    socketService.disconnect();
-                    const reinitialized = await socketService.initialize(newUserId);
-                    if (!reinitialized) {
-                      setError('Authentication failed. Please try logging in again.');
-                    }
-                  }
-                } else {
-                  setError('Authentication failed. Please try logging in again.');
-                }
-              }).catch(() => {
-                setError('Authentication failed. Please try logging in again.');
-              });
             } else {
               setError('Connection error. Please try again.');
             }

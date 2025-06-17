@@ -11,11 +11,6 @@ class UserService {
     try {
       console.log('Saving user data:', JSON.stringify(userData, null, 2));
       
-      // Ensure we have the required fields
-      if (!userData.user_id) {
-        console.error('User data missing user_id field');
-        return false;
-      }
 
       // Save user data
       await EncryptedStorage.setItem(
@@ -23,22 +18,6 @@ class UserService {
         JSON.stringify(userData)
       );
       console.log('User data saved to storage');
-
-      // Save tokens separately
-      if (userData.access) {
-        await EncryptedStorage.setItem(
-          'user_token',
-          userData.access
-        );
-        console.log('Access token saved');
-      }
-      if (userData.refresh) {
-        await EncryptedStorage.setItem(
-          'refresh_token',
-          userData.refresh
-        );
-        console.log('Refresh token saved');
-      }
 
       this.userData = userData;
       return true;
@@ -53,18 +32,13 @@ class UserService {
     try {
       console.log('Getting user data from storage...');
       
-      if (this.userData) {
-        console.log('Returning cached user data:', JSON.stringify(this.userData, null, 2));
-        return this.userData;
-      }
-
       const userDataString = await EncryptedStorage.getItem('user_data');
       console.log('Raw user data from storage:', userDataString);
       
       if (userDataString) {
-        this.userData = JSON.parse(userDataString);
-        console.log('Parsed user data:', JSON.stringify(this.userData, null, 2));
-        return this.userData;
+        const parsedData = JSON.parse(userDataString);
+        console.log('Parsed user data:', JSON.stringify(parsedData, null, 2));
+        return parsedData;
       }
       
       console.log('No user data found in storage');

@@ -1,5 +1,4 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { verifyOtp, sendOtp } from '../store/slices/authSlice';
 import { loginWithGoogle, loginWithFacebook, loginWithApple } from '../store/slices/authSlice';
 
 const PhoneLoginScreen = ({ navigation }) => {

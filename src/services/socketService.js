@@ -16,7 +16,7 @@ class SocketService {
     this.authPromise = null;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 5;
-    this.dns="ws://sakooneqalb.com'"
+    this.dns="wss://sakooneqalb.com"
   }
 
   // Initialize socket connection
@@ -229,6 +229,7 @@ class SocketService {
 
   // Send message with acknowledgment
   sendMessage(conversationId, toUserId, message, messageType = 'text') {
+    console.log('sending message-', this.socket, this.isConnected, this.isAuthenticated);
     if (!this.socket || !this.isConnected || !this.isAuthenticated) {
       console.error('Cannot send message: socket not ready');
       return Promise.reject(new Error('Socket not ready'));
