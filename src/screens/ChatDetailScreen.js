@@ -20,6 +20,7 @@ import chatService from '../services/chatService';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import peopleService from '../services/peopleService';
 import { launchImageLibrary } from 'react-native-image-picker';
+import socketService from '../services/socketService';
 // import Toast from 'react-native-toast-message';
 
 // -------------------- UTILITIES --------------------
@@ -358,7 +359,7 @@ const ChatDetailScreen = () => {
       
       // Create a temporary message object for immediate display
       const tempMessage = {
-        id: `temp_${Date.now()}`,
+        id: `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         content: message,
         senderId: chatService.userId,
         timestamp: new Date().toISOString(),
@@ -415,7 +416,7 @@ const ChatDetailScreen = () => {
       setImageSending(true);
       // Create a temporary image message
       const tempMessage = {
-        id: `temp_img_${Date.now()}`,
+        id: `temp_img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         content: imageUri,
         senderId: chatService.userId,
         timestamp: new Date().toISOString(),
@@ -475,33 +476,54 @@ const ChatDetailScreen = () => {
 
   // Set up message listener
   useEffect(() => {
-    const unsubscribe = chatService.addMessageListener((event, data) => {
+    const unsubscribe = socketService.addMessageListener((event, data) => {
+      console.log('Message event received11:', event);
+      console.log('Message data11:', data);
+      
       if (event === 'message_received' && data.room_id === chat.id) {
+        // Create a properly formatted message object
         const newMessage = {
-          id: data.message_id || data.messageId,
-          content: data.message,
-          senderId: data.from_user_id,
+          id: data.id || data.message_id || `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          content: data.content || data.message || '',
+          senderId: data.senderId || data.from_user_id,
           timestamp: data.timestamp || new Date().toISOString(),
           status: 'received',
-          is_my_message: data.from_user_id === chatService.userId
+          is_my_message: false,
+          message_type: data.message_type || 'text',
+          imageUrl: data.imageUrl
         };
-        // Add new message at the end of the list
-        setMessages(prevMessages => [...prevMessages, newMessage]);
+
+        console.log('Adding new received message:', newMessage);
+        
+        // Add new message to the messages array
+        setMessages(prevMessages => {
+          // Check if message already exists to prevent duplicates
+          const messageExists = prevMessages.some(msg => msg.id === newMessage.id);
+          if (messageExists) {
+            console.log('Message already exists, not adding duplicate');
+            return prevMessages;
+          }
+          return [...prevMessages, newMessage];
+        });
+
+        // Scroll to bottom after adding new message
         scrollToBottom();
       } else if (event === 'message_sent' && data.room_id === chat.id) {
+        console.log('Message sent event received11:', data);
         // Update message status if it was sent by current user
         setMessages(prevMessages => 
-          prevMessages.map(msg => 
-            msg.status === 'sending' && msg.content === data.message
-              ? {
-                  ...msg,
-                  id: data.message_id || data.messageId,
-                  status: 'sent',
-                  timestamp: data.timestamp || new Date().toISOString(),
-                  is_my_message: true
-                }
-              : msg
-          )
+          prevMessages.map(msg => {
+            if (msg.status === 'sending' && msg.content === data.message) {
+              return {
+                ...msg,
+                id: data.message_id || data.messageId || msg.id,
+                status: 'sent',
+                timestamp: data.timestamp || new Date().toISOString(),
+                is_my_message: true
+              };
+            }
+            return msg;
+          })
         );
       }
     });
@@ -664,7 +686,12 @@ const ChatDetailScreen = () => {
           <FlatList
             ref={flatListRef}
             data={messages}
-            keyExtractor={(item) => item.id || item.messageId || `msg_${Date.now()}`}
+            keyExtractor={(item) => {
+              // Use a combination of id and timestamp to ensure uniqueness
+              const messageId = item.id || item.messageId || '';
+              const timestamp = item.timestamp || Date.now();
+              return `msg_${messageId}_${timestamp}`;
+            }}
             renderItem={({ item }) => (
               <MessageBubble
                 message={item}
