@@ -416,10 +416,7 @@ const ProfileScreen = () => {
             </View>
           )}
         </View>
-      </ScrollView>
-      
-      {/* Logout button */}
-      <TouchableOpacity 
+        <TouchableOpacity 
         style={styles.logoutButton} 
         onPress={handleLogout}
         activeOpacity={0.8}
@@ -434,6 +431,10 @@ const ProfileScreen = () => {
           <Text style={styles.logoutText}>Logout</Text>
         </LinearGradient>
       </TouchableOpacity>
+      </ScrollView>
+      
+      {/* Logout button */}
+ 
     </SafeAreaView>
   );
 };

@@ -338,8 +338,8 @@ const RandomVideoScreen = () => {
         // Navigate to video call with matched data
         const callData = {
           callId: response.data.caller_id,
-          recipientId: response.data.matched_with,
-          recipientName: 'Anonymous', // You can update this if API provides name
+          recipientId: response.data.matched_with_id||response.data.matched_with,
+          recipientName: response.data.matched_with_name||'Anonymous', // You can update this if API provides name
           isRandom: true
         };
         

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { request, PERMISSIONS, RESULTS, requestMultiple } from 'react-native-permissions';
 import callService from '../services/callService';
+import callHistoryService from '../services/callHistoryService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // ZegoCloud import for production use
@@ -35,7 +36,58 @@ const VideoCallScreen = ({ route, navigation }) => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [checkingPermissions, setCheckingPermissions] = useState(false);
   const [loadingSDK, setLoadingSDK] = useState(true);
+  const [callInitiated, setCallInitiated] = useState(false);
   const permissionRequestRef = useRef(false);
+
+  // Function to notify server about call initiation
+  const notifyCallInitiation = async () => {
+    if (!recipientId || callInitiated) {
+      console.log('[VideoCallScreen] Skipping call initiation notification:', { 
+        recipientId, 
+        callInitiated 
+      });
+      return;
+    }
+
+    try {
+      console.log('[VideoCallScreen] Notifying server about call initiation');
+      
+      await callHistoryService.initiateCall({
+        call_id: callId,
+        call_type: 'video',
+        recipient_id: recipientId,
+        status: 'initiated'
+      });
+
+      setCallInitiated(true);
+      console.log('[VideoCallScreen] Call initiation notification successful');
+    } catch (error) {
+      console.error('[VideoCallScreen] Error notifying call initiation:', error);
+      // Don't block the call if the API fails
+    }
+  };
+
+  // Function to notify server about call end
+  const notifyCallEnd = async () => {
+    console.log('[VideoCallScreen] notifyCallEnd called with duration:');
+    if (!callId) {
+      console.log('[VideoCallScreen] Skipping call end notification - no recipientId');
+      return;
+    }
+
+    try {
+      console.log('[VideoCallScreen] Notifying server about call end');
+      
+      await callHistoryService.endCall({
+        call_id: callId,
+      });
+
+      console.log('[VideoCallScreen] Call end notification successful');
+    } catch (error) {
+      console.error('[VideoCallScreen] Error notifying call end:', error);
+      // Don't block navigation if the API fails
+    }
+  };
 
   // Function to request Android permissions directly
   const requestAndroidPermissions = async () => {
@@ -222,7 +274,9 @@ const VideoCallScreen = ({ route, navigation }) => {
         setTimeout(() => {
           console.log('[VideoCallScreen] SDK loading completed');
           setLoadingSDK(false);
-        }, 1500); // Slightly longer delay to ensure proper initialization
+          // Notify server about call initiation after SDK is loaded
+          notifyCallInitiation();
+        }, 300); // Slightly longer delay to ensure proper initialization
         
         return true;
       } catch (error) {
@@ -267,8 +321,9 @@ const VideoCallScreen = ({ route, navigation }) => {
   // Handle back button to properly end the call
   useFocusEffect(
     React.useCallback(() => {
-      const onBackPress = () => {
+      const onBackPress = async () => {
         console.log('[VideoCallScreen] Back button pressed, handling end call');
+        notifyCallEnd();
         handleEndCall();
         return true;
       };
@@ -292,8 +347,9 @@ const VideoCallScreen = ({ route, navigation }) => {
         { 
           text: 'End Call', 
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             console.log('[VideoCallScreen] Call ended by user');
+             notifyCallEnd();
             navigation.goBack();
           } 
         }
@@ -419,7 +475,11 @@ const VideoCallScreen = ({ route, navigation }) => {
                 {{
                     // You can also use ONE_ON_ONE_VOICE_CALL_CONFIG/GROUP_VIDEO_CALL_CONFIG/GROUP_VOICE_CALL_CONFIG to make more types of calls.
                     ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
-                    onCallEnd: (callID, reason, duration) => { navigation.goBack()},
+                    onCallEnd: async (callID, reason, duration) => { 
+                      console.log('[VideoCallScreen] Call ended with reason:', reason, 'duration:', duration);
+                      notifyCallEnd();
+                      navigation.goBack();
+                    },
                 }}
             />
 
