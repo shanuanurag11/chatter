@@ -102,6 +102,57 @@ class ChatService {
       throw error;
     }
   }
+
+  // Create or find conversation with a user
+  async createOrFindConversation(otherUserId) {
+    try {
+      console.log('Creating or finding conversation with user:', otherUserId);
+      
+      // First, try to find existing conversation
+      const existingChats = await this.getMessageThreads();
+      const existingChat = existingChats.find(chat => 
+        chat.other_participant && chat.other_participant.id === otherUserId
+      );
+      
+      if (existingChat) {
+        console.log('Found existing conversation:', existingChat);
+        return existingChat;
+      }
+      
+      // If no existing conversation, create a new one
+      console.log('No existing conversation found, creating new one...');
+      const response = await apiClient.post('/api/v1/user/chats/', {
+        other_user_id: otherUserId
+      });
+      
+      if (response.data.status) {
+        const newChat = {
+          id: response.data.data.id,
+          name: response.data.data.other_participant?.name || 'Unknown',
+          avatar: response.data.data.other_participant?.profile_picture,
+          lastMessage: {
+            text: '',
+            timestamp: new Date().toISOString(),
+            messageType: 'text'
+          },
+          unread: 0,
+          isOnline: false,
+          timestamp: new Date().toISOString(),
+          created_at: response.data.data.created_at,
+          updated_at: response.data.data.updated_at,
+          other_participant: response.data.data.other_participant
+        };
+        
+        console.log('Created new conversation:', newChat);
+        return newChat;
+      }
+      
+      throw new Error('Failed to create conversation');
+    } catch (error) {
+      console.error('Error creating or finding conversation:', error);
+      throw error;
+    }
+  }
 }
 
 export default new ChatService(); 

@@ -124,6 +124,23 @@ class UserService {
       return null;
     }
   }
+
+  // Get user profile by ID
+  async getUserProfileById(userId) {
+    try {
+      console.log('Fetching user profile for ID:', userId);
+      const response = await apiClient.get(`/api/v1/user/profile/${userId}/`);
+      console.log('User profile API response:', JSON.stringify(response.data, null, 2));
+      
+      if (response.data.status) {
+        return response.data.data;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error getting user profile by ID:', error);
+      throw error;
+    }
+  }
 }
 
 export default new UserService();

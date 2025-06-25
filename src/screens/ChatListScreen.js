@@ -114,7 +114,7 @@ const convertEmojiCodes = (text) => {
 };
 
 // Chat Item Component
-const ChatItem = ({ chat, onPress }) => {
+const ChatItem = ({ chat, onPress, onAvatarPress }) => {
   const timestamp = chat.lastMessage && chat.lastMessage.timestamp 
     ? chat.lastMessage.timestamp 
     : chat.timestamp;
@@ -141,7 +141,13 @@ const ChatItem = ({ chat, onPress }) => {
       activeOpacity={0.7}
     >
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+        <TouchableOpacity
+          onPress={() => onAvatarPress(chat)}
+          activeOpacity={0.8}
+          // style={styles.avatarTouchable}
+        >
+          <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+        </TouchableOpacity>
         {chat.isOnline && <View style={styles.onlineBadge} />}
       </View>
       
@@ -349,6 +355,25 @@ const ChatListScreen = () => {
     }
   };
   
+  // Navigate to user details screen
+  const handleAvatarPress = (chat) => {
+    console.log("Selected user:", chat);
+    try {
+      if (!chat || !chat.other_participant || !chat.other_participant.id) {
+        console.error('Invalid user object:', chat);
+        return;
+      }
+      
+      // Pass the user ID to UserDetails screen
+      navigation.navigate('UserDetails', {
+        userId: chat.other_participant.id
+      });
+    } catch (error) {
+      console.error('Error navigating to user details:', error);
+      setError('Failed to open user details. Please try again.');
+    }
+  };
+  
   // Render separator between items
   const renderSeparator = () => <View style={styles.separator} />;
   
@@ -414,7 +439,7 @@ const ChatListScreen = () => {
           data={chats}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <ChatItem chat={item} onPress={handleChatPress} />
+            <ChatItem chat={item} onPress={handleChatPress} onAvatarPress={handleAvatarPress} />
           )}
           ItemSeparatorComponent={renderSeparator}
           contentContainerStyle={chats.length === 0 ? {flex: 1} : {paddingTop: 12}}
@@ -679,6 +704,13 @@ const styles = StyleSheet.create({
   emojiMessage: {
     fontSize: 18, // Increased font size for better emoji visibility
     lineHeight: 22,
+  },
+  avatarTouchable: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });
 

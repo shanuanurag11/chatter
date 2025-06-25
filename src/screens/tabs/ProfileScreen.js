@@ -10,7 +10,8 @@ import {
   StatusBar,
   Animated,
   Dimensions,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useNavigation } from '@react-navigation/native';
@@ -29,6 +30,7 @@ const ProfileScreen = () => {
   const dispatch = useDispatch();
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   
@@ -38,19 +40,52 @@ const ProfileScreen = () => {
   const contentOpacity = useRef(new Animated.Value(0)).current;
   
   // Fetch user profile
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = async (isRefreshing = false) => {
     try {
-      setLoading(true);
+      if (isRefreshing) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
       const profileData = await profileService.getUserProfile();
       console.log('Profile data:', profileData);
+      
+      if (!profileData) {
+        throw new Error('No profile data received from server');
+      }
+      
       setUser(profileData);
     } catch (err) {
-      setError(err.message || 'Failed to load profile');
       console.error('Profile fetch error:', err);
+      
+      // Provide more specific error messages
+      let errorMessage = 'Failed to load profile';
+      
+      if (err.message) {
+        if (err.message.includes('network') || err.message.includes('connection')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else if (err.message.includes('unauthorized') || err.message.includes('401')) {
+          errorMessage = 'Session expired. Please login again.';
+        } else if (err.message.includes('server') || err.message.includes('500')) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (err.message.includes('timeout')) {
+          errorMessage = 'Request timeout. Please try again.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  // Handle pull-to-refresh
+  const handleRefresh = () => {
+    fetchUserProfile(true);
   };
 
   // Load profile on mount
@@ -137,30 +172,41 @@ const ProfileScreen = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (error) {
     return (
-      <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchUserProfile}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Icon name="alert-circle-outline" size={64} color="#FF3B30" />
+          <Text style={styles.errorTitle}>Unable to Load Profile</Text>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchUserProfile}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
 
   if (!user) {
     return (
-      <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <Text style={styles.errorText}>No profile data available</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchUserProfile}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Icon name="person-outline" size={64} color="#8E8E93" />
+          <Text style={styles.errorTitle}>No Profile Data</Text>
+          <Text style={styles.errorText}>Unable to load your profile information.</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={fetchUserProfile}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
       </SafeAreaView>
     );
   }
@@ -168,140 +214,191 @@ const ProfileScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar 
-        barStyle="light-content" 
-        backgroundColor={Colors.primary} 
+        barStyle="dark-content" 
+        backgroundColor={Colors.background} 
         animated={true}
       />
-      
-      {/* Header with gradient background */}
-      <View style={styles.headerContainer}>
-        <LinearGradient
-          colors={[Colors.gradientStart, Colors.gradientEnd]}
-          style={styles.headerGradient}
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 0}}
-        >
-          <View style={styles.headerPattern} />
-        </LinearGradient>
-        
-        {/* Header buttons */}
-        <View style={styles.headerButtons}>
-          <TouchableOpacity 
-            style={[styles.iconButton, styles.editButton]} 
-            onPress={handleEditProfile}
-          >
-            <Icon name="create-outline" size={22} color={Colors.white} />
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.iconButton, styles.settingsButton]}>
-            <Icon name="settings-outline" size={22} color={Colors.white} />
-          </TouchableOpacity>
-        </View>
-      </View>
       
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[Colors.primary]}
+            tintColor={Colors.primary}
+          />
+        }
       >
-        {/* Profile section */}
-        <View style={styles.profileContainer}>
-          <Animated.View style={[styles.avatarWrapper, avatarAnimStyle]}>
-            <View style={styles.avatarContainer}>
-              <Image 
-                source={{ uri: user.profile_picture || 'https://randomuser.me/api/portraits/lego/1.jpg' }} 
-                style={styles.avatar} 
-                resizeMode="cover"
-              />
-              <LinearGradient
-                colors={['transparent', 'rgba(0,0,0,0.1)']}
-                style={styles.avatarOverlay}
-              />
+        {/* Enhanced Profile Header Section */}
+        <View style={styles.profileHeader}>
+          <LinearGradient
+            colors={['#667eea', '#764ba2', '#f093fb']}
+            style={styles.profileGradient}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 1}}
+          >
+            <View style={styles.profilePattern} />
+            
+            {/* Profile Actions */}
+            <View style={styles.profileActions}>
+              <TouchableOpacity 
+                style={styles.actionButton} 
+                onPress={handleEditProfile}
+              >
+                <Icon name="create-outline" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.actionButton}>
+                <Icon name="settings-outline" size={20} color="#FFFFFF" />
+              </TouchableOpacity>
             </View>
-            <View style={styles.avatarRing} />
-            {user.is_verified && (
-              <View style={styles.verifiedBadge}>
-                <Icon name="checkmark-circle" size={20} color={Colors.primary} />
+            
+            {/* Profile Avatar and Info */}
+            <View style={styles.profileContent}>
+              <Animated.View style={[styles.avatarWrapper, avatarAnimStyle]}>
+                <View style={styles.avatarContainer}>
+                  <Image 
+                    source={{ uri: user.profile_picture || 'https://randomuser.me/api/portraits/lego/1.jpg' }} 
+                    style={styles.avatar} 
+                    resizeMode="cover"
+                  />
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.1)']}
+                    style={styles.avatarOverlay}
+                  />
+                  <TouchableOpacity style={styles.cameraButton} onPress={handleEditProfile}>
+                    <Icon name="camera" size={16} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.avatarRing} />
+                {user.is_verified && (
+                  <View style={styles.verifiedBadge}>
+                    <Icon name="checkmark-circle" size={20} color="#4CAF50" />
+                  </View>
+                )}
+              </Animated.View>
+              
+              {/* User Info */}
+              <Animated.View style={[styles.userInfoContainer, contentAnimStyle]}>
+                <View style={styles.nameContainer}>
+                  <Text style={styles.username}>{user.username}</Text>
+                  <Text style={styles.userId}>ID: {user.id}</Text>
+                  <View style={styles.statusContainer}>
+                    {user.is_verified && (
+                      <View style={styles.verifiedTextContainer}>
+                        <Icon name="checkmark-circle" size={14} color="#4CAF50" />
+                        <Text style={styles.verifiedText}>Verified</Text>
+                      </View>
+                    )}
+                    <View style={[styles.statusIndicator, { backgroundColor: user.active ? '#4CD964' : '#FF3B30' }]}>
+                      <Text style={styles.statusText}>{user.active ? 'Active' : 'Inactive'}</Text>
+                    </View>
+                  </View>
+                </View>
+                
+                {user.bio && user.bio.trim() !== '' ? (
+                  <View style={styles.bioContainer}>
+                    <Icon name="chatbubble-outline" size={16} color="#FFFFFF" style={styles.bioIcon} />
+                    <Text style={styles.bioText}>{user.bio}</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity style={styles.addBioButton} onPress={handleEditProfile}>
+                    <Icon name="add-circle-outline" size={16} color="#FFFFFF" />
+                    <Text style={styles.addBioText}>Add Bio</Text>
+                  </TouchableOpacity>
+                )}
+              </Animated.View>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* Stats Section */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statLabel}>Photos</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statLabel}>Videos</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{user.selected_age || 'N/A'}</Text>
+            <Text style={styles.statLabel}>Age</Text>
+          </View>
+        </View>
+
+        {/* Tokens and VIP Cards */}
+        <Animated.View style={[styles.cardsContainer, {transform: [{scale: cardScale}]}]}>
+          <TouchableOpacity 
+            style={styles.tokenCard}
+            onPress={handleTokenPress}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={[Colors.primaryLight, Colors.primary]}
+              style={styles.cardGradient}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+            >
+              <View style={styles.cardPattern} />
+              <View style={styles.cardContent}>
+                <View style={styles.cardIconContainer}>
+                  <Icon name="key" size={24} color="#FFC107" />
+                </View>
+                <View style={{flex: 1}}>
+                  <Text style={styles.tokenAmount}>0</Text>
+                  <Text style={styles.cardLabel}>Tokens</Text>
+                </View>
+                <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
               </View>
-            )}
-          </Animated.View>
+            </LinearGradient>
+          </TouchableOpacity>
           
-          {/* User Info */}
-          <Animated.View style={[styles.userInfoContainer, contentAnimStyle]}>
-            <View style={styles.nameContainer}>
-              <Text style={styles.username}>{user.username}</Text>
-              <Text style={styles.userId}>ID: {user.id}</Text>
-            </View>
-            
-            {user.bio && (
-              <View style={styles.bioContainer}>
-                <Icon name="chatbubble-outline" size={16} color={Colors.textDark} style={styles.bioIcon} />
-                <Text style={styles.bioText}>{user.bio}</Text>
+          <TouchableOpacity 
+            style={styles.vipCard}
+            onPress={handleVIPPress}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={['#FF9D80', '#FF7D6B']}
+              style={styles.cardGradient}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+            >
+              <View style={styles.cardPattern} />
+              <View style={styles.cardContent}>
+                <View style={styles.cardIconContainer}>
+                  <Icon name="crown" size={24} color="#FFC107" />
+                </View>
+                <View style={{flex: 1}}>
+                  <Text style={styles.cardLabel}>VIP</Text>
+                  <Text style={styles.vipText}>Get VIP</Text>
+                </View>
+                <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
               </View>
-            )}
-          </Animated.View>
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
 
-          {/* Tokens and VIP Cards */}
-          <Animated.View style={[styles.cardsContainer, {transform: [{scale: cardScale}]}]}>
-            <TouchableOpacity 
-              style={styles.tokenCard}
-              onPress={handleTokenPress}
-              activeOpacity={0.85}
-            >
-              <LinearGradient
-                colors={[Colors.primaryLight, Colors.primary]}
-                style={styles.cardGradient}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
-              >
-                <View style={styles.cardPattern} />
-                <View style={styles.cardContent}>
-                  <View style={styles.cardIconContainer}>
-                    <Icon name="key" size={24} color="#FFC107" />
-                  </View>
-                  <View style={{flex: 1}}>
-                    <Text style={styles.tokenAmount}>0</Text>
-                    <Text style={styles.cardLabel}>Tokens</Text>
-                  </View>
-                  <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.vipCard}
-              onPress={handleVIPPress}
-              activeOpacity={0.85}
-            >
-              <LinearGradient
-                colors={['#FF9D80', '#FF7D6B']}
-                style={styles.cardGradient}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}
-              >
-                <View style={styles.cardPattern} />
-                <View style={styles.cardContent}>
-                  <View style={styles.cardIconContainer}>
-                    <Icon name="crown" size={24} color="#FFC107" />
-                  </View>
-                  <View style={{flex: 1}}>
-                    <Text style={styles.cardLabel}>VIP</Text>
-                    <Text style={styles.vipText}>Get VIP</Text>
-                  </View>
-                  <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
-                </View>
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
-
-          {/* User Details */}
+        {/* Personal Information Section */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Personal Information</Text>
           <View style={styles.userDetailsContainer}>
             {user.name && (
               <View style={styles.detailRow}>
                 <View style={styles.detailIconContainer}>
                   <Icon name="person-outline" size={18} color={Colors.primary} />
                 </View>
-                <Text style={styles.detailText}>{user.name}</Text>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Full Name</Text>
+                  <Text style={styles.detailText}>{user.name}</Text>
+                </View>
               </View>
             )}
             
@@ -310,7 +407,10 @@ const ProfileScreen = () => {
                 <View style={styles.detailIconContainer}>
                   <Icon name="call-outline" size={18} color={Colors.primary} />
                 </View>
-                <Text style={styles.detailText}>{user.mobile_number}</Text>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Phone Number</Text>
+                  <Text style={styles.detailText}>{user.mobile_number}</Text>
+                </View>
               </View>
             )}
             
@@ -319,25 +419,36 @@ const ProfileScreen = () => {
                 <View style={styles.detailIconContainer}>
                   <Icon name="male-female-outline" size={18} color={Colors.primary} />
                 </View>
-                <Text style={styles.detailText}>{user.gender}</Text>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Gender</Text>
+                  <Text style={styles.detailText}>{user.gender}</Text>
+                </View>
               </View>
             )}
             
-            {user.address && (
-              <View style={styles.detailRow}>
-                <View style={styles.detailIconContainer}>
-                  <Icon name="location-outline" size={18} color={Colors.primary} />
-                </View>
-                <Text style={styles.detailText}>{user.address}, {user.city}</Text>
-              </View>
-            )}
-
             {user.selected_age && (
               <View style={styles.detailRow}>
                 <View style={styles.detailIconContainer}>
                   <Icon name="calendar-outline" size={18} color={Colors.primary} />
                 </View>
-                <Text style={styles.detailText}>Age: {user.selected_age}</Text>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Age</Text>
+                  <Text style={styles.detailText}>{user.selected_age} years old</Text>
+                </View>
+              </View>
+            )}
+
+            {(user.address || user.city) && (
+              <View style={styles.detailRow}>
+                <View style={styles.detailIconContainer}>
+                  <Icon name="location-outline" size={18} color={Colors.primary} />
+                </View>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Location</Text>
+                  <Text style={styles.detailText}>
+                    {user.address && user.city ? `${user.address}, ${user.city}` : user.address || user.city}
+                  </Text>
+                </View>
               </View>
             )}
 
@@ -346,95 +457,121 @@ const ProfileScreen = () => {
                 <View style={styles.detailIconContainer}>
                   <Icon name="time-outline" size={18} color={Colors.primary} />
                 </View>
-                <Text style={styles.detailText}>Joined: {new Date(user.created_at).toLocaleDateString()}</Text>
+                <View style={styles.detailContent}>
+                  <Text style={styles.detailLabel}>Member Since</Text>
+                  <Text style={styles.detailText}>
+                    {new Date(user.created_at).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </Text>
+                </View>
               </View>
             )}
           </View>
-
-          {/* Media Section */}
-          {(user.images?.length > 0 || user.videos?.length > 0) && (
-            <View style={styles.mediaSection}>
-              <Text style={styles.sectionTitle}>Media</Text>
-              
-              {/* Images Grid */}
-              {user.images?.length > 0 && (
-                <View style={styles.mediaContainer}>
-                  <Text style={styles.mediaSubtitle}>Photos</Text>
-                  <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.mediaScrollView}
-                  >
-                    {user.images.map((image, index) => (
-                      <TouchableOpacity 
-                        key={index}
-                        style={styles.mediaItem}
-                        onPress={() => {
-                          console.log('Preview image:', image);
-                        }}
-                      >
-                        <Image 
-                          source={{ uri: image }} 
-                          style={styles.mediaImage}
-                          resizeMode="cover"
-                        />
-                        <LinearGradient
-                          colors={['transparent', 'rgba(0,0,0,0.3)']}
-                          style={styles.mediaOverlay}
-                        />
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-
-              {/* Videos Grid */}
-              {user.videos?.length > 0 && (
-                <View style={styles.mediaContainer}>
-                  <Text style={styles.mediaSubtitle}>Videos</Text>
-                  <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.mediaScrollView}
-                  >
-                    {user.videos.map((video, index) => (
-                      <TouchableOpacity 
-                        key={index}
-                        style={styles.mediaItem}
-                        onPress={() => {
-                          console.log('Preview video:', video);
-                        }}
-                      >
-                        <View style={styles.videoThumbnail}>
-                          <Icon name="play-circle" size={40} color={Colors.white} />
-                        </View>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-            </View>
-          )}
         </View>
-        <TouchableOpacity 
-        style={styles.logoutButton} 
-        onPress={handleLogout}
-        activeOpacity={0.8}
-      >
-        <LinearGradient
-          colors={['#F5F5F5', '#EEEEEE']}
-          style={styles.logoutGradient}
-          start={{x: 0, y: 0}}
-          end={{x: 1, y: 0}}
-        >
-          <Icon name="log-out-outline" size={22} color={Colors.primary} style={styles.logoutIcon} />
-          <Text style={styles.logoutText}>Logout</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+
+        {/* Media Section */}
+        {(user.images?.length > 0 || user.videos?.length > 0) && (
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Media</Text>
+            
+            {/* Images Grid */}
+            {user.images?.length > 0 && (
+              <View style={styles.mediaContainer}>
+                <Text style={styles.mediaSubtitle}>Photos</Text>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.mediaScrollView}
+                >
+                  {user.images.map((image, index) => (
+                    <TouchableOpacity 
+                      key={index}
+                      style={styles.mediaItem}
+                      onPress={() => {
+                        console.log('Preview image:', image);
+                      }}
+                    >
+                      <Image 
+                        source={{ uri: image }} 
+                        style={styles.mediaImage}
+                        resizeMode="cover"
+                      />
+                      <LinearGradient
+                        colors={['transparent', 'rgba(0,0,0,0.3)']}
+                        style={styles.mediaOverlay}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Videos Grid */}
+            {user.videos?.length > 0 && (
+              <View style={styles.mediaContainer}>
+                <Text style={styles.mediaSubtitle}>Videos</Text>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.mediaScrollView}
+                >
+                  {user.videos.map((video, index) => (
+                    <TouchableOpacity 
+                      key={index}
+                      style={styles.mediaItem}
+                      onPress={() => {
+                        console.log('Preview video:', video);
+                      }}
+                    >
+                      <View style={styles.videoThumbnail}>
+                        <Icon name="play-circle" size={40} color={Colors.white} />
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Empty Media State */}
+        {(!user.images || user.images.length === 0) && (!user.videos || user.videos.length === 0) && (
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Media</Text>
+            <View style={styles.emptyMediaContainer}>
+              <Icon name="images-outline" size={48} color="#CCCCCC" />
+              <Text style={styles.emptyMediaTitle}>No Media Yet</Text>
+              <Text style={styles.emptyMediaText}>Add photos and videos to your profile</Text>
+              <TouchableOpacity style={styles.addMediaButton} onPress={handleEditProfile}>
+                <Icon name="add" size={20} color={Colors.white} />
+                <Text style={styles.addMediaButtonText}>Add Media</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+        
+        {/* Logout Button */}
+        <View style={styles.logoutContainer}>
+          <TouchableOpacity 
+            style={styles.logoutButton} 
+            onPress={handleLogout}
+            activeOpacity={0.8}
+          >
+            <LinearGradient
+              colors={['#FF6B6B', '#FF5252']}
+              style={styles.logoutGradient}
+              start={{x: 0, y: 0}}
+              end={{x: 1, y: 0}}
+            >
+              <Icon name="log-out-outline" size={20} color="#FFFFFF" style={styles.logoutIcon} />
+              <Text style={styles.logoutText}>Logout</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
-      
-      {/* Logout button */}
- 
     </SafeAreaView>
   );
 };
@@ -446,100 +583,73 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    zIndex: 2,
   },
   scrollContent: {
     paddingBottom: 100,
   },
-  headerContainer: {
-    height: 180,
+  profileHeader: {
+    height: 280,
     position: 'relative',
-    zIndex: 1,
+    marginBottom: 20,
   },
-  headerGradient: {
+  profileGradient: {
+    flex: 1,
+    position: 'relative',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  profilePattern: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-    zIndex: 1,
-  },
-  headerPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.15,
+    opacity: 0.1,
     backgroundColor: 'transparent',
-    borderTopWidth: 120,
-    borderLeftWidth: 120,
+    borderTopWidth: 150,
+    borderLeftWidth: 150,
     borderStyle: 'solid',
     borderTopColor: 'white',
     borderLeftColor: 'transparent',
-    zIndex: 1,
   },
-  headerButtons: {
+  profileActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    paddingTop: 16,
-    paddingHorizontal: 15,
+    paddingTop: 20,
+    paddingHorizontal: 20,
     zIndex: 2,
   },
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  actionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 14,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-  },
-  editButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
-  },
-  settingsButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderWidth: 1.5,
+    marginLeft: 12,
+    borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
-  profileContainer: {
-    marginTop: -50,
-    paddingHorizontal: 15,
-    zIndex: 2,
-    position: 'relative',
-    backgroundColor: Colors.background,
+  profileContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   avatarWrapper: {
     alignItems: 'center',
     position: 'relative',
-    marginBottom: 24,
-    zIndex: 3,
-    elevation: 8,
+    marginBottom: 20,
   },
   avatarContainer: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
     backgroundColor: '#F0F0F0',
     overflow: 'hidden',
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
     borderWidth: 4,
     borderColor: '#FFFFFF',
     position: 'relative',
-    zIndex: 3,
   },
   avatarOverlay: {
     position: 'absolute',
@@ -547,135 +657,143 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    zIndex: 3,
   },
   avatar: {
     width: '100%',
     height: '100%',
-    zIndex: 3,
   },
   avatarRing: {
     position: 'absolute',
-    width: 144,
-    height: 144,
-    borderRadius: 72,
-    borderWidth: 1.5,
+    width: 132,
+    height: 132,
+    borderRadius: 66,
+    borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.6)',
-    top: -7,
-    zIndex: 3,
+    top: -6,
   },
   verifiedBadge: {
     position: 'absolute',
-    bottom: 2,
-    right: 2,
+    bottom: 0,
+    right: 0,
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 5,
-    elevation: 6,
+    borderRadius: 16,
+    padding: 4,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    zIndex: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   userInfoContainer: {
     alignItems: 'center',
-    marginTop: 24,
   },
   nameContainer: {
     alignItems: 'center',
   },
   username: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#2C2C2C',
-    textShadowColor: 'rgba(0,0,0,0.08)',
-    textShadowOffset: {width: 0, height: 2},
-    textShadowRadius: 4,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: {width: 0, height: 1},
+    textShadowRadius: 3,
   },
   userId: {
-    fontSize: 15,
-    color: '#666666',
-    marginTop: 6,
-    letterSpacing: 0.5,
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 4,
   },
   bioContainer: {
-    marginTop: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(0,0,0,0.04)',
+    marginTop: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 20,
-    maxWidth: '92%',
+    maxWidth: '90%',
     flexDirection: 'row',
     alignItems: 'center',
   },
   bioIcon: {
-    marginRight: 10,
+    marginRight: 8,
   },
   bioText: {
-    fontSize: 15,
-    color: '#444444',
+    fontSize: 14,
+    color: '#FFFFFF',
     textAlign: 'center',
     flex: 1,
-    lineHeight: 22,
   },
-  userDetailsContainer: {
-    marginTop: 28,
-    width: '100%',
-    paddingHorizontal: 15,
-  },
-  detailRow: {
+  addBioButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
-    backgroundColor: 'rgba(0,0,0,0.03)',
-    padding: 16,
+    padding: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
+    marginTop: 8,
   },
-  detailIconContainer: {
-    width: 40,
-    height: 40,
+  addBioText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    marginLeft: 4,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
     borderRadius: 20,
-    backgroundColor: 'rgba(108, 99, 255, 0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 14,
+    paddingVertical: 20,
+    marginBottom: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
-  detailText: {
-    fontSize: 16,
-    color: '#333333',
+  statItem: {
     flex: 1,
-    letterSpacing: 0.3,
+    alignItems: 'center',
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#E0E0E0',
+    marginVertical: 10,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#666666',
+    fontWeight: '500',
   },
   cardsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 15,
-    marginTop: 28,
+    paddingHorizontal: 20,
     marginBottom: 24,
     gap: 12,
   },
   tokenCard: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
     height: 100,
-    elevation: 8,
+    elevation: 6,
     shadowColor: '#6C63FF',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
     shadowRadius: 8,
   },
   vipCard: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: 20,
     overflow: 'hidden',
     height: 100,
-    elevation: 8,
+    elevation: 6,
     shadowColor: '#FF7D6B',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
     shadowRadius: 8,
   },
   cardGradient: {
@@ -684,7 +802,7 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    padding: 14,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     position: 'relative',
@@ -696,92 +814,125 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    opacity: 0.15,
+    opacity: 0.1,
     zIndex: 1,
     backgroundColor: 'transparent',
-    borderTopWidth: 120,
-    borderLeftWidth: 120,
+    borderTopWidth: 100,
+    borderLeftWidth: 100,
     borderStyle: 'solid',
     borderTopColor: 'white',
     borderLeftColor: 'transparent',
   },
   cardIconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   tokenAmount: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 2,
-    textShadowColor: 'rgba(0,0,0,0.25)',
-    textShadowOffset: {width: 0, height: 2},
-    textShadowRadius: 4,
   },
   cardLabel: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 3,
   },
   vipText: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#FFFFFF',
     opacity: 0.9,
-    marginTop: 1,
+    marginTop: 2,
   },
   cardArrow: {
     position: 'absolute',
-    right: 14,
+    right: 16,
     top: '50%',
     transform: [{ translateY: -8 }],
-    opacity: 0.9,
+    opacity: 0.8,
   },
-  mediaSection: {
-    marginTop: 28,
-    paddingHorizontal: 15,
+  sectionContainer: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#2C2C2C',
-    marginBottom: 22,
+    color: '#333333',
+    marginBottom: 16,
+  },
+  userDetailsContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 20,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingVertical: 8,
+  },
+  detailIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(108, 99, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  detailContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8E8E93',
+    marginBottom: 2,
+    textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
+  detailText: {
+    fontSize: 16,
+    color: '#333333',
+    fontWeight: '500',
+  },
   mediaContainer: {
-    marginBottom: 28,
+    marginBottom: 20,
   },
   mediaSubtitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
     color: '#444444',
-    marginBottom: 18,
-    letterSpacing: 0.3,
+    marginBottom: 12,
   },
   mediaScrollView: {
     flexDirection: 'row',
   },
   mediaItem: {
-    width: 150,
-    height: 150,
-    marginRight: 18,
+    width: 120,
+    height: 120,
+    marginRight: 12,
     borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: '#F0F0F0',
-    elevation: 6,
+    elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   mediaImage: {
     width: '100%',
@@ -797,23 +948,63 @@ const styles = StyleSheet.create({
   videoThumbnail: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  logoutButton: {
-    position: 'absolute',
-    bottom: 24,
-    left: width / 2 - 90,
-    width: 180,
-    height: 52,
-    borderRadius: 26,
-    overflow: 'hidden',
-    elevation: 6,
+  emptyMediaContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  emptyMediaTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#666666',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyMediaText: {
+    fontSize: 14,
+    color: '#8E8E93',
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  addMediaButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: Colors.primary,
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  addMediaButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginLeft: 8,
+  },
+  logoutContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  logoutButton: {
+    width: '100%',
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   logoutGradient: {
     flex: 1,
@@ -822,13 +1013,104 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logoutIcon: {
-    marginRight: 10,
+    marginRight: 8,
   },
   logoutText: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
-    color: Colors.primary,
+    color: '#FFFFFF',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#8E8E93',
+    fontWeight: '500',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    padding: 24,
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000000',
+    marginTop: 16,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#8E8E93',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 22,
+  },
+  retryButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: Colors.primary,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  verifiedTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  verifiedText: {
+    fontSize: 12,
+    color: '#4CAF50',
+    marginLeft: 4,
+    fontWeight: '600',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 8,
+  },
+  statusIndicator: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  cameraButton: {
+    position: 'absolute',
+    bottom: 4,
+    right: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
 });
 
