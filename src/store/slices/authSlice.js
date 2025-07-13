@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import apiClient from '../../services/api/client';
 import userService from '../../services/userService';
+import zegoService from '../../services/zegoService';
 
 // Async thunks
 export const login = createAsyncThunk(
@@ -35,6 +36,19 @@ export const loginWithGoogle = createAsyncThunk(
     try {
       const response = await dummyAuthApi.loginWithGoogle(googleData);
       await AsyncStorage.setItem('authToken', response.token);
+      
+      // Initialize ZEGOCLOUD call service after successful login
+      try {
+        const userID = response.user.id?.toString() || googleData.id;
+        const userName = response.user.name || googleData.displayName || `User_${userID}`;
+        await zegoService.initialize(userID, userName);
+        console.log('[Auth] ZEGOCLOUD initialized successfully for Google login');
+      } catch (zegoError) {
+        console.error('[Auth] ZEGOCLOUD initialization failed for Google login:', zegoError);
+        // Don't fail the login if ZEGOCLOUD fails to initialize
+      }
+      
+      // Return user data to be stored in Redux state
       return {
         user: response.user,
         token: response.token
@@ -53,6 +67,17 @@ export const loginWithFacebook = createAsyncThunk(
       
       // Store auth tokens in secure storage
       await AsyncStorage.setItem('authToken', response.token);
+      
+      // Initialize ZEGOCLOUD call service after successful login
+      try {
+        const userID = response.user.id?.toString() || facebookData.id;
+        const userName = response.user.name || facebookData.displayName || `User_${userID}`;
+        await zegoService.initialize(userID, userName);
+        console.log('[Auth] ZEGOCLOUD initialized successfully for Facebook login');
+      } catch (zegoError) {
+        console.error('[Auth] ZEGOCLOUD initialization failed for Facebook login:', zegoError);
+        // Don't fail the login if ZEGOCLOUD fails to initialize
+      }
       
       // Return user data to be stored in Redux state
       return {
@@ -73,6 +98,17 @@ export const loginWithApple = createAsyncThunk(
       
       // Store auth tokens in secure storage
       await AsyncStorage.setItem('authToken', response.token);
+      
+      // Initialize ZEGOCLOUD call service after successful login
+      try {
+        const userID = response.user.id?.toString() || appleData.id;
+        const userName = response.user.name || appleData.displayName || `User_${userID}`;
+        await zegoService.initialize(userID, userName);
+        console.log('[Auth] ZEGOCLOUD initialized successfully for Apple login');
+      } catch (zegoError) {
+        console.error('[Auth] ZEGOCLOUD initialization failed for Apple login:', zegoError);
+        // Don't fail the login if ZEGOCLOUD fails to initialize
+      }
       
       // Return user data to be stored in Redux state
       return {
@@ -122,6 +158,17 @@ export const verifyOTP = createAsyncThunk(
           await EncryptedStorage.setItem('refresh_token', response.data.data.refresh);
           const userData = response.data.data;
           await userService.saveUserData(userData);
+          
+          // Initialize ZEGOCLOUD call service after successful login
+          try {
+            const userID = userData.id?.toString() || userData.user_id?.toString() || phone;
+            const userName = userData.name || userData.username || `User_${phone}`;
+            await zegoService.initialize(userID, userName);
+            console.log('[Auth] ZEGOCLOUD initialized successfully');
+          } catch (zegoError) {
+            console.error('[Auth] ZEGOCLOUD initialization failed:', zegoError);
+            // Don't fail the login if ZEGOCLOUD fails to initialize
+          }
         }
         return response.data.data;
       } else {
@@ -203,6 +250,22 @@ export const checkAuthStatus = createAsyncThunk(
       const refreshToken = await EncryptedStorage.getItem('refresh_token');
 
       if (userToken && refreshToken) {
+        // Get user data from storage
+        const userData = await userService.getUserData();
+        
+        // Initialize ZEGOCLOUD call service if user is authenticated
+        if (userData) {
+          try {
+            const userID = userData.id?.toString() || userData.user_id?.toString();
+            const userName = userData.name || userData.username || `User_${userID}`;
+            await zegoService.initialize(userID, userName);
+            console.log('[Auth] ZEGOCLOUD initialized successfully on app start');
+          } catch (zegoError) {
+            console.error('[Auth] ZEGOCLOUD initialization failed on app start:', zegoError);
+            // Don't fail the auth check if ZEGOCLOUD fails to initialize
+          }
+        }
+        
         // Validate token with backend if needed
         // For now, just return the tokens
         return {
@@ -251,13 +314,24 @@ export const register = createAsyncThunk(
 
 // Add a new thunk to handle logout and clear storage
 export const logoutUser = createAsyncThunk(
-  'auth/logoutUser',
+  'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
-      // Clear the stored tokens
+      // Uninitialize ZEGOCLOUD call service before logout
+      try {
+        await zegoService.uninitialize();
+        console.log('[Auth] ZEGOCLOUD uninitialized successfully');
+      } catch (zegoError) {
+        console.error('[Auth] ZEGOCLOUD uninitialization failed:', zegoError);
+        // Don't fail the logout if ZEGOCLOUD fails to uninitialize
+      }
+      
+      // Clear stored tokens
       await EncryptedStorage.removeItem('user_token');
       await EncryptedStorage.removeItem('refresh_token');
-      return null;
+      await AsyncStorage.removeItem('authToken');
+      
+      return true;
     } catch (error) {
       return rejectWithValue(error);
     }

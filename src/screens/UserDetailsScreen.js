@@ -17,6 +17,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import userService from '../services/userService';
 import chatService from '../services/chatService';
+import CallInvitationButton from '../components/CallInvitationButton';
 
 const { width, height } = Dimensions.get('window');
 
@@ -420,6 +421,30 @@ const UserDetailsScreen = () => {
 
         {/* Action Buttons */}
         <View style={styles.actionSection}>
+          {/* Call Buttons Row */}
+          <View style={styles.callButtonsRow}>
+            <CallInvitationButton
+              targetUser={userProfile}
+              isVideoCall={false}
+              onCallStarted={() => console.log('Audio call started with:', userProfile.name)}
+              onCallFailed={(error) => {
+                Alert.alert('Call Failed', error.message || 'Unable to start audio call');
+              }}
+              style={styles.callButton}
+            />
+            
+            <CallInvitationButton
+              targetUser={userProfile}
+              isVideoCall={true}
+              onCallStarted={() => console.log('Video call started with:', userProfile.name)}
+              onCallFailed={(error) => {
+                Alert.alert('Call Failed', error.message || 'Unable to start video call');
+              }}
+              style={styles.callButton}
+            />
+          </View>
+          
+          {/* Message Button */}
           <TouchableOpacity 
             style={[styles.primaryButton, messageLoading && styles.primaryButtonDisabled]} 
             onPress={handleMessagePress}
@@ -906,6 +931,20 @@ const styles = StyleSheet.create({
   actionSection: {
     paddingHorizontal: 24,
     paddingBottom: 32,
+  },
+  callButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  callButton: {
+    flex: 1,
+    borderRadius: 20,
+    shadowColor: COLORS.shadowDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
   },
   primaryButton: {
     borderRadius: 20,

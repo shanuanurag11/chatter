@@ -21,6 +21,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import peopleService from '../services/peopleService';
 import { launchImageLibrary } from 'react-native-image-picker';
 import socketService from '../services/socketService';
+import CallInvitationButton from '../components/CallInvitationButton';
+import zegoService from '../services/zegoService';
 // import Toast from 'react-native-toast-message';
 
 // -------------------- UTILITIES --------------------
@@ -203,11 +205,11 @@ const TypingIndicator = () => (
   </View>
 );
 
-const ChatHeader = ({ avatar, name, isOnline, onBackPress, onVideoPress, onAudioPress, onMorePress }) => {
+const ChatHeader = ({ avatar, name, isOnline, onBackPress, onVideoPress, onAudioPress, onMorePress, targetUser }) => {
   const displayName = name || '';
   const avatarUrl = avatar || 'https://randomuser.me/api/portraits/women/44.jpg';
   const onlineStatus = isOnline === true ? 'Online' : 'Offline';
-  
+  console.log("targetUser-->",targetUser);
   return (
     <View style={styles.header}>
       <TouchableOpacity 
@@ -232,21 +234,23 @@ const ChatHeader = ({ avatar, name, isOnline, onBackPress, onVideoPress, onAudio
       </TouchableOpacity>
       
       <View style={styles.headerActions}>
-        <TouchableOpacity 
-          style={styles.headerActionButton} 
-          onPress={onAudioPress}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="call" size={22} color="#000" />
-        </TouchableOpacity>
+        {/* Audio Call Button */}
+        <CallInvitationButton
+          targetUser={targetUser}
+          isVideoCall={false}
+          onCallStarted={() => console.log('Audio call started')}
+          onCallFailed={(error) => console.error('Audio call failed:', error)}
+          style={styles.headerActionButton}
+        />
         
-        <TouchableOpacity 
-          style={styles.headerActionButton} 
-          onPress={onVideoPress}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="videocam" size={22} color="#000" />
-        </TouchableOpacity>
+        {/* Video Call Button */}
+        <CallInvitationButton
+          targetUser={targetUser}
+          isVideoCall={true}
+          onCallStarted={() => console.log('Video call started')}
+          onCallFailed={(error) => console.error('Video call failed:', error)}
+          style={styles.headerActionButton}
+        />
         
         <TouchableOpacity 
           style={styles.headerActionButton} 
@@ -675,6 +679,7 @@ const ChatDetailScreen = () => {
         onVideoPress={handleVideoCallPress}
         onAudioPress={() => console.log('Audio call with:', chat.name)}
         onMorePress={() => console.log('More options for:', chat.name)}
+        targetUser={chat}
       />
       
       <KeyboardAvoidingView

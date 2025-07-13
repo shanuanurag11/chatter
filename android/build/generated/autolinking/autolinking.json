@@ -108,6 +108,30 @@
         }
       }
     },
+    "zego-zpns-react-native": {
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-zpns-react-native",
+      "name": "zego-zpns-react-native",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-zpns-react-native/react-native-zego-zpns.podspec",
+          "version": "2.8.1",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-zpns-react-native/android",
+          "packageImportPath": "import im.zego.zpns_reactnative_sdk.RCTZegoZPNsPackage;",
+          "packageInstance": "new RCTZegoZPNsPackage()",
+          "buildTypes": [],
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-zpns-react-native/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
     "@react-native-async-storage/async-storage": {
       "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/@react-native-async-storage/async-storage",
       "name": "@react-native-async-storage/async-storage",

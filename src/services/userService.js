@@ -118,11 +118,51 @@ class UserService {
   async getUserId() {
     try {
       const userData = await this.getUserData();
-      return userData?.user_id;
+      // Handle both 'id' and 'user_id' field names
+      return userData?.id || userData?.user_id;
     } catch (error) {
       console.error('Error getting user ID:', error);
       return null;
     }
+  }
+
+  // Get user ID consistently (helper method)
+  async getUserIdConsistent() {
+    try {
+      const userData = await this.getUserData();
+      if (!userData) {
+        console.error('No user data available');
+        return null;
+      }
+      
+      // Check for both possible field names
+      const userId = userData.id || userData.user_id;
+      if (!userId) {
+        console.error('User ID not found in user data:', userData);
+        return null;
+      }
+      
+      return userId.toString();
+    } catch (error) {
+      console.error('Error getting user ID consistently:', error);
+      return null;
+    }
+  }
+
+  // Validate user data structure
+  validateUserData(userData) {
+    if (!userData) {
+      console.error('User data is null or undefined');
+      return false;
+    }
+    
+    const userId = userData.id || userData.user_id;
+    if (!userId) {
+      console.error('User ID not found in user data:', userData);
+      return false;
+    }
+    
+    return true;
   }
 
   // Get user profile by ID

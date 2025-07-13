@@ -17,6 +17,13 @@ import Colors from '../constants/colors';
 import { View, StyleSheet } from 'react-native';
 import { navigationRef } from '../services/navigationService';
 
+// Import ZEGOCLOUD call screens
+import { 
+  ZegoUIKitPrebuiltCallWaitingScreen, 
+  ZegoUIKitPrebuiltCallInCallScreen,
+  ZegoCallInvitationDialog
+} from '@zegocloud/zego-uikit-prebuilt-call-rn';
+
 const Stack = createStackNavigator();
 
 // Define app-wide status bar color
@@ -54,11 +61,26 @@ const AppNavigator = () => {
               <Stack.Screen name="VipSubscription" component={VipSubscriptionScreen} />
               <Stack.Screen name="VideoCallScreen" component={VideoCallScreen} />
               <Stack.Screen name="UserDetails" component={UserDetailsScreen} />
+              
+              {/* ZEGOCLOUD Call Screens - DO NOT change the names */}
+              <Stack.Screen
+                options={{ headerShown: false }}
+                name="ZegoUIKitPrebuiltCallWaitingScreen"
+                component={ZegoUIKitPrebuiltCallWaitingScreen}
+              />
+              <Stack.Screen
+                options={{ headerShown: false }}
+                name="ZegoUIKitPrebuiltCallInCallScreen"
+                component={ZegoUIKitPrebuiltCallInCallScreen}
+              />
             </>
           ) : (
             <Stack.Screen name="Auth" component={AuthNavigator} />
           )}
         </Stack.Navigator>
+        
+        {/* ZEGOCLOUD Call Invitation Dialog - Must be inside NavigationContainer */}
+        <ZegoCallInvitationDialog />
       </NavigationContainer>
     </View>
   );
