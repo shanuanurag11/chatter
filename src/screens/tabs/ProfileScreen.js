@@ -170,6 +170,10 @@ const ProfileScreen = () => {
     navigation.navigate('VipSubscription');
   };
 
+  const handleWithdrawalPress = () => {
+    navigation.navigate('Withdrawal');
+  };
+
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -333,58 +337,89 @@ const ProfileScreen = () => {
           </View>
         </View>
 
-        {/* Tokens and VIP Cards */}
-        <Animated.View style={[styles.cardsContainer, {transform: [{scale: cardScale}]}]}>
-          <TouchableOpacity 
-            style={styles.tokenCard}
-            onPress={handleTokenPress}
-            activeOpacity={0.85}
-          >
-            <LinearGradient
-              colors={[Colors.primaryLight, Colors.primary]}
-              style={styles.cardGradient}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
+        {/* Withdrawal Card - Only for Female Users */}
+        {user?.gender?.toLowerCase()  === 'female' ? (
+          <Animated.View style={[styles.withdrawalContainer, {transform: [{scale: cardScale}]}]}>
+            <TouchableOpacity 
+              style={styles.withdrawalCard}
+              onPress={handleWithdrawalPress}
+              activeOpacity={0.85}
             >
-              <View style={styles.cardPattern} />
-              <View style={styles.cardContent}>
-                <View style={styles.cardIconContainer}>
-                  <Icon name="key" size={24} color="#FFC107" />
+              <LinearGradient
+                colors={['#667eea', '#764ba2', '#f093fb']}
+                style={styles.withdrawalGradient}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+              >
+                <View style={styles.withdrawalPattern} />
+                <View style={styles.withdrawalContent}>
+                  <View style={styles.withdrawalIconContainer}>
+                    <Icon name="wallet-outline" size={28} color="#FFFFFF" />
+                  </View>
+                  <View style={styles.withdrawalTextContainer}>
+                    <Text style={styles.withdrawalLabel}>Withdraw Coins</Text>
+                    <Text style={styles.withdrawalText}>Cash out your earnings</Text>
+                  </View>
+                  <View style={styles.withdrawalArrowContainer}>
+                    <Icon name="chevron-forward" size={24} color="#FFFFFF" />
+                  </View>
                 </View>
-                <View style={{flex: 1}}>
-                  <Text style={styles.tokenAmount}>0</Text>
-                  <Text style={styles.cardLabel}>Tokens</Text>
-                </View>
-                <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.vipCard}
-            onPress={handleVIPPress}
-            activeOpacity={0.85}
+                <View style={styles.withdrawalShine} />
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        )
+      :( <Animated.View style={[styles.cardsContainer, {transform: [{scale: cardScale}]}]}>
+        <TouchableOpacity 
+          style={styles.tokenCard}
+          onPress={handleTokenPress}
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={[Colors.primaryLight, Colors.primary]}
+            style={styles.cardGradient}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 0}}
           >
-            <LinearGradient
-              colors={['#FF9D80', '#FF7D6B']}
-              style={styles.cardGradient}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-            >
-              <View style={styles.cardPattern} />
-              <View style={styles.cardContent}>
-                <View style={styles.cardIconContainer}>
-                  <Icon name="crown" size={24} color="#FFC107" />
-                </View>
-                <View style={{flex: 1}}>
-                  <Text style={styles.cardLabel}>VIP</Text>
-                  <Text style={styles.vipText}>Get VIP</Text>
-                </View>
-                <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
+            <View style={styles.cardPattern} />
+            <View style={styles.cardContent}>
+              <View style={styles.cardIconContainer}>
+                <Icon name="key" size={24} color="#FFC107" />
               </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
+              <View style={{flex: 1}}>
+                <Text style={styles.tokenAmount}>0</Text>
+                <Text style={styles.cardLabel}>Tokens</Text>
+              </View>
+              <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.vipCard}
+          onPress={handleVIPPress}
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={['#FF9D80', '#FF7D6B']}
+            style={styles.cardGradient}
+            start={{x: 0, y: 0}}
+            end={{x: 1, y: 0}}
+          >
+            <View style={styles.cardPattern} />
+            <View style={styles.cardContent}>
+              <View style={styles.cardIconContainer}>
+                <Icon name="crown" size={24} color="#FFC107" />
+              </View>
+              <View style={{flex: 1}}>
+                <Text style={styles.cardLabel}>VIP</Text>
+                <Text style={styles.vipText}>Get VIP</Text>
+              </View>
+              <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
+            </View>
+          </LinearGradient>
+        </TouchableOpacity>
+      </Animated.View>)}
 
         {/* Personal Information Section */}
         <View style={styles.sectionContainer}>
@@ -1111,6 +1146,102 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+  },
+  withdrawalContainer: {
+    marginHorizontal: 20,
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  withdrawalCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    height: 110,
+    elevation: 8,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+  },
+  withdrawalGradient: {
+    flex: 1,
+    position: 'relative',
+  },
+  withdrawalPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.15,
+    zIndex: 1,
+    backgroundColor: 'transparent',
+  },
+  withdrawalContent: {
+    flex: 1,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 2,
+  },
+  withdrawalIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  withdrawalTextContainer: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  withdrawalLabel: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+  },
+  withdrawalText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
+  },
+  withdrawalArrowContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  withdrawalShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    borderRadius: 20,
+    opacity: 0.1,
+    zIndex: 0,
   },
 });
 
