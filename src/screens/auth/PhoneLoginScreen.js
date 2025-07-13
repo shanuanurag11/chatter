@@ -258,11 +258,11 @@ const PhoneLoginScreen = ({ navigation }) => {
               </>
             )}
             
-            <View style={styles.divider}>
+            {/* <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>OR</Text>
               <View style={styles.dividerLine} />
-            </View>
+            </View> */}
             
             {/* <TouchableOpacity
               style={styles.googleButton}
@@ -273,13 +273,13 @@ const PhoneLoginScreen = ({ navigation }) => {
               <Icon name="login" size={24} color="#DB4437" style={styles.googleIcon} />
               <Text style={styles.googleText}>Sign in with Google</Text>
             </TouchableOpacity> */}
-            
+{/*             
              <View style={styles.footer}>
               <Text style={styles.footerText}>Don't have an account?</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
                 <Text style={styles.signupText}>Sign Up</Text>
               </TouchableOpacity>
-            </View> 
+            </View>  */}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
