@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
+import CallInvitationButton from './CallInvitationButton';
 import Colors from '../constants/colors';
 
 const { width } = Dimensions.get('window');
@@ -72,19 +73,20 @@ const PersonCard = ({ person, onPress, onVideoPress }) => {
         locations={[0, 0.6, 1]}
         style={styles.gradientOverlay}
       >
-        <TouchableOpacity 
+        {/* Video Call Button using CallInvitationButton */}
+        <CallInvitationButton
+          targetUser={person}
+          isVideoCall={true}
+          onCallStarted={() => {
+            console.log('Video call started with:', person.name);
+            onVideoPress && onVideoPress(person);
+          }}
+          onCallFailed={(error) => {
+            console.error('Video call failed:', error);
+            // The error handling is done in the parent component
+          }}
           style={styles.videoButton}
-          onPress={() => onVideoPress && onVideoPress(person)}
-        >
-          <LinearGradient
-            colors={[Colors.gradientStart, Colors.gradientEnd]}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
-            style={styles.videoButtonGradient}
-          >
-            <Icon name="videocam" size={20} color="#fff" />
-          </LinearGradient>
-        </TouchableOpacity>
+        />
       </LinearGradient>
       
       {/* Enhanced username footer with stronger gradient */}
@@ -288,13 +290,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 6,
     zIndex: 10,
-  },
-  videoButtonGradient: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 21,
   },
   verifiedBadge: {
     width: 16,

@@ -19,6 +19,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import PeopleHeader from '../../components/PeopleHeader';
 import PersonCard from '../../components/PersonCard';
 import PromoBanner from '../../components/PromoBanner';
+import CallInvitationButton from '../../components/CallInvitationButton';
 import { tabs } from '../../data/dummyPeople';
 import peopleService from '../../services/peopleService';
 import Colors from '../../constants/colors';
@@ -44,6 +45,7 @@ const PeopleScreen = ({ navigation }) => {
   const [people, setPeople] = useState([]);
   const [activeTab, setActiveTab] = useState('popular');
   const [error, setError] = useState(null);
+  const [banner, setBanner] = useState(null); // Add banner state
   
   // Refs for animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -130,44 +132,34 @@ const PeopleScreen = ({ navigation }) => {
     Alert.alert('Person Selected', `You selected ${person.name}`);
   }, []);
   
-  const handleVideoCallPress = async (person) => {
-    try {
-      setLoading(true);
-      
-      // Call the initiateVideoCall method from peopleService
-      const callData = await peopleService.initiateVideoCall(person.id);
-      
-      setLoading(false);
-      
-      // Navigate to the VideoCallScreen with the call data
-      navigation.navigate('VideoCall', {
-        contactName: person.name,
-        contactId: person.id,
-        callID: callData.callId,
-        isIncoming: false
-      });
-    } catch (error) {
-      setLoading(false);
-      
-      // Show error toast or alert
-      ToastAndroid.show({
-        type: 'error',
-        text1: 'Call Failed',
-        text2: error.message || 'Could not start video call',
-        position: 'bottom',
-        visibilityTime: 4000,
-      });
-      
-      console.error('Error starting video call:', error);
-    }
-  };
+  const handleVideoCallPress = useCallback((person) => {
+    // This function will be called by the CallInvitationButton component
+    // The actual video call logic is handled by the CallInvitationButton component
+    console.log('Video call initiated for:', person.name);
+  }, []);
+  
+  const handleVideoCallStarted = useCallback(() => {
+    console.log('Video call started successfully');
+  }, []);
+  
+  const handleVideoCallFailed = useCallback((error) => {
+    console.error('Video call failed:', error);
+    // Show error toast
+    ToastAndroid.show({
+      type: 'error',
+      text1: 'Call Failed',
+      text2: error.message || 'Could not start video call',
+      position: 'bottom',
+      visibilityTime: 4000,
+    });
+  }, []);
   
   const handleBannerPress = useCallback(() => {
     if (banner?.action === 'OPEN_WALLET') {
       Alert.alert('Promotion', 'Opening wallet to add funds with 50% discount');
       // navigation.navigate('Wallet', { discount: banner.discount });
     }
-  }, []);
+  }, [banner]);
   
   const handleLocationPress = useCallback(() => {
     Alert.alert('Location', 'Opening location settings');
@@ -261,7 +253,7 @@ const PeopleScreen = ({ navigation }) => {
         />
       </Animated.View>
     );
-  }, [ fadeAnim, handleBannerPress]);
+  }, [banner, fadeAnim, handleBannerPress]);
   
   // Header with animation for subtle parallax effect
   const renderHeaderComponent = useCallback(() => {
