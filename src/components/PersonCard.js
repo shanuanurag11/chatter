@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Dimensions, Animated, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import CallInvitationButton from './CallInvitationButton';
@@ -10,6 +10,43 @@ const CARD_WIDTH = (width - 48) / 2; // Two cards per row with margins
 
 const PersonCard = ({ person, onPress, onVideoPress }) => {
   if (!person) return null;
+
+  // Check if user has sufficient total_seconds for calling
+  const checkCallEligibility = () => {
+    console.log("Checking call eligibility for person:", JSON.stringify(person, null, 2));
+    const min_seconds_for_call = 4;
+    // Check if person has total_seconds property
+    if (person && person.total_seconds !== undefined) {
+      console.log("Found total_seconds:", person.total_seconds);
+      if (person.total_seconds < min_seconds_for_call) {
+        console.log("Insufficient total_seconds, blocking call");
+        return false;
+      }
+      console.log("Sufficient total_seconds, allowing call");
+    } else {
+      console.log("No total_seconds found in person, allowing call");
+    }
+    return true;
+  };
+
+  // Handle disabled button click
+  const handleDisabledButtonClick = () => {
+    Alert.alert(
+      'Insufficient Time',
+      'You need at least 4 seconds to make a call. Please add more time to your account.',
+      [
+        { 
+          text: 'OK', 
+          onPress: () => {
+            console.log("User acknowledged insufficient time");
+          }
+        }
+      ]
+    );
+  };
+
+  // Check if call is eligible
+  const isCallEligible = checkCallEligibility();
 
   return (
     <TouchableOpacity 
@@ -74,19 +111,29 @@ const PersonCard = ({ person, onPress, onVideoPress }) => {
         style={styles.gradientOverlay}
       >
         {/* Video Call Button using CallInvitationButton */}
-        <CallInvitationButton
-          targetUser={person}
-          isVideoCall={true}
-          onCallStarted={() => {
-            console.log('Video call started with:', person.name);
-            onVideoPress && onVideoPress(person);
-          }}
-          onCallFailed={(error) => {
-            console.error('Video call failed:', error);
-            // The error handling is done in the parent component
-          }}
-          style={styles.videoButton}
-        />
+        {isCallEligible ? (
+          <CallInvitationButton
+            targetUser={person}
+            isVideoCall={true}
+            onCallStarted={() => {
+              console.log('Video call started with:', person.name);
+              onVideoPress && onVideoPress(person);
+            }}
+            onCallFailed={(error) => {
+              console.error('Video call failed:', error);
+              // The error handling is done in the parent component
+            }}
+            style={styles.videoButton}
+          />
+        ) : (
+          <TouchableOpacity
+            onPress={handleDisabledButtonClick}
+            style={styles.disabledVideoButton}
+            activeOpacity={0.7}
+          >
+            <Icon name="videocam-off" size={20} color="#D32F2F" />
+          </TouchableOpacity>
+        )}
       </LinearGradient>
       
       {/* Enhanced username footer with stronger gradient */}
@@ -290,6 +337,23 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 6,
     zIndex: 10,
+  },
+  disabledVideoButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 6,
+    marginRight: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 6,
+    zIndex: 10,
+    backgroundColor: 'rgba(211, 47, 47, 0.2)', // Red background for disabled state
   },
   verifiedBadge: {
     width: 16,

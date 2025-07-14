@@ -15,6 +15,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import zegoInvitationService from '../services/zegoInvitationService';
 import userService from '../services/userService';
+import callHistoryService from '../services/callHistoryService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -38,6 +39,57 @@ const IncomingCallScreen = () => {
   const [callerInfo, setCallerInfo] = useState(null);
   const [callType, setCallType] = useState('audio');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [callInitiated, setCallInitiated] = useState(false);
+
+  // Function to notify server about call initiation
+  const notifyCallInitiation = async () => {
+    if (!invitation?.callID || callInitiated) {
+      console.log('[IncomingCallScreen] Skipping call initiation notification:', { 
+        callID: invitation?.callID, 
+        callInitiated 
+      });
+      return;
+    }
+
+    try {
+      console.log('[IncomingCallScreen] Notifying server about call initiation');
+      
+      await callHistoryService.initiateCall({
+        call_id: invitation.callID,
+        call_type: callType,
+        recipient_id: invitation.caller?.userID,
+        status: 'initiated'
+      });
+
+      setCallInitiated(true);
+      console.log('[IncomingCallScreen] Call initiation notification successful');
+    } catch (error) {
+      console.error('[IncomingCallScreen] Error notifying call initiation:', error);
+      // Don't block the call if the API fails
+    }
+  };
+
+  // Function to notify server about call end
+  const notifyCallEnd = async () => {
+    console.log('[IncomingCallScreen] notifyCallEnd called');
+    if (!invitation?.callID) {
+      console.log('[IncomingCallScreen] Skipping call end notification - no callID');
+      return;
+    }
+
+    try {
+      console.log('[IncomingCallScreen] Notifying server about call end');
+      
+      await callHistoryService.endCall({
+        call_id: invitation.callID,
+      });
+
+      console.log('[IncomingCallScreen] Call end notification successful');
+    } catch (error) {
+      console.error('[IncomingCallScreen] Error notifying call end:', error);
+      // Don't block navigation if the API fails
+    }
+  };
 
   useEffect(() => {
     if (invitation) {
@@ -51,12 +103,26 @@ const IncomingCallScreen = () => {
     }
   }, [invitation]);
 
+  // Cleanup effect to handle component unmount
+  useEffect(() => {
+    return () => {
+      // If call was initiated but component is unmounting, notify server about call end
+      if (callInitiated && invitation?.callID) {
+        console.log('[IncomingCallScreen] Component unmounting, notifying call end');
+        notifyCallEnd();
+      }
+    };
+  }, [callInitiated, invitation?.callID]);
+
   const handleAcceptCall = async () => {
     try {
       setIsProcessing(true);
       
       // Accept the call invitation using ZEGOCLOUD's built-in system
       await zegoInvitationService.acceptCallInvitation(invitation);
+      
+      // Notify server about call initiation
+      await notifyCallInitiation();
       
       // Get current user data directly from storage (same as ChatListScreen)
       const currentUser = await userService.getUserData();
@@ -96,6 +162,9 @@ const IncomingCallScreen = () => {
       
       // Decline the call invitation using ZEGOCLOUD's built-in system
       await zegoInvitationService.declineCallInvitation(invitation);
+      
+      // Notify server about call end
+      await notifyCallEnd();
       
       // Show declined message and go back
       Alert.alert('Call Declined', 'You declined the incoming call.');

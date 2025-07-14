@@ -205,11 +205,10 @@ const TypingIndicator = () => (
   </View>
 );
 
-const ChatHeader = ({ avatar, name, isOnline, onBackPress, onVideoPress, onAudioPress, onMorePress, targetUser }) => {
+const ChatHeader = ({ avatar, name, isOnline, onBackPress, onMorePress, targetUser }) => {
   const displayName = name || '';
   const avatarUrl = avatar || 'https://randomuser.me/api/portraits/women/44.jpg';
   const onlineStatus = isOnline === true ? 'Online' : 'Offline';
-  console.log("targetUser-->",targetUser);
   return (
     <View style={styles.header}>
       <TouchableOpacity 
@@ -676,8 +675,6 @@ const ChatDetailScreen = () => {
         name={chat.name}
         isOnline={chat.isOnline}
         onBackPress={() => navigation.goBack()}
-        onVideoPress={handleVideoCallPress}
-        onAudioPress={() => console.log('Audio call with:', chat.name)}
         onMorePress={() => console.log('More options for:', chat.name)}
         targetUser={chat}
       />

@@ -52,6 +52,40 @@ const UserDetailsScreen = () => {
   const route = useRoute();
   const { userId } = route.params;
 
+  // Check if user has sufficient total_seconds for calling
+  const checkCallEligibility = () => {
+    console.log("Checking call eligibility for userProfile:", JSON.stringify(userProfile, null, 2));
+    const min_seconds_for_call = 4;
+    // Check if userProfile has total_seconds property
+    if (userProfile && userProfile.total_seconds !== undefined) {
+      console.log("Found total_seconds:", userProfile.total_seconds);
+      if (userProfile.total_seconds < min_seconds_for_call) {
+        console.log("Insufficient total_seconds, blocking call");
+        return false;
+      }
+      console.log("Sufficient total_seconds, allowing call");
+    } else {
+      console.log("No total_seconds found in userProfile, allowing call");
+    }
+    return true;
+  };
+
+  // Handle disabled button click
+  const handleDisabledButtonClick = () => {
+    Alert.alert(
+      'Insufficient Time',
+      'You need at least 4 seconds to make a call. Please add more time to your account.',
+      [
+        { 
+          text: 'OK', 
+          onPress: () => {
+            console.log("User acknowledged insufficient time");
+          }
+        }
+      ]
+    );
+  };
+
   useEffect(() => {
     if (userId) {
       loadUserProfile();
@@ -64,6 +98,8 @@ const UserDetailsScreen = () => {
       setError(null);
       
       const profile = await userService.getUserProfileById(userId);
+      console.log('UserDetailsScreen - Received profile data:', JSON.stringify(profile, null, 2));
+      
       if (profile) {
         setUserProfile(profile);
       } else {
@@ -115,10 +151,26 @@ const UserDetailsScreen = () => {
   };
 
   const getAgeFromDate = (dateString) => {
-    if (!dateString) return null;
+    if (!dateString) {
+      console.log('UserDetailsScreen - No date string provided for age calculation');
+      return null;
+    }
+    
+    console.log('UserDetailsScreen - Calculating age from date:', dateString);
+    
     try {
       const birthDate = new Date(dateString);
       const today = new Date();
+      
+      console.log('UserDetailsScreen - Birth date:', birthDate);
+      console.log('UserDetailsScreen - Today:', today);
+      
+      // Check if the date is valid and not in the future
+      if (isNaN(birthDate.getTime()) || birthDate > today) {
+        console.log('UserDetailsScreen - Invalid date or future date detected');
+        return null;
+      }
+      
       let age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
       
@@ -126,26 +178,38 @@ const UserDetailsScreen = () => {
         age--;
       }
       
-      return age;
+      console.log('UserDetailsScreen - Calculated age:', age);
+      return age > 0 ? age : null;
     } catch (error) {
+      console.error('Error calculating age:', error);
       return null;
     }
   };
 
-  const renderInfoItem = (icon, label, value, isLast = false) => (
-    <View style={[styles.infoItem, isLast && styles.infoItemLast]}>
-      <View style={styles.infoIconContainer}>
-        <Ionicons name={icon} size={22} color={COLORS.primary} />
+  const renderInfoItem = (icon, label, value, isLast = false) => {
+    // Don't render if value is null, undefined, or empty string
+    if (!value || value === '') {
+      console.log(`UserDetailsScreen - Skipping ${label}: value is ${value}`);
+      return null;
+    }
+    
+    console.log(`UserDetailsScreen - Rendering ${label}: ${value}`);
+    
+    return (
+      <View style={[styles.infoItem, isLast && styles.infoItemLast]}>
+        <View style={styles.infoIconContainer}>
+          <Ionicons name={icon} size={22} color={COLORS.primary} />
+        </View>
+        <View style={styles.infoContent}>
+          <Text style={styles.infoLabel}>{label}</Text>
+          <Text style={styles.infoValue}>{value}</Text>
+        </View>
+        <View style={styles.infoArrow}>
+          <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
+        </View>
       </View>
-      <View style={styles.infoContent}>
-        <Text style={styles.infoLabel}>{label}</Text>
-        <Text style={styles.infoValue}>{value || 'Not specified'}</Text>
-      </View>
-      <View style={styles.infoArrow}>
-        <Ionicons name="chevron-forward" size={16} color={COLORS.textTertiary} />
-      </View>
-    </View>
-  );
+    );
+  };
 
   const renderStatCard = (icon, value, label) => (
     <LinearGradient
@@ -277,7 +341,7 @@ const UserDetailsScreen = () => {
       {/* Content */}
       <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
         {/* Profile Picture Section */}
-        <View style={styles.profileSection}>
+          <View style={styles.profileSection}>
           <View style={styles.profileImageContainer}>
             <View style={styles.profileImageWrapper}>
               <LinearGradient
@@ -316,60 +380,60 @@ const UserDetailsScreen = () => {
           <Text style={styles.username}>@{userProfile.username}</Text>
           
           {userProfile.bio && (
-            <LinearGradient
-              colors={[COLORS.surface, COLORS.surfaceVariant]}
-              style={styles.bioContainer}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-            >
-              <Text style={styles.bio}>{userProfile.bio}</Text>
-            </LinearGradient>
+              <LinearGradient
+                colors={[COLORS.surface, COLORS.surfaceVariant]}
+                style={styles.bioContainer}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+              >
+                <Text style={styles.bio}>{userProfile.bio}</Text>
+              </LinearGradient>
           )}
-        </View>
+            </View>
 
         {/* Quick Stats */}
-        <View style={styles.statsSection}>
-          <View style={styles.statsRow}>
+          <View style={styles.statsSection}>
+            <View style={styles.statsRow}>
             {renderStatCard('calendar-outline', age || 'N/A', 'Age')}
-            {renderStatCard('location-outline', userProfile.city || 'N/A', 'City')}
-            {renderStatCard('time-outline', userProfile.selected_age ? `${userProfile.selected_age}y` : 'N/A', 'Selected')}
+              {renderStatCard('location-outline', userProfile.city || 'N/A', 'City')}
+              {renderStatCard('time-outline', userProfile.selected_age ? `${userProfile.selected_age}y` : 'N/A', 'Selected')}
+            </View>
           </View>
-        </View>
 
-        {/* Profile Information */}
-        <View style={styles.infoSection}>
-          <View style={styles.sectionHeader}>
+          {/* Profile Information */}
+          <View style={styles.infoSection}>
+            <View style={styles.sectionHeader}>
+              <LinearGradient
+                colors={[COLORS.primary, COLORS.primaryLight]}
+                style={styles.sectionIconContainer}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+              >
+                <Ionicons name="person-circle-outline" size={24} color="#FFFFFF" />
+              </LinearGradient>
+              <Text style={styles.sectionTitle}>Profile Information</Text>
+            </View>
+            
             <LinearGradient
-              colors={[COLORS.primary, COLORS.primaryLight]}
-              style={styles.sectionIconContainer}
+              colors={[COLORS.surface, COLORS.surfaceVariant]}
+              style={styles.infoCard}
               start={{x: 0, y: 0}}
               end={{x: 1, y: 1}}
             >
-              <Ionicons name="person-circle-outline" size={24} color="#FFFFFF" />
+              {renderInfoItem('person-outline', 'Full Name', userProfile.name)}
+              {renderInfoItem('at-outline', 'Username', userProfile.username)}
+              {renderInfoItem('mail-outline', 'Email Address', userProfile.user_email)}
+              {renderInfoItem('call-outline', 'Mobile Number', userProfile.mobile_number)}
+              {renderInfoItem('calendar-outline', 'Date of Birth', formatDate(userProfile.date_of_birth))}
+              {age && renderInfoItem('time-outline', 'Age', `${age} years old`)}
+              {renderInfoItem('male-female-outline', 'Gender', userProfile.gender)}
+              {renderInfoItem('location-outline', 'City', userProfile.city)}
+              {renderInfoItem('home-outline', 'Address', userProfile.address)}
+              {renderInfoItem('time-outline', 'Selected Age', userProfile.selected_age ? `${userProfile.selected_age} years` : null)}
+              {renderInfoItem('checkmark-circle-outline', 'Account Status', userProfile.active ? 'Active' : 'Inactive')}
+              {renderInfoItem('calendar-outline', 'Member Since', formatDate(userProfile.created_at), true)}
             </LinearGradient>
-            <Text style={styles.sectionTitle}>Profile Information</Text>
           </View>
-          
-          <LinearGradient
-            colors={[COLORS.surface, COLORS.surfaceVariant]}
-            style={styles.infoCard}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
-          >
-            {renderInfoItem('person-outline', 'Full Name', userProfile.name)}
-            {renderInfoItem('at-outline', 'Username', userProfile.username)}
-            {renderInfoItem('mail-outline', 'Email Address', userProfile.user_email)}
-            {renderInfoItem('call-outline', 'Mobile Number', userProfile.mobile_number)}
-            {renderInfoItem('calendar-outline', 'Date of Birth', formatDate(userProfile.date_of_birth))}
-            {age && renderInfoItem('time-outline', 'Age', `${age} years old`)}
-            {renderInfoItem('male-female-outline', 'Gender', userProfile.gender)}
-            {renderInfoItem('location-outline', 'City', userProfile.city)}
-            {renderInfoItem('home-outline', 'Address', userProfile.address)}
-            {renderInfoItem('time-outline', 'Selected Age', userProfile.selected_age ? `${userProfile.selected_age} years` : null)}
-            {renderInfoItem('checkmark-circle-outline', 'Account Status', userProfile.active ? 'Active' : 'Inactive')}
-            {renderInfoItem('calendar-outline', 'Member Since', formatDate(userProfile.created_at), true)}
-          </LinearGradient>
-        </View>
 
         {/* Media Section */}
         {(userProfile.images?.length > 0 || userProfile.videos?.length > 0) && (
@@ -467,6 +531,7 @@ const UserDetailsScreen = () => {
             </LinearGradient>
           </TouchableOpacity>
         </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -482,7 +547,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: COLORS.background,
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
   },
   loadingCard: {
     borderRadius: 20,
@@ -898,7 +963,7 @@ const styles = StyleSheet.create({
   mediaItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 12,
   },
   mediaIconContainer: {
     width: 52,
@@ -918,28 +983,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   mediaCount: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.textPrimary,
-    marginBottom: 4,
+    marginBottom: 2,
   },
   mediaLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.textSecondary,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   actionSection: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   callButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   callButton: {
     flex: 1,
-    borderRadius: 20,
+    borderRadius: 16,
     shadowColor: COLORS.shadowDark,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
@@ -947,7 +1012,7 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   primaryButton: {
-    borderRadius: 20,
+    borderRadius: 16,
     shadowColor: COLORS.shadowDark,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
@@ -955,11 +1020,11 @@ const styles = StyleSheet.create({
     elevation: 12,
   },
   primaryButtonGradient: {
-    paddingVertical: 18,
+    paddingVertical: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 20,
+    borderRadius: 16,
   },
   primaryButtonDisabled: {
     shadowOpacity: 0.1,

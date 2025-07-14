@@ -128,9 +128,22 @@ const PeopleScreen = ({ navigation }) => {
   };
   
   const handlePersonPress = useCallback((person) => {
-    // Navigate to person detail or open chat
-    Alert.alert('Person Selected', `You selected ${person.name}`);
-  }, []);
+    // Navigate to user details screen
+    try {
+      if (!person || !person.id) {
+        console.error('Invalid person object:', person);
+        return;
+      }
+      
+      // Navigate to UserDetails screen with the person's ID
+      navigation.navigate('UserDetails', {
+        userId: person.id
+      });
+    } catch (error) {
+      console.error('Error navigating to user details:', error);
+      setError('Failed to open user details. Please try again.');
+    }
+  }, [navigation]);
   
   const handleVideoCallPress = useCallback((person) => {
     // This function will be called by the CallInvitationButton component

@@ -34,7 +34,9 @@ class ChatService {
           timestamp: chat.last_message_at,
           created_at: chat.created_at,
           updated_at: chat.updated_at,
-          other_participant: chat.other_participant
+          other_participant: chat.other_participant,
+          coins: chat.coins,
+          total_seconds: chat.total_seconds
         }));
       }
       return [];
@@ -140,7 +142,9 @@ class ChatService {
           timestamp: new Date().toISOString(),
           created_at: response.data.data.created_at,
           updated_at: response.data.data.updated_at,
-          other_participant: response.data.data.other_participant
+          other_participant: response.data.data.other_participant,
+          coins: response.data.data.coins,
+          total_seconds: response.data.data.total_seconds
         };
         
         console.log('Created new conversation:', newChat);
