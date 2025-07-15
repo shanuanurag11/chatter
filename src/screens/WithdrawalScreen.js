@@ -17,6 +17,8 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import Colors from '../constants/colors';
+import apiClient from '../services/api/client';
+import userService from '../services/userService';
 
 const WithdrawalScreen = () => {
   const navigation = useNavigation();
@@ -76,8 +78,8 @@ const WithdrawalScreen = () => {
       const coins = parseInt(formData.coinsToWithdraw);
       if (isNaN(coins) || coins <= 0) {
         newErrors.coinsToWithdraw = 'Please enter a valid amount';
-      } else if (coins < 100) {
-        newErrors.coinsToWithdraw = 'Minimum withdrawal amount is 100 coins';
+      } else if (coins < 10) {
+        newErrors.coinsToWithdraw = 'Minimum withdrawal amount is 10 coins';
       }
     }
 
@@ -93,21 +95,44 @@ const WithdrawalScreen = () => {
     setLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      Alert.alert(
-        'Withdrawal Request Submitted',
-        'Your withdrawal request has been submitted successfully. You will receive the amount within 3-5 business days.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack()
-          }
-        ]
-      );
+      // Get user ID using userService
+      const userId = await userService.getUserId();
+
+      if (!userId) {
+        throw new Error('User ID not found. Please login again.');
+      }
+
+      // Prepare API request data
+      const requestData = {
+        user_id: userId,
+        name: formData.accountHolderName,
+        ifsc_code: formData.ifscCode,
+        account_no: formData.accountNumber,
+        confirm_account_no: formData.confirmAccountNumber,
+        coins: parseInt(formData.coinsToWithdraw)
+      };
+      // Make API call
+      const response = await apiClient.post('/api/v1/user/withdraw/', requestData);
+      if (response.data.status) {
+        Alert.alert(
+          'Withdrawal Request Submitted',
+          'Your withdrawal request has been submitted successfully. You will receive the amount within 5-7 business days.',
+          [
+            {
+              text: 'OK',
+              onPress: () => navigation.goBack()
+            }
+          ]
+        );
+      } else {
+        throw new Error(response.data.message || 'Failed to submit withdrawal request');
+      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to submit withdrawal request. Please try again.');
+      console.error('Withdrawal error:', error);
+      Alert.alert(
+        'Error', 
+        error.message || 'Failed to submit withdrawal request. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -240,20 +265,20 @@ const WithdrawalScreen = () => {
           </View>
 
           {/* Info Card */}
-          <View style={styles.infoCard}>
+           <View style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Icon name="information-circle-outline" size={20} color={Colors.info} />
               <Text style={styles.infoTitle}>Important Information</Text>
             </View>
             <View style={styles.infoContent}>
               <Text style={styles.infoText}>
-                • Minimum withdrawal amount: 100 coins{'\n'}
-                • Processing time: 3-5 business days{'\n'}
+                • Minimum withdrawal amount: 10 coins{'\n'}
+                • Processing time: 5-7 business days{'\n'}
                 • Bank charges may apply{'\n'}
                 • Ensure account details are correct
               </Text>
             </View>
-          </View>
+          </View> 
         </ScrollView>
 
         {/* Submit Button */}
