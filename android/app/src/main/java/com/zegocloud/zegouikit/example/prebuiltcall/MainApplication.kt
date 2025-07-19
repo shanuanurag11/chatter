@@ -1,4 +1,4 @@
-package com.zegocloud.zegouikit.example.prebuiltcall
+package com.sakoonclub
 
 import android.app.Application
 import com.facebook.react.PackageList

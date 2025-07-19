@@ -1,4 +1,4 @@
-package com.zegocloud.zegouikit.example.prebuiltcall
+package com.sakoonclub
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

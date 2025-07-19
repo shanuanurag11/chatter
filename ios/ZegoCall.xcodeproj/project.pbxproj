@@ -490,7 +490,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.zegocloud.zegouikit.example.prebuiltcall;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sakoonclub;
 				PRODUCT_NAME = chatter;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -520,7 +520,7 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.zegocloud.zegouikit.example.prebuiltcall;
+				PRODUCT_BUNDLE_IDENTIFIER = com.sakoonclub;
 				PRODUCT_NAME = chatter;
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";

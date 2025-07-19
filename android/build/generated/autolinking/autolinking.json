@@ -1073,8 +1073,8 @@
     "android": {
       "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/android",
       "appName": "app",
-      "packageName": "com.zegocloud.zegouikit.example.prebuiltcall",
-      "applicationId": "com.zegocloud.zegouikit.example.prebuiltcall",
+      "packageName": "com.sakoonclub",
+      "applicationId": "com.sakoonclub",
       "mainActivity": ".MainActivity",
       "assets": []
     }
