@@ -5,10 +5,10 @@ import uuid from 'react-native-uuid';
 
 export const ZEGO_CONFIG = {
   // Replace with your actual App ID from ZEGOCLOUD Console
-  APP_ID: 1765584231, // Your ZEGOCLOUD App ID (number)
+  APP_ID: 229292280, // Your ZEGOCLOUD App ID (number)
   
   // Replace with your actual App Sign from ZEGOCLOUD Console
-  APP_SIGN: '5187d0a49871d478f21df4a71737fc84255f33c0095b8d1dd160ac333b10802d', // Your ZEGOCLOUD App Sign (string)
+  APP_SIGN: 'a6e5dd0784398ee99430daf2105c74095d1ff2b0e18540a2bbfa510a0c8ed3da', // Your ZEGOCLOUD App Sign (string)
   
   // Server URL (usually doesn't need to be changed)
   SERVER_URL: 'https://webliveroom-test.zego.im',

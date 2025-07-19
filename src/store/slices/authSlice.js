@@ -42,7 +42,7 @@ export const loginWithGoogle = createAsyncThunk(
         const userID = response.user.id?.toString() || googleData.id;
         const userName = response.user.name || googleData.displayName || `User_${userID}`;
         await zegoService.initialize(userID, userName);
-        console.log('[Auth] ZEGOCLOUD initialized successfully for Google login');
+        console.log('[Auth] ZEGOCLOUD initialized successfully for Google login 111');
       } catch (zegoError) {
         console.error('[Auth] ZEGOCLOUD initialization failed for Google login:', zegoError);
         // Don't fail the login if ZEGOCLOUD fails to initialize
@@ -73,7 +73,7 @@ export const loginWithFacebook = createAsyncThunk(
         const userID = response.user.id?.toString() || facebookData.id;
         const userName = response.user.name || facebookData.displayName || `User_${userID}`;
         await zegoService.initialize(userID, userName);
-        console.log('[Auth] ZEGOCLOUD initialized successfully for Facebook login');
+        console.log('[Auth] ZEGOCLOUD initialized successfully for Facebook login 22');
       } catch (zegoError) {
         console.error('[Auth] ZEGOCLOUD initialization failed for Facebook login:', zegoError);
         // Don't fail the login if ZEGOCLOUD fails to initialize
@@ -104,7 +104,7 @@ export const loginWithApple = createAsyncThunk(
         const userID = response.user.id?.toString() || appleData.id;
         const userName = response.user.name || appleData.displayName || `User_${userID}`;
         await zegoService.initialize(userID, userName);
-        console.log('[Auth] ZEGOCLOUD initialized successfully for Apple login');
+        console.log('[Auth] ZEGOCLOUD initialized successfully for Apple login 33');
       } catch (zegoError) {
         console.error('[Auth] ZEGOCLOUD initialization failed for Apple login:', zegoError);
         // Don't fail the login if ZEGOCLOUD fails to initialize
@@ -163,8 +163,9 @@ export const verifyOTP = createAsyncThunk(
           try {
             const userID = userData.id?.toString() || userData.user_id?.toString() || phone;
             const userName = userData.name || userData.username || `User_${phone}`;
-            await zegoService.initialize(userID, userName);
-            console.log('[Auth] ZEGOCLOUD initialized successfully');
+            const duration = userData.total_Seconds;
+            await zegoService.initialize(userID, userName, duration);
+            console.log('[Auth] ZEGOCLOUD initialized successfully11111111');
           } catch (zegoError) {
             console.error('[Auth] ZEGOCLOUD initialization failed:', zegoError);
             // Don't fail the login if ZEGOCLOUD fails to initialize
@@ -258,8 +259,9 @@ export const checkAuthStatus = createAsyncThunk(
           try {
             const userID = userData.id?.toString() || userData.user_id?.toString();
             const userName = userData.name || userData.username || `User_${userID}`;
-            await zegoService.initialize(userID, userName);
-            console.log('[Auth] ZEGOCLOUD initialized successfully on app start');
+            const duration = userData.total_Seconds;
+            await zegoService.initialize(userID, userName, duration);
+            console.log('[Auth] ZEGOCLOUD initialized successfully on app start2222');
           } catch (zegoError) {
             console.error('[Auth] ZEGOCLOUD initialization failed on app start:', zegoError);
             // Don't fail the auth check if ZEGOCLOUD fails to initialize
@@ -298,10 +300,12 @@ export const register = createAsyncThunk(
         // Store the tokens
         await EncryptedStorage.setItem('user_token', response.data.data.access);
         await EncryptedStorage.setItem('refresh_token', response.data.data.refresh);
+        
         const userData = response.data.data;
         await userService.saveUserData(userData);
+        const duration = userData.total_Seconds;
+        await zegoService.initialize(userID, userName, duration);
         return userData;
-        return response.data.data;
       } else {
         return rejectWithValue(response.data.message);
       }

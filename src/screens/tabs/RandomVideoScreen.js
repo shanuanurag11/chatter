@@ -22,6 +22,7 @@ import callService from '../../services/callService';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import apiClient from '../../services/api/client.js';
+import userService from '../../services/userService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -101,12 +102,12 @@ const RandomVideoScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [profiles, setProfiles] = useState([]);
+  const [userData, setUserData] = useState(null);
   const innerRingAnimation = useRef(new Animated.Value(0)).current;
   const outerRingAnimation = useRef(new Animated.Value(0)).current;
   const pulseAnimations = useRef({});
   const statusAnimations = useRef({});
   const joinAnimations = useRef({});
-  const coinCountRef = useRef(3);
   const offerPercentRef = useRef(60);
   const [timeLeft, setTimeLeft] = useState(1797); // 29:57 in seconds
   const pollingIntervalRef = useRef(null);
@@ -121,6 +122,19 @@ const RandomVideoScreen = () => {
   const timerRefs = useRef({});
 
   useEffect(() => {
+    // Load user data on component mount
+    const loadUserData = async () => {
+      try {
+        const data = await userService.getUserData();
+        setUserData(data);
+        console.log('[RandomVideoScreen] User data loaded:', data);
+      } catch (error) {
+        console.error('[RandomVideoScreen] Error loading user data:', error);
+      }
+    };
+    
+    loadUserData();
+    
     // Generate static profiles when component mounts
     const generatedProfiles = generateProfiles();
     setProfiles(generatedProfiles);
@@ -348,6 +362,16 @@ const RandomVideoScreen = () => {
         navigation.navigate('VideoCallScreen', callData);
         return true;
       }
+      if(userData.total_Seconds>4){
+          // Clear polling interval
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+
+            setIsLoading(false);
+            setError('No Tokens left, Kindly buy tokens for calling.');
+      }
       
       return false;
     } catch (error) {
@@ -564,7 +588,7 @@ const RandomVideoScreen = () => {
         <View style={styles.coinCircle}>
           <Text style={styles.coinText}>c</Text>
         </View>
-        <Text style={styles.whiteText}>{coinCountRef.current}</Text>
+        <Text style={styles.whiteText}>{userData?.coins || '0'}</Text>
         <TouchableOpacity style={styles.addButton}>
           <Icon name="add" size={24} color="white" />
         </TouchableOpacity>

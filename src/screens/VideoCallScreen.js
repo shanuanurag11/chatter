@@ -5,10 +5,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import { request, PERMISSIONS, RESULTS, requestMultiple } from 'react-native-permissions';
 import callService from '../services/callService';
 import callHistoryService from '../services/callHistoryService';
+import userService from '../services/userService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // ZegoCloud import for production use
-import {ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG } from '@zegocloud/zego-uikit-prebuilt-call-rn'
+import {ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG, ZegoUIKitPrebuiltCallService } from '@zegocloud/zego-uikit-prebuilt-call-rn'
 
 // Replace with your ZegoCloud credentials once you have them
 const ZEGO_APP_ID = 1765584231; // Replace with your actual App ID (as a number)
@@ -37,7 +38,28 @@ const VideoCallScreen = ({ route, navigation }) => {
   const [checkingPermissions, setCheckingPermissions] = useState(false);
   const [loadingSDK, setLoadingSDK] = useState(true);
   const [callInitiated, setCallInitiated] = useState(false);
+  const [userData, setUserData] = useState(null);
   const permissionRequestRef = useRef(false);
+
+  // Load user data on component mount
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const data = await userService.getUserData();
+        setUserData(data);
+        console.log('[VideoCallScreen] User data loaded:', data);
+        
+        // Debug: Log current total_seconds
+        if (data?.total_Seconds !== undefined) {
+          console.log('[VideoCallScreen] Current total_seconds available:', data.total_Seconds);
+        }
+      } catch (error) {
+        console.error('[VideoCallScreen] Error loading user data:', error);
+      }
+    };
+    
+    loadUserData();
+  }, []);
 
   // Function to notify server about call initiation
   const notifyCallInitiation = async () => {
@@ -68,21 +90,33 @@ const VideoCallScreen = ({ route, navigation }) => {
   };
 
   // Function to notify server about call end
-  const notifyCallEnd = async () => {
-    console.log('[VideoCallScreen] notifyCallEnd called with duration:');
+  const notifyCallEnd = async (total_seconds) => {
+    console.log('[VideoCallScreen] notifyCallEnd called with duration:', total_seconds);
     if (!callId) {
-      console.log('[VideoCallScreen] Skipping call end notification - no recipientId');
+      console.log('[VideoCallScreen] Skipping call end notification - no callId');
       return;
     }
 
     try {
-      console.log('[VideoCallScreen] Notifying server about call end');
+      console.log('[VideoCallScreen] Notifying server about call end**total_seconds**',total_seconds);
       
       await callHistoryService.endCall({
         call_id: callId,
+        total_seconds
       });
 
       console.log('[VideoCallScreen] Call end notification successful');
+
+      // Update total_seconds in user data storage
+      if (total_seconds && total_seconds > 0) {
+        console.log('[VideoCallScreen] Updating total_seconds in storage, deducting:', total_seconds);
+        const updated = await userService.updateTotalSeconds(total_seconds);
+        if (updated) {
+          console.log('[VideoCallScreen] Total seconds updated successfully in storage');
+        } else {
+          console.error('[VideoCallScreen] Failed to update total seconds in storage');
+        }
+      }
     } catch (error) {
       console.error('[VideoCallScreen] Error notifying call end:', error);
       // Don't block navigation if the API fails
@@ -323,7 +357,7 @@ const VideoCallScreen = ({ route, navigation }) => {
     React.useCallback(() => {
       const onBackPress = async () => {
         console.log('[VideoCallScreen] Back button pressed, handling end call');
-        notifyCallEnd();
+        notifyCallEnd(0); // Pass 0 for manual termination
         handleEndCall();
         return true;
       };
@@ -349,7 +383,6 @@ const VideoCallScreen = ({ route, navigation }) => {
           style: 'destructive',
           onPress: async () => {
             console.log('[VideoCallScreen] Call ended by user');
-             notifyCallEnd();
             navigation.goBack();
           } 
         }
@@ -464,7 +497,7 @@ const VideoCallScreen = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.callContainer}>
-      <ZegoUIKitPrebuiltCall
+     {userData?.total_Seconds && <ZegoUIKitPrebuiltCall
                 appID={ZEGO_APP_ID}
                 appSign={ZEGO_APP_SIGN}
                 userID={userId} // userID can be something like a phone number or the user id on your own user system. 
@@ -477,55 +510,24 @@ const VideoCallScreen = ({ route, navigation }) => {
                     ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
                     onCallEnd: async (callID, reason, duration) => { 
                       console.log('[VideoCallScreen] Call ended with reason:', reason, 'duration:', duration);
-                      notifyCallEnd();
+                      notifyCallEnd(duration);
                       navigation.goBack();
                     },
+                    timingConfig: {
+                      isDurationVisible: true,
+                      onDurationUpdate: (durationInSec) => {
+                        console.log('[VideoCallScreen] Call duration:', durationInSec, 'seconds');
+                        // Auto-end call at 20 seconds (same as zegoService)
+                        const totalSeconds = userData?.total_Seconds || 20;
+                        if (durationInSec >= totalSeconds) {
+                          console.log('[VideoCallScreen] Auto-ending call at', totalSeconds, 'seconds');
+                          // Import and use ZegoUIKitPrebuiltCallService to hang up
+                          ZegoUIKitPrebuiltCallService.hangUp();
+                        }
+                      },
+                    },
                 }}
-            />
-
-        {/* <ZegoUIKitPrebuiltCall
-          appID={ZEGO_APP_ID}
-          appSign={ZEGO_APP_SIGN}
-          userID={userId}
-          userName={userName}
-          callID={callId}
-          config={{
-            ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
-            onOnlySelfInRoom: () => {
-              console.log('[VideoCallScreen] User is alone in the room');
-              // Wait for a moment and navigate back if no one joins
-              setTimeout(() => {
-                Alert.alert(
-                  'No One Joined',
-                  'The other user did not join the call.',
-                  [{ text: 'OK', onPress: () => navigation.goBack() }]
-                );
-              }, 10000); // 10 seconds wait time
-            },
-            onCallEnd: (callID, reason, duration) => { navigation.navigate('HomePage') },
-            layout: {
-              mode: 1, // Picture-in-picture layout
-              config: {
-                isSmallViewDraggable: true, // Allow dragging the small view
-                switchLargeOrSmallViewByClick: true, // Allow switching the large and small view by clicking
-              },
-            },
-            audioVideoViewConfig: {
-              useVideoViewAspectFill: true, // Use aspect fill for video view
-            },
-            turnOnCameraWhenJoining: true, // Turn on camera when joining
-            turnOnMicrophoneWhenJoining: true, // Turn on microphone when joining
-            useSpeakerWhenJoining: true, // Use speaker when joining
-            bottomMenuBarConfig: {
-              buttons: [
-                'toggleCameraButton',
-                'toggleMicrophoneButton',
-                'switchCameraButton',
-                'hangUpButton'
-              ]
-            }
-          }}
-        /> */}
+            />}
       </View>
     </SafeAreaView>
   );

@@ -23,36 +23,12 @@ import SectionHeader from '../components/SectionHeader';
 import PhotoSelector from '../components/PhotoSelector';
 import TagsInput from '../components/TagsInput';
 import { launchCamera, launchImageLibrary } from 'react-native-image-picker';
-
-// API config - replace with real API in production
-const API_URL = 'https://api.example.com/v1/user';
-
-// Dummy user data - would be replaced with Redux or Context in real app
-const dummyUser = {
-  userId: "109943032",
-  username: "user3lGhMk98",
-  images: [],
-  gender: "Male",
-  birthdate: "2007-04-09",
-  constellation: "Aries",
-  language: "English",
-  tags: ["Aries"]
-};
-
-// For image picking demo - in a real app, use react-native-image-picker or similar
-const mockImageOptions = [
-  { id: 1, url: 'https://randomuser.me/api/portraits/men/32.jpg' },
-  { id: 2, url: 'https://randomuser.me/api/portraits/men/33.jpg' },
-  { id: 3, url: 'https://randomuser.me/api/portraits/men/34.jpg' },
-  { id: 4, url: 'https://randomuser.me/api/portraits/women/44.jpg' },
-  { id: 5, url: 'https://randomuser.me/api/portraits/women/45.jpg' }
-];
+import profileService from '../services/profileService';
 
 /**
  * Edit Profile Screen
  * Allows user to update profile information including:
  * - Profile picture
- * - Photo album
  * - Personal information 
  * - Tags
  */
@@ -60,11 +36,8 @@ const EditProfileScreen = () => {
   const navigation = useNavigation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [user, setUser] = useState({
-    ...dummyUser,
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
-  });
-  const [tags, setTags] = useState(dummyUser.tags || []);
+  const [user, setUser] = useState(null);
+  const [tags, setTags] = useState([]);
   const [error, setError] = useState(null);
   const [editing, setEditing] = useState(null);
   const [tempValues, setTempValues] = useState({});
@@ -80,24 +53,23 @@ const EditProfileScreen = () => {
 
   // Fetch user profile data
   const fetchUserData = async () => {
-    console.log('Fetching user data...');
+    console.log('Fetching user profile data...');
     
     try {
-      // In a real app, this would be an API call
-      // const response = await fetch(`${API_URL}/profile`);
-      // const data = await response.json();
+      setLoading(true);
+      setError(null);
       
-      // Using dummy data for now
-      setTimeout(() => {
-        const userData = {
-          ...dummyUser,
-          avatar: 'https://randomuser.me/api/portraits/men/32.jpg' // Add a sample avatar
-        };
-        console.log('Setting user data:', userData);
-        setUser(userData);
-        setTags(dummyUser.tags || []);
-        setLoading(false);
-      }, 500);
+      const profileData = await profileService.getUserProfile();
+      console.log('Profile data received:', JSON.stringify(profileData, null, 2));
+      
+      if (!profileData) {
+        throw new Error('No profile data received from server');
+      }
+      
+      setUser(profileData);
+      // Initialize tags from profile data if available
+      setTags(profileData.tags || []);
+      setLoading(false);
     } catch (err) {
       console.error('Error fetching user data:', err);
       setError('Failed to load profile data');
@@ -107,31 +79,102 @@ const EditProfileScreen = () => {
 
   // Handle saving profile changes
   const handleSaveChanges = async () => {
+    console.log('=== SAVE BUTTON PRESSED ===');
+    console.log('Current user state:', user);
+    console.log('Current tags state:', tags);
+    console.log('Current saving state:', saving);
+    
+    // Check if user data exists
+    if (!user) {
+      console.log('No user data available');
+      Alert.alert('Error', 'No user data available. Please try again.');
+      return;
+    }
+    
+    // Check if already saving
+    if (saving) {
+      console.log('Already saving, ignoring press');
+      return;
+    }
+    
+    console.log('Setting saving to true...');
     setSaving(true);
     
     try {
-      // In a real app, this would be an API call
-      // const response = await fetch(`${API_URL}/profile`, {
-      //   method: 'PUT',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     ...user,
-      //     tags
-      //   }),
-      // });
+      console.log('Saving profile changes...');
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Prepare the data to send to API
+      // Only include fields that are actually editable and have values
+      const updateData = {};
+      
+      // Add editable fields that have values
+      if (user.name) updateData.name = user.name;
+      if (user.username) updateData.username = user.username;
+      if (user.bio) updateData.bio = user.bio;
+      if (user.gender) updateData.gender = user.gender;
+      if (user.selected_age) updateData.selected_age = user.selected_age;
+      if (user.address) updateData.address = user.address;
+      if (user.city) updateData.city = user.city;
+      if (user.date_of_birth) updateData.date_of_birth = user.date_of_birth;
+      if (user.mobile_number) updateData.mobile_number = user.mobile_number;
+      if (user.user_email) updateData.user_email = user.user_email;
+      
+      // Add tags if they exist
+      if (tags && tags.length > 0) {
+        updateData.tags = tags;
+      }
+      
+      console.log('Data to update:', JSON.stringify(updateData, null, 2));
+      
+      // Check if there's any data to update
+      if (Object.keys(updateData).length === 0) {
+        console.log('No data to update');
+        Alert.alert('Info', 'No changes to save.');
+        return;
+      }
+      
+      console.log('Calling profileService.editProfile...');
+      // Call the edit profile API
+      const updatedProfile = await profileService.editProfile(updateData);
+      
+      console.log('Profile updated successfully:', updatedProfile);
       
       // Show success message
-      Alert.alert('Success', 'Profile updated successfully');
-      navigation.goBack();
+      Alert.alert(
+        'Success', 
+        'Profile updated successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              console.log('Success alert OK pressed, navigating back');
+              navigation.goBack();
+            }
+          }
+        ]
+      );
     } catch (err) {
       console.error('Error updating profile:', err);
-      Alert.alert('Error', 'Failed to update profile');
+      console.error('Error stack:', err.stack);
+      
+      let errorMessage = 'Failed to update profile';
+      if (err.message) {
+        if (err.message.includes('network') || err.message.includes('connection')) {
+          errorMessage = 'Network error. Please check your internet connection.';
+        } else if (err.message.includes('unauthorized') || err.message.includes('401')) {
+          errorMessage = 'Session expired. Please login again.';
+        } else if (err.message.includes('server') || err.message.includes('500')) {
+          errorMessage = 'Server error. Please try again later.';
+        } else if (err.message.includes('timeout')) {
+          errorMessage = 'Request timeout. Please try again.';
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      Alert.alert('Error', errorMessage);
     } finally {
+      console.log('Setting saving to false...');
       setSaving(false);
     }
   };
@@ -139,6 +182,12 @@ const EditProfileScreen = () => {
   // Navigate back to previous screen
   const handleGoBack = () => {
     navigation.goBack();
+  };
+
+  // Test function to debug button presses
+  const handleTestPress = () => {
+    console.log('Test button pressed!');
+    Alert.alert('Test', 'Button is working!');
   };
 
   // Handle field edit toggling
@@ -198,37 +247,6 @@ const EditProfileScreen = () => {
     return true; // iOS handles permissions differently
   };
 
-  // Fallback function for when react-native-image-picker doesn't work
-  const handleImagePickerFallback = (type) => {
-    setImageModalVisible(false);
-    
-    // Simulate image selection with mock data
-    setTimeout(() => {
-      Alert.alert(
-        "Select Test Image",
-        "Choose one of these sample images:",
-        mockImageOptions.map(img => ({
-          text: `Test Image ${img.id}`,
-          onPress: () => {
-            console.log('Selected fallback image:', img.url);
-            // Create a mock imageData object similar to what react-native-image-picker would return
-            const mockImageData = {
-              uri: img.url,
-              type: 'image/jpeg',
-              fileName: `test_image_${img.id}.jpg`
-            };
-            handleImageUpload(mockImageData);
-          }
-        })).concat([
-          {
-            text: "Cancel",
-            style: "cancel"
-          }
-        ])
-      );
-    }, 500);
-  };
-
   // Handle camera selection with fallback
   const handleTakePhoto = async () => {
     try {
@@ -269,13 +287,11 @@ const EditProfileScreen = () => {
         }
       } catch (error) {
         console.error('Camera launch error:', error);
-        console.log('Falling back to mock image picker');
-        handleImagePickerFallback('camera');
+        Alert.alert('Error', 'Failed to launch camera. Please try again.');
       }
     } catch (error) {
       console.error('Camera permission error:', error);
-      Alert.alert('Error', 'Failed to request camera permission. Using fallback option.');
-      handleImagePickerFallback('camera');
+      Alert.alert('Error', 'Failed to request camera permission.');
     }
   };
 
@@ -312,13 +328,11 @@ const EditProfileScreen = () => {
         }
       } catch (error) {
         console.error('Image library launch error:', error);
-        console.log('Falling back to mock image picker');
-        handleImagePickerFallback('gallery');
+        Alert.alert('Error', 'Failed to open gallery. Please try again.');
       }
     } catch (error) {
       console.error('Gallery selection error:', error);
-      Alert.alert('Error', 'Failed to open gallery. Using fallback option.');
-      handleImagePickerFallback('gallery');
+      Alert.alert('Error', 'Failed to open gallery.');
     }
   };
 
@@ -329,10 +343,9 @@ const EditProfileScreen = () => {
     try {
       // Create a FormData object for multipart/form-data uploads
       const formData = new FormData();
-      formData.append('userId', user.userId);
       
       // Append the image file
-      formData.append('profileImage', {
+      formData.append('profile_picture', {
         uri: imageData.uri,
         type: imageData.type || 'image/jpeg',
         name: imageData.fileName || 'profile.jpg',
@@ -348,14 +361,14 @@ const EditProfileScreen = () => {
       //   body: formData,
       // });
       
-      // For the demo, we'll simulate the delay and use the local image URI
+      // For now, we'll simulate the delay and use the local image URI
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // After a successful upload, the server would return the new image URL
       // For demo purposes, we'll use the local URI
       setUser(prev => ({
         ...prev,
-        avatar: imageData.uri
+        profile_picture: imageData.uri
       }));
       
       Alert.alert("Success", "Profile picture updated successfully!");
@@ -365,13 +378,6 @@ const EditProfileScreen = () => {
     } finally {
       setUploadingImage(false);
     }
-  };
-
-  // Handle photo album changes 
-  const handlePhotoAlbumChange = (photos) => {
-    console.log('Photo album updated:', photos);
-    // In a real app, this would update the photo array
-    // and possibly upload new photos to a server
   };
 
   // Handle adding/removing tags
@@ -455,7 +461,7 @@ const EditProfileScreen = () => {
           style: "destructive",
           onPress: () => {
             setImageModalVisible(false);
-            setUser(prev => ({...prev, avatar: null}));
+            setUser(prev => ({...prev, profile_picture: null}));
           }
         }
       ]
@@ -514,6 +520,37 @@ const EditProfileScreen = () => {
     );
   }
 
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.errorContainer}>
+        <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
+        <LinearGradient
+          colors={[Colors.background, '#F9F5FF']}
+          style={styles.gradientBackground}
+        >
+          <View style={styles.errorContent}>
+            <Icon name="person-outline" size={70} color="#8E8E93" />
+            <Text style={styles.errorTitle}>No Profile Data</Text>
+            <Text style={styles.errorText}>Unable to load your profile information.</Text>
+            <TouchableOpacity 
+              style={styles.retryButton} 
+              onPress={fetchUserData}
+            >
+              <LinearGradient
+                colors={[Colors.primaryLight, Colors.primary]}
+                style={styles.retryButtonGradient}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 0}}
+              >
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+      </SafeAreaView>
+    );
+  }
+
   console.log('Rendering main UI, user:', user);
 
   return (
@@ -538,7 +575,6 @@ const EditProfileScreen = () => {
               <Icon name="chevron-back" size={28} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Edit Profile</Text>
-            <View style={styles.headerRight} />
             
             {/* Decorative elements for header */}
             <View style={styles.headerDecoration1} />
@@ -574,8 +610,8 @@ const EditProfileScreen = () => {
                   <View style={styles.uploadingContainer}>
                     <ActivityIndicator size="large" color={Colors.primary} />
                   </View>
-                ) : user?.avatar ? (
-                  <Image source={{ uri: user.avatar }} style={styles.profileImage} />
+                ) : user?.profile_picture ? (
+                  <Image source={{ uri: user.profile_picture }} style={styles.profileImage} />
                 ) : (
                   <View style={styles.profileImagePlaceholder}>
                     <Icon name="person" size={40} color="#CCCCCC" />
@@ -593,7 +629,7 @@ const EditProfileScreen = () => {
               
               <View style={styles.profileTextContainer}>
                 <Text style={styles.profileNameText}>{user?.username || 'Username'}</Text>
-                <Text style={styles.profileIdText}>ID: {user?.userId || 'N/A'}</Text>
+                <Text style={styles.profileIdText}>ID: {user?.id || 'N/A'}</Text>
                 
                 <View style={styles.statusBadge}>
                   <Icon name="checkmark-circle" size={14} color="#fff" />
@@ -602,23 +638,6 @@ const EditProfileScreen = () => {
               </View>
             </View>
           </View>
-          
-          {/* Photo Album Section - Temporarily hidden
-          <View style={styles.section}>
-            <SectionHeader 
-              title={`Photo Album (${user?.images?.length || 0}/9)`} 
-              subtitle="Share your favorite moments"
-            />
-            <PhotoSelector 
-              photos={user?.images || []} 
-              onPhotosChange={handlePhotoAlbumChange}
-              maxPhotos={9}
-            />
-            <Text style={styles.helperText}>
-              <Icon name="information-circle-outline" size={14} color="#999" /> Drag pictures to reorder
-            </Text>
-          </View>
-          */}
           
           {/* My Info Section */}
           <View style={styles.section}>
@@ -629,22 +648,34 @@ const EditProfileScreen = () => {
             
             <View style={styles.infoFieldsContainer}>
               {/* Name Field */}
-              {renderField('username', 'Name', 'person-outline')}
+              {renderField('name', 'Full Name', 'person-outline')}
               
-              {/* UserID Field - Not editable */}
-              {renderField('userId', 'UserID', 'id-card-outline', false)}
+              {/* Username Field */}
+              {renderField('username', 'Username', 'at-outline')}
+              
+              {/* Bio Field */}
+              {renderField('bio', 'Bio', 'chatbubble-outline')}
+              
+              {/* Email Field */}
+              {renderField('user_email', 'Email', 'mail-outline')}
+              
+              {/* Mobile Number Field */}
+              {renderField('mobile_number', 'Mobile Number', 'call-outline')}
               
               {/* Gender Field */}
               {renderField('gender', 'Gender', 'male-female-outline')}
               
-              {/* Birthday Field */}
-              {renderField('birthdate', 'Birthday', 'calendar-outline')}
+              {/* Selected Age Field */}
+              {renderField('selected_age', 'Age', 'calendar-outline')}
               
-              {/* Constellation Field */}
-              {renderField('constellation', 'Constellation', 'star-outline')}
+              {/* Date of Birth Field */}
+              {renderField('date_of_birth', 'Date of Birth', 'calendar-outline')}
               
-              {/* Language Field */}
-              {renderField('language', 'Language', 'language-outline')}
+              {/* City Field */}
+              {renderField('city', 'City', 'location-outline')}
+              
+              {/* Address Field */}
+              {renderField('address', 'Address', 'home-outline')}
             </View>
           </View>
           
@@ -669,9 +700,13 @@ const EditProfileScreen = () => {
         <View style={styles.saveButtonContainer}>
           <TouchableOpacity 
             style={styles.saveButton} 
-            onPress={handleSaveChanges}
+            onPress={() => {
+              console.log('Save button TouchableOpacity pressed!');
+              handleSaveChanges();
+            }}
             disabled={saving}
-            activeOpacity={0.85}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <LinearGradient
               colors={[Colors.gradientStart, Colors.gradientEnd]}
@@ -868,6 +903,20 @@ const styles = StyleSheet.create({
   },
   headerRight: {
     width: 40,
+  },
+  testButton: {
+    width: 60,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  testButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
@@ -1115,10 +1164,17 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     paddingTop: 10,
+    paddingBottom: 10,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
+    zIndex: 1000,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   saveButton: {
     borderRadius: 30,
@@ -1226,6 +1282,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#666',
+  },
+  testSaveButton: {
+    backgroundColor: Colors.primary,
+    paddingVertical: 15,
+    paddingHorizontal: 25,
+    borderRadius: 30,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  testSaveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

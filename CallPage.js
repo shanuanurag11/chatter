@@ -51,6 +51,39 @@ export default function CallPage(props) {
                         }
                       }
                     },
+                    // Add call invitation configuration with acceptance callbacks
+                    callInvitationConfig: {
+                      // Called when a call invitation is accepted (on caller side)
+                      onIncomingCallAccepted: async (callID, caller, type) => {
+                        console.log('[CallPage] Call accepted by recipient:', { callID, caller, type });
+                        // Add your notification logic here
+                      },
+                      // Called when a call invitation is accepted (on called side)
+                      onOutgoingCallAccepted: async (callID, callee, type) => {
+                        console.log('[CallPage] Outgoing call accepted by:', { callID, callee, type });
+                        // Add your notification logic here
+                      },
+                      // Called when a call invitation is declined
+                      onIncomingCallDeclined: async (callID, caller, type) => {
+                        console.log('[CallPage] Call declined by recipient:', { callID, caller, type });
+                        // Add your notification logic here
+                      },
+                      // Called when a call invitation is declined
+                      onOutgoingCallDeclined: async (callID, callee, type) => {
+                        console.log('[CallPage] Outgoing call declined by:', { callID, callee, type });
+                        // Add your notification logic here
+                      },
+                      // Called when a call invitation times out
+                      onIncomingCallTimeout: async (callID, caller, type) => {
+                        console.log('[CallPage] Call timed out:', { callID, caller, type });
+                        // Add your notification logic here
+                      },
+                      // Called when a call invitation times out
+                      onOutgoingCallTimeout: async (callID, callee, type) => {
+                        console.log('[CallPage] Outgoing call timed out:', { callID, callee, type });
+                        // Add your notification logic here
+                      },
+                    },
                     topMenuBarConfig: {
                         buttons: [
                             ZegoMenuBarButtonName.minimizingButton,

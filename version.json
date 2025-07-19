@@ -1,0 +1,9 @@
+{
+  "versionName": "1.0.0",
+  "versionCode": 1,
+  "appName": "Chatter",
+  "packageName": "com.sakoonclub",
+  "description": "Video calling and chat app",
+  "category": "Communication",
+  "releaseNotes": "Initial release with video calling functionality"
+} 

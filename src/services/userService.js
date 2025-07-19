@@ -181,6 +181,60 @@ class UserService {
       throw error;
     }
   }
+
+  // Update total_seconds by deducting used seconds
+  async updateTotalSeconds(usedSeconds) {
+    try {
+      console.log('[UserService] Updating total_seconds, deducting:', usedSeconds);
+      
+      // Get current user data from storage
+      const currentUserData = await this.getUserData();
+      
+      if (!currentUserData) {
+        console.error('[UserService] No user data found in storage');
+        return false;
+      }
+
+      // Get current total_seconds
+      const currentTotalSeconds = currentUserData.total_Seconds || 0;
+      console.log('[UserService] Current total_seconds:', currentTotalSeconds);
+
+      // Calculate new total_seconds (ensure it doesn't go below 0)
+      const newTotalSeconds = Math.max(0, currentTotalSeconds - usedSeconds);
+      console.log('[UserService] New total_seconds after deduction:', newTotalSeconds);
+
+      // Update the user data with new total_seconds
+      const updatedUserData = {
+        ...currentUserData,
+        total_Seconds: newTotalSeconds
+      };
+
+      // Save updated user data to storage
+      const saved = await this.saveUserData(updatedUserData);
+      
+      if (saved) {
+        console.log('[UserService] Total seconds updated successfully');
+        return true;
+      } else {
+        console.error('[UserService] Failed to save updated user data');
+        return false;
+      }
+    } catch (error) {
+      console.error('[UserService] Error updating total_seconds:', error);
+      return false;
+    }
+  }
+
+  // Get current total_seconds
+  async getTotalSeconds() {
+    try {
+      const userData = await this.getUserData();
+      return userData?.total_Seconds || 0;
+    } catch (error) {
+      console.error('[UserService] Error getting total_seconds:', error);
+      return 0;
+    }
+  }
 }
 
 export default new UserService();

@@ -22,7 +22,6 @@ import peopleService from '../services/peopleService';
 import { launchImageLibrary } from 'react-native-image-picker';
 import socketService from '../services/socketService';
 import CallInvitationButton from '../components/CallInvitationButton';
-import zegoService from '../services/zegoService';
 // import Toast from 'react-native-toast-message';
 
 // -------------------- UTILITIES --------------------
