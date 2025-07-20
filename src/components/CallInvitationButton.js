@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import callHistoryService from '../services/callHistoryService';
 import userService from '../services/userService';
+import zegoService from '../services/zegoService';
 
 const CallInvitationButton = ({ 
   targetUser, 
@@ -90,6 +91,40 @@ const CallInvitationButton = ({
     };
   };
 
+  // Handle call end logic
+  const handleCallEnd = async (callID, reason, duration) => {
+    console.log('[CallInvitationButton] onCallEnd** caledd**');
+
+    // Notify server about call end
+    try {
+      await callHistoryService.endCall({
+        call_id: callID,
+        total_seconds: duration || 0
+      });
+      console.log('[CallInvitationButton] Call end notification sent successfully',duration);
+    } catch (error) {
+      console.error('[CallInvitationButton] Error notifying call end:', error);
+    }
+    
+    const total_seconds=duration;
+    if (total_seconds && total_seconds > 0) {
+      console.log('[CallInvitationButton] Updating total_seconds in storage, deducting:', total_seconds);
+      const updated = await userService.updateTotalSeconds(total_seconds);
+      if (updated) {
+        console.log('[CallInvitationButton] Total seconds updated successfully in storage');
+        
+        // Reset ZEGO service with updated duration
+        const resetSuccess = await zegoService.zegoResetAfterCall();
+        if (resetSuccess) {
+          console.log('[CallInvitationButton] ZEGO service reset successfully after call');
+        } else {
+          console.error('[CallInvitationButton] Failed to reset ZEGO service after call');
+        }
+      } else {
+        console.error('[CallInvitationButton] Failed to update total seconds in storage');
+      }
+    }
+  };
 
   // If ZEGOCLOUD call button is not loaded yet, show loading
   if (!ZegoSendCallInvitationButton) {
@@ -149,31 +184,7 @@ const CallInvitationButton = ({
       onOutgoingCallTimeout={async (callID, callee, type) => {
         Alert.alert('User did not picked the call');
       }}
-      onCallEnd={async (callID, reason, duration) => {
-
-        console.log('[CallInvitationButton] onCallEnd** caledd**');
-
-        // Notify server about call end
-        try {
-          await callHistoryService.endCall({
-            call_id: callID,
-            total_seconds: duration || 0
-          });
-          console.log('[CallInvitationButton] Call end notification sent successfully',duration);
-        } catch (error) {
-          console.error('[CallInvitationButton] Error notifying call end:', error);
-        }
-        const total_seconds=duration;
-        if (total_seconds && total_seconds > 0) {
-          console.log('[VideoCallScreen] Updating total_seconds in storage, deducting:', total_seconds);
-          const updated = await userService.updateTotalSeconds(total_seconds);
-          if (updated) {
-            console.log('[VideoCallScreen] Total seconds updated successfully in storage');
-          } else {
-            console.error('[VideoCallScreen] Failed to update total seconds in storage');
-          }
-        }
-      }}
+      onCallEnd={handleCallEnd}
     />
   );
 };

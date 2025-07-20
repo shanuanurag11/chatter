@@ -1,6 +1,6 @@
 {
   "name": "chatter",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -13,7 +13,8 @@
     "build-release": "cd android && ./gradlew clean && ./gradlew assembleRelease",
     "clean-and-build": "npm run clean && npm run build-release",
     "build-aab": "cd android && ./gradlew clean && ./gradlew bundleRelease",
-    "build-release-full": "./scripts/build-release.sh"
+    "build-release-full": "./scripts/build-release.sh",
+    "index-build": "react-native bundle --platform android --dev false --entry-file index.js --bundle-output android/app/src/main/assets/index.android.bundle --assets-dest android/app/src/main/res"
   },
   "dependencies": {
     "@react-native-community/checkbox": "^0.5.20",

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -14,7 +14,7 @@ import {
   RefreshControl
 } from 'react-native';
 import { useDispatch } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { logout, logoutUser } from '../../store/slices/authSlice';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -92,6 +92,13 @@ const ProfileScreen = () => {
   useEffect(() => {
     fetchUserProfile();
   }, []);
+  
+  // Refresh when screen is focused (e.g., after editing profile)
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserProfile();
+    }, [])
+  );
   
   // Animate elements when component mounts
   useEffect(() => {
@@ -172,6 +179,10 @@ const ProfileScreen = () => {
 
   const handleWithdrawalPress = () => {
     navigation.navigate('Withdrawal');
+  };
+
+  const handleSettings = () => {
+    navigation.navigate('Settings');
   };
 
   if (loading) {
@@ -255,7 +266,7 @@ const ProfileScreen = () => {
                 <Icon name="create-outline" size={20} color="#FFFFFF" />
               </TouchableOpacity>
               
-              <TouchableOpacity style={styles.actionButton}>
+              <TouchableOpacity style={styles.actionButton} onPress={handleSettings}>
                 <Icon name="settings-outline" size={20} color="#FFFFFF" />
               </TouchableOpacity>
             </View>

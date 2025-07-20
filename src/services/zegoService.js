@@ -246,6 +246,42 @@ class ZegoService {
       console.error('[ZegoService] Failed to request system alert window:', error);
     }
   }
+
+  /**
+   * Reset ZEGO service after call ends with updated duration
+   * This method uninitializes and reinitializes the service with the latest user data
+   */
+  async zegoResetAfterCall() {
+    try {
+      console.log('[ZegoService] Resetting ZEGO service after call...');
+      
+      // Get updated user data with new total_seconds
+      const updatedUserData = await userService.getUserData();
+      if (!updatedUserData) {
+        console.error('[ZegoService] Failed to get updated user data for reset');
+        return false;
+      }
+
+      // Uninitialize current ZEGO service
+      await this.uninitialize();
+      
+      // Get user details for reinitialization
+      const userId = await userService.getUserId();
+      const userName = updatedUserData.name || updatedUserData.userName || 'User';
+      const newDuration = updatedUserData.total_Seconds || 0;
+      
+      console.log('[ZegoService] Reinitializing with new duration:', newDuration);
+      
+      // Reinitialize with updated duration
+      await this.initialize(userId, userName, newDuration);
+      
+      console.log('[ZegoService] ZEGO service reset successfully');
+      return true;
+    } catch (error) {
+      console.error('[ZegoService] Error resetting ZEGO service after call:', error);
+      return false;
+    }
+  }
 }
 
 // Create singleton instance

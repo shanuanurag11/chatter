@@ -497,7 +497,7 @@ const VideoCallScreen = ({ route, navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.callContainer}>
-     {userData?.total_Seconds && <ZegoUIKitPrebuiltCall
+     {<ZegoUIKitPrebuiltCall
                 appID={ZEGO_APP_ID}
                 appSign={ZEGO_APP_SIGN}
                 userID={userId} // userID can be something like a phone number or the user id on your own user system. 
@@ -518,11 +518,13 @@ const VideoCallScreen = ({ route, navigation }) => {
                       onDurationUpdate: (durationInSec) => {
                         console.log('[VideoCallScreen] Call duration:', durationInSec, 'seconds');
                         // Auto-end call at 20 seconds (same as zegoService)
-                        const totalSeconds = userData?.total_Seconds || 20;
+                        const totalSeconds = userData?.total_Seconds;
                         if (durationInSec >= totalSeconds) {
                           console.log('[VideoCallScreen] Auto-ending call at', totalSeconds, 'seconds');
                           // Import and use ZegoUIKitPrebuiltCallService to hang up
                           ZegoUIKitPrebuiltCallService.hangUp();
+                          notifyCallEnd(durationInSec);
+                          navigation.goBack();
                         }
                       },
                     },

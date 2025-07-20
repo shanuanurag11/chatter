@@ -11,6 +11,9 @@ import VipSubscriptionScreen from '../screens/VipSubscriptionScreen';
 import VideoCallScreen from '../screens/VideoCallScreen';
 import UserDetailsScreen from '../screens/UserDetailsScreen';
 import WithdrawalScreen from '../screens/WithdrawalScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen';
+import TermsConditionsScreen from '../screens/TermsConditionsScreen';
 import { checkAuthStatus } from '../store/slices/authSlice';
 import LoadingScreen from '../screens/LoadingScreen';
 import CustomStatusBar from '../components/CustomStatusBar';
@@ -63,6 +66,9 @@ const AppNavigator = () => {
               <Stack.Screen name="VideoCallScreen" component={VideoCallScreen} />
               <Stack.Screen name="UserDetails" component={UserDetailsScreen} />
               <Stack.Screen name="Withdrawal" component={WithdrawalScreen} />
+              <Stack.Screen name="Settings" component={SettingsScreen} />
+              <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+              <Stack.Screen name="TermsConditions" component={TermsConditionsScreen} />
               
               {/* ZEGOCLOUD Call Screens - DO NOT change the names */}
               <Stack.Screen
