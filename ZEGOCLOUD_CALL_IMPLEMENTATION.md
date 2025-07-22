@@ -1,6 +1,6 @@
 # ZEGOCLOUD Call Invitation Implementation
 
-This document outlines the implementation of ZEGOCLOUD's call invitation feature in the Chatter app, allowing users to make audio and video calls by clicking on user images in chat lists and detail screens.
+This document outlines the implementation of ZEGOCLOUD's call invitation feature in the sakooneqlab app, allowing users to make audio and video calls by clicking on user images in chat lists and detail screens.
 
 ## Overview
 

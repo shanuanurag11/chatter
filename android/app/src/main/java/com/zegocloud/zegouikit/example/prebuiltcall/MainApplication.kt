@@ -1,4 +1,4 @@
-package com.sakoonclub
+package com.sakooneqlab
 
 import android.app.Application
 import com.facebook.react.PackageList

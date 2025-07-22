@@ -52,7 +52,7 @@ const TermsConditionsScreen = () => {
           <Text style={styles.lastUpdated}>Last Updated: December 2024</Text>
           
           <Text style={styles.paragraph}>
-            By downloading, installing, or using the Chatter app ("Service"), you agree to be bound by these Terms and Conditions ("Terms"). If you disagree with any part of these terms, then you may not access the Service.
+            By downloading, installing, or using the sakooneqlab app ("Service"), you agree to be bound by these Terms and Conditions ("Terms"). If you disagree with any part of these terms, then you may not access the Service.
           </Text>
           
           <Text style={styles.sectionTitle}>1. Acceptance of Terms</Text>
@@ -94,7 +94,7 @@ const TermsConditionsScreen = () => {
           
           <Text style={styles.sectionTitle}>7. Intellectual Property</Text>
           <Text style={styles.paragraph}>
-            The Service and its original content, features, and functionality are and will remain the exclusive property of Chatter and its licensors. The Service is protected by copyright, trademark, and other laws.
+            The Service and its original content, features, and functionality are and will remain the exclusive property of sakooneqlab and its licensors. The Service is protected by copyright, trademark, and other laws.
           </Text>
           
           <Text style={styles.sectionTitle}>8. Payment Terms</Text>
@@ -109,22 +109,22 @@ const TermsConditionsScreen = () => {
           
           <Text style={styles.sectionTitle}>10. Limitation of Liability</Text>
           <Text style={styles.paragraph}>
-            In no event shall Chatter, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the Service.
+            In no event shall sakooneqlab, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the Service.
           </Text>
           
           <Text style={styles.sectionTitle}>11. Disclaimer</Text>
           <Text style={styles.paragraph}>
-            The Service is provided on an "AS IS" and "AS AVAILABLE" basis. Chatter makes no warranties, expressed or implied, and hereby disclaims all warranties, including without limitation, warranties of merchantability, fitness for a particular purpose, and non-infringement.
+            The Service is provided on an "AS IS" and "AS AVAILABLE" basis. sakooneqlab makes no warranties, expressed or implied, and hereby disclaims all warranties, including without limitation, warranties of merchantability, fitness for a particular purpose, and non-infringement.
           </Text>
           
           <Text style={styles.sectionTitle}>12. Indemnification</Text>
           <Text style={styles.paragraph}>
-            You agree to defend, indemnify, and hold harmless Chatter and its licensors from and against any claims, damages, obligations, losses, liabilities, costs, or debt arising from your use of the Service or violation of these Terms.
+            You agree to defend, indemnify, and hold harmless sakooneqlab and its licensors from and against any claims, damages, obligations, losses, liabilities, costs, or debt arising from your use of the Service or violation of these Terms.
           </Text>
           
           <Text style={styles.sectionTitle}>13. Governing Law</Text>
           <Text style={styles.paragraph}>
-            These Terms shall be interpreted and governed by the laws of the jurisdiction in which Chatter operates, without regard to its conflict of law provisions.
+            These Terms shall be interpreted and governed by the laws of the jurisdiction in which sakooneqlab operates, without regard to its conflict of law provisions.
           </Text>
           
           <Text style={styles.sectionTitle}>14. Changes to Terms</Text>
