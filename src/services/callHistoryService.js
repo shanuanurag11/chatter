@@ -41,10 +41,10 @@ class CallHistoryService {
    */
   async endCall(callData) {
     try {
-        const data={
-            call_id:callData.call_id,
-            total_seconds:callData.total_seconds
-        }
+      const {
+        call_id,
+        total_seconds
+      } = callData
       console.log('[CallHistoryService] Ending call with data:', callData);
       
       const response = await apiClient.post(`/api/v1/user/calls/${call_id}/end/`,{total_seconds});

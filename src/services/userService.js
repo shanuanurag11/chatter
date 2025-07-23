@@ -182,48 +182,6 @@ class UserService {
     }
   }
 
-  // Update total_seconds by deducting used seconds
-  async updateTotalSeconds(usedSeconds) {
-    try {
-      console.log('[UserService] Updating total_seconds, deducting:', usedSeconds);
-      
-      // Get current user data from storage
-      const currentUserData = await this.getUserData();
-      
-      if (!currentUserData) {
-        console.error('[UserService] No user data found in storage');
-        return false;
-      }
-
-      // Get current total_seconds
-      const currentTotalSeconds = currentUserData.total_Seconds || 0;
-      console.log('[UserService] Current total_seconds:', currentTotalSeconds);
-
-      // Calculate new total_seconds (ensure it doesn't go below 0)
-      const newTotalSeconds = Math.max(0, currentTotalSeconds - usedSeconds);
-      console.log('[UserService] New total_seconds after deduction:', newTotalSeconds);
-
-      // Update the user data with new total_seconds
-      const updatedUserData = {
-        ...currentUserData,
-        total_Seconds: newTotalSeconds
-      };
-
-      // Save updated user data to storage
-      const saved = await this.saveUserData(updatedUserData);
-      
-      if (saved) {
-        console.log('[UserService] Total seconds updated successfully');
-        return true;
-      } else {
-        console.error('[UserService] Failed to save updated user data');
-        return false;
-      }
-    } catch (error) {
-      console.error('[UserService] Error updating total_seconds:', error);
-      return false;
-    }
-  }
 
   // Get current total_seconds
   async getTotalSeconds() {
@@ -233,6 +191,75 @@ class UserService {
     } catch (error) {
       console.error('[UserService] Error getting total_seconds:', error);
       return 0;
+    }
+  }
+
+  // Update coins and total_seconds from profile API
+  async updateCoinsAndTotalSecondsFromProfile() {
+    try {
+      console.log('[UserService] Updating coins and total_seconds from profile API...');
+      
+      // Import profileService here to avoid circular dependency
+      const profileService = require('./profileService').default;
+      
+      // Get latest profile data from API
+      const profileData = await profileService.getUserProfile();
+      
+      if (!profileData) {
+        console.error('[UserService] No profile data received from API');
+        return false;
+      }
+
+      console.log('[UserService] Profile data received:', JSON.stringify(profileData, null, 2));
+
+      // Get current user data from storage
+      const currentUserData = await this.getUserData();
+      
+      if (!currentUserData) {
+        console.error('[UserService] No user data found in storage');
+        return false;
+      }
+
+      // Extract only coins and total_seconds from profile API response
+      const updatedValues = {};
+      
+      if (profileData.coins !== undefined) {
+        updatedValues.coins = profileData.coins;
+        console.log('[UserService] Updating coins to:', profileData.coins);
+      }
+      
+      if (profileData.total_Seconds !== undefined) {
+        updatedValues.total_Seconds = profileData.total_Seconds; // Note: Using total_Seconds (with capital S) to match existing storage format
+        console.log('[UserService] Updating total_seconds to:', profileData.total_Seconds);
+      }
+
+      // If no values to update, return success
+      if (Object.keys(updatedValues).length === 0) {
+        console.log('[UserService] No coins or total_seconds found in profile data');
+        return true;
+      }
+
+      // Update the user data with new values
+      const updatedUserData = {
+        ...currentUserData,
+        ...updatedValues
+      };
+
+      console.log('[UserService] Updated user data with new coins and total_seconds:', JSON.stringify(updatedValues, null, 2));
+
+      // Save updated user data to storage
+      const saved = await this.saveUserData(updatedUserData);
+      
+      if (saved) {
+        console.log('[UserService] Coins and total_seconds updated successfully from profile API');
+        return true;
+      } else {
+        console.error('[UserService] Failed to save updated user data');
+        return false;
+      }
+    } catch (error) {
+      console.error('[UserService] Error updating coins and total_seconds from profile API:', error);
+      return false;
     }
   }
 }

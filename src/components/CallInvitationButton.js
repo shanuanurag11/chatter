@@ -17,7 +17,9 @@ const CallInvitationButton = ({
   const navigation = useNavigation();
   
   console.log("targetUser-131->",targetUser);  
+  
   useEffect(() => {
+    
     // Dynamically import the ZEGOCLOUD call invitation button
     const loadCallButton = async () => {
       try {
@@ -92,39 +94,7 @@ const CallInvitationButton = ({
   };
 
   // Handle call end logic
-  const handleCallEnd = async (callID, reason, duration) => {
-    console.log('[CallInvitationButton] onCallEnd** caledd**');
-
-    // Notify server about call end
-    try {
-      await callHistoryService.endCall({
-        call_id: callID,
-        total_seconds: duration || 0
-      });
-      console.log('[CallInvitationButton] Call end notification sent successfully',duration);
-    } catch (error) {
-      console.error('[CallInvitationButton] Error notifying call end:', error);
-    }
-    
-    const total_seconds=duration;
-    if (total_seconds && total_seconds > 0) {
-      console.log('[CallInvitationButton] Updating total_seconds in storage, deducting:', total_seconds);
-      const updated = await userService.updateTotalSeconds(total_seconds);
-      if (updated) {
-        console.log('[CallInvitationButton] Total seconds updated successfully in storage');
-        
-        // Reset ZEGO service with updated duration
-        const resetSuccess = await zegoService.zegoResetAfterCall();
-        if (resetSuccess) {
-          console.log('[CallInvitationButton] ZEGO service reset successfully after call');
-        } else {
-          console.error('[CallInvitationButton] Failed to reset ZEGO service after call');
-        }
-      } else {
-        console.error('[CallInvitationButton] Failed to update total seconds in storage');
-      }
-    }
-  };
+  
 
   // If ZEGOCLOUD call button is not loaded yet, show loading
   if (!ZegoSendCallInvitationButton) {
@@ -163,28 +133,6 @@ const CallInvitationButton = ({
       resourceID={"zego_call"}
       disabled={disabled}
       style={style}
-      onOutgoingCallAccepted={async (callID, callee, type) => {
-        console.log('[CallInvitationButton] Outgoing call accepted by:', { callID, callee, type });
-        try {
-          // Notify server that call was accepted
-          await callHistoryService.initiateCall({
-            call_id: callID,
-            call_type: type === 1 ? 'video' : 'audio',
-            recipient_id: callee.userID,
-            status: 'accepted'
-          });
-          console.log('[CallInvitationButton] Outgoing call acceptance notification sent successfully');
-        } catch (error) {
-          console.error('[CallInvitationButton] Error notifying outgoing call acceptance:', error);
-        }
-      }}
-      onOutgoingCallDeclined={async (callID, callee, type) => {
-        Alert.alert('Call Declined', 'The call was declined by the recipient.');
-      }}
-      onOutgoingCallTimeout={async (callID, callee, type) => {
-        Alert.alert('User did not picked the call');
-      }}
-      onCallEnd={handleCallEnd}
     />
   );
 };

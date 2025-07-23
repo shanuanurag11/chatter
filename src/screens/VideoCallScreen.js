@@ -6,6 +6,7 @@ import { request, PERMISSIONS, RESULTS, requestMultiple } from 'react-native-per
 import callService from '../services/callService';
 import callHistoryService from '../services/callHistoryService';
 import userService from '../services/userService';
+import zegoService from '../services/zegoService';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // ZegoCloud import for production use
@@ -43,6 +44,8 @@ const VideoCallScreen = ({ route, navigation }) => {
 
   // Load user data on component mount
   useEffect(() => {
+    // Set navigation reference in zegoService
+    
     const loadUserData = async () => {
       try {
         const data = await userService.getUserData();
@@ -107,14 +110,14 @@ const VideoCallScreen = ({ route, navigation }) => {
 
       console.log('[VideoCallScreen] Call end notification successful');
 
-      // Update total_seconds in user data storage
+      // Update coins and total_seconds from profile API
       if (total_seconds && total_seconds > 0) {
-        console.log('[VideoCallScreen] Updating total_seconds in storage, deducting:', total_seconds);
-        const updated = await userService.updateTotalSeconds(total_seconds);
+        console.log('[VideoCallScreen] Updating coins and total_seconds from profile API after call...');
+        const updated = await userService.updateCoinsAndTotalSecondsFromProfile();
         if (updated) {
-          console.log('[VideoCallScreen] Total seconds updated successfully in storage');
+          console.log('[VideoCallScreen] Coins and total_seconds updated successfully from profile API');
         } else {
-          console.error('[VideoCallScreen] Failed to update total seconds in storage');
+          console.error('[VideoCallScreen] Failed to update coins and total_seconds from profile API');
         }
       }
     } catch (error) {

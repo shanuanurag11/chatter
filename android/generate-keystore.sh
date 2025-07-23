@@ -3,7 +3,7 @@
 # Create the keystore file
 keytool -genkeypair -v \
   -keystore app/release.keystore \
-  -alias chatter-app \
+  -alias sakooneqlub-app \
   -keyalg RSA \
   -keysize 2048 \
   -validity 10000 \
