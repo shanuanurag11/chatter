@@ -362,7 +362,7 @@ const RandomVideoScreen = () => {
         navigation.navigate('VideoCallScreen', callData);
         return true;
       }
-      if(userData.total_Seconds<4){
+      if(userData.total_seconds<4){
           // Clear polling interval
           if (pollingIntervalRef.current) {
             clearInterval(pollingIntervalRef.current);

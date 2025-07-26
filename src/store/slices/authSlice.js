@@ -163,7 +163,7 @@ export const verifyOTP = createAsyncThunk(
           try {
             const userID = userData.id?.toString() || userData.user_id?.toString() || phone;
             const userName = userData.name || userData.username || `User_${phone}`;
-            const duration = userData.total_Seconds;
+            const duration = userData.total_seconds;
             await zegoService.initialize(userID, userName, duration);
             console.log('[Auth] ZEGOCLOUD initialized successfully11111111');
           } catch (zegoError) {
@@ -259,7 +259,7 @@ export const checkAuthStatus = createAsyncThunk(
           try {
             const userID = userData.id?.toString() || userData.user_id?.toString();
             const userName = userData.name || userData.username || `User_${userID}`;
-            const duration = userData.total_Seconds;
+            const duration = userData.total_seconds;
             await zegoService.initialize(userID, userName, duration);
             console.log('[Auth] ZEGOCLOUD initialized successfully on app start2222');
           } catch (zegoError) {
@@ -303,7 +303,7 @@ export const register = createAsyncThunk(
         
         const userData = response.data.data;
         await userService.saveUserData(userData);
-        const duration = userData.total_Seconds;
+        const duration = userData.total_seconds;
         await zegoService.initialize(userID, userName, duration);
         return userData;
       } else {

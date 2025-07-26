@@ -136,7 +136,7 @@ const IncomingCallScreen = () => {
       }
 
       // Get user ID directly (same as ChatListScreen)
-      const currentUserId = currentUser.id;
+      const currentUserId = String(currentUser.id);
       console.log("Using user_id for accepting ZEGOCLOUD call:", currentUserId);
       
       // Navigate to audio call screen with correct user data

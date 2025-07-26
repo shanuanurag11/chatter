@@ -53,8 +53,8 @@ const VideoCallScreen = ({ route, navigation }) => {
         console.log('[VideoCallScreen] User data loaded:', data);
         
         // Debug: Log current total_seconds
-        if (data?.total_Seconds !== undefined) {
-          console.log('[VideoCallScreen] Current total_seconds available:', data.total_Seconds);
+        if (data?.total_seconds !== undefined) {
+          console.log('[VideoCallScreen] Current total_seconds available:', data.total_seconds);
         }
       } catch (error) {
         console.error('[VideoCallScreen] Error loading user data:', error);
@@ -521,7 +521,7 @@ const VideoCallScreen = ({ route, navigation }) => {
                       onDurationUpdate: (durationInSec) => {
                         console.log('[VideoCallScreen] Call duration:', durationInSec, 'seconds');
                         // Auto-end call at 20 seconds (same as zegoService)
-                        const totalSeconds = userData?.total_Seconds;
+                        const totalSeconds = userData?.total_seconds;
                         if (durationInSec >= totalSeconds) {
                           console.log('[VideoCallScreen] Auto-ending call at', totalSeconds, 'seconds');
                           // Import and use ZegoUIKitPrebuiltCallService to hang up

@@ -96,7 +96,7 @@ android {
         release {
             storeFile file('release.keystore')
             storePassword 'chatter123'
-            keyAlias 'sakooneqlub-app'
+            keyAlias 'chatter-app'
             keyPassword 'chatter123'
         }
     }

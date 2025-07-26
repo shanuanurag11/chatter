@@ -40,11 +40,16 @@ class ZegoService {
         console.log('[ZegoService] Coins and total_seconds updated successfully from profile API');
         
         // Reset ZEGO service with updated duration
-        const resetSuccess = await this.zegoResetAfterCall();
-        if (resetSuccess) {
-          console.log('[ZegoService] ZEGO service reset successfully after call');
-        } else {
-          console.error('[ZegoService] Failed to reset ZEGO service after call');
+        try {
+          const resetSuccess = await this.zegoResetAfterCall();
+          if (resetSuccess) {
+            console.log('[ZegoService] ZEGO service reset successfully after call');
+          } else {
+            console.error('[ZegoService] Failed to reset ZEGO service after call');
+          }
+        } catch (error) {
+          console.error('[ZegoService] Error resetting ZEGO service after call:', error);
+          return false;
         }
       } else {
         console.error('[ZegoService] Failed to update coins and total_seconds from profile API');
@@ -91,14 +96,27 @@ class ZegoService {
               },
             },
             onCallEnd: (callID, reason, duration) => {
-              this.handleCallEnd(callID, reason, duration);
-              if (this.navigation) {
-                console.log('[ZegoService] Navigating back after call end using passed navigation');
-                this.navigation.goBack();
-              } else {
-                console.log('[ZegoService] Using navigation service to go back');
-                navigationService.goBack();
+              console.log("this is it**123**r",callID, reason, duration)
+              
+              try{
+                this.handleCallEnd(callID, reason, duration);
+                if (this.navigation) {
+                  console.log('[ZegoService] Navigating back after call end using passed navigation');
+                 return this.navigation.goBack();
+                } else {
+                  console.log('[ZegoService] Using navigation service to go back');
+                 return navigationService.goBack();
+                }
+              }catch{
+                if (this.navigation) {
+                  console.log('[ZegoService] Navigating back after call end using passed navigation');
+                 return this.navigation.goBack();
+                } else {
+                  console.log('[ZegoService] Using navigation service to go back');
+                 return navigationService.goBack();
+                }
               }
+            
            
             },
           }),
@@ -248,7 +266,7 @@ class ZegoService {
       // Get user details for reinitialization
       const userId = await userService.getUserId();
       const userName = updatedUserData.name || updatedUserData.userName || 'User';
-      const newDuration = updatedUserData.total_Seconds || 0;
+      const newDuration = updatedUserData.total_seconds || 0;
       
       console.log('[ZegoService] Reinitializing with new duration:', newDuration);
       

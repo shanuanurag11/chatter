@@ -119,7 +119,9 @@ class UserService {
     try {
       const userData = await this.getUserData();
       // Handle both 'id' and 'user_id' field names
-      return userData?.id || userData?.user_id;
+      const userId = userData?.id || userData?.user_id;
+      // Convert to string to prevent Java bridge type casting errors
+      return userId ? String(userId) : null;
     } catch (error) {
       console.error('Error getting user ID:', error);
       return null;
@@ -187,7 +189,7 @@ class UserService {
   async getTotalSeconds() {
     try {
       const userData = await this.getUserData();
-      return userData?.total_Seconds || 0;
+      return userData?.total_seconds || 0;
     } catch (error) {
       console.error('[UserService] Error getting total_seconds:', error);
       return 0;
@@ -210,7 +212,7 @@ class UserService {
         return false;
       }
 
-      console.log('[UserService] Profile data received:', JSON.stringify(profileData, null, 2));
+      // console.log('[UserService] Profile data received:', JSON.stringify(profileData, null, 2));
 
       // Get current user data from storage
       const currentUserData = await this.getUserData();
@@ -228,9 +230,9 @@ class UserService {
         console.log('[UserService] Updating coins to:', profileData.coins);
       }
       
-      if (profileData.total_Seconds !== undefined) {
-        updatedValues.total_Seconds = profileData.total_Seconds; // Note: Using total_Seconds (with capital S) to match existing storage format
-        console.log('[UserService] Updating total_seconds to:', profileData.total_Seconds);
+      if (profileData.total_seconds !== undefined) {
+        updatedValues.total_seconds = profileData.total_seconds; // Note: Using total_seconds (with capital S) to match existing storage format
+        console.log('[UserService] Updating total_seconds to:', profileData.total_seconds);
       }
 
       // If no values to update, return success

@@ -1073,8 +1073,8 @@
     "android": {
       "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/android",
       "appName": "app",
-      "packageName": "com.sakoonclub",
-      "applicationId": "com.sakoonclub",
+      "packageName": "com.sakooneqlab",
+      "applicationId": "com.sakooneqlab",
       "mainActivity": ".MainActivity",
       "assets": []
     }
