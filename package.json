@@ -1,6 +1,6 @@
 {
   "name": "sakooneqlub",
-  "version": "1.0.1",
+  "version": "3.0.11",
   "private": true,
   "scripts": {
     "android": "react-native run-android",
@@ -24,6 +24,7 @@
     "react": "18.3.1",
     "react-native": "0.75.4",
     "react-native-gesture-handler": "^2.25.0",
+    "react-native-iap": "^13.0.2",
     "react-native-uuid": "^2.0.3",
     "socket.io-client": "^4.8.1",
     "zego-zpns-react-native": "^2.8.1"

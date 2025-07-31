@@ -6,97 +6,18 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Image,
   StatusBar,
   ActivityIndicator,
-  Animated
+  Animated,
+  Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import Colors from '../constants/colors';
+import IAPService from '../services/iapService';
 
-// Dummy token packages data
-const DUMMY_TOKEN_PACKAGES = [
-  {
-    id: '1',
-    tokenAmount: 10,
-    price: 0,
-    originalPrice: 0,
-    discount: null,
-    isFree: true,
-    currency: 'Rs',
-    isPopular: false,
-    label: null
-  },
-  {
-    id: '2',
-    tokenAmount: 340,
-    price: 308,
-    originalPrice: 398,
-    discount: null,
-    isFree: false,
-    currency: 'Rs',
-    isPopular: false,
-    label: null
-  },
-  {
-    id: '3',
-    tokenAmount: 880,
-    price: 744,
-    originalPrice: 826.67,
-    discount: '10% OFF',
-    isFree: false,
-    currency: 'Rs',
-    isPopular: false,
-    label: null
-  },
-  {
-    id: '4',
-    tokenAmount: 1800,
-    price: 1469,
-    originalPrice: 1728.24,
-    discount: '15% OFF',
-    isFree: false,
-    currency: 'Rs',
-    isPopular: true,
-    label: '🔥'
-  },
-  {
-    id: '5',
-    tokenAmount: 4000,
-    price: 2999,
-    originalPrice: 3749,
-    discount: '20% OFF',
-    isFree: false,
-    currency: 'Rs',
-    isPopular: false,
-    label: null
-  },
-  {
-    id: '6',
-    tokenAmount: 10000,
-    price: 7499,
-    originalPrice: 9999,
-    discount: '25% OFF',
-    isFree: false,
-    currency: 'Rs',
-    isPopular: false,
-    label: 'Best Value'
-  },
-];
-
-// Dummy token usage data
-const DUMMY_TOKEN_USAGE = {
-  timeDuration: '00:29:28',
-  tokensRemaining: 100,
-  videoCallTokens: 2,
-  chatTokens: 5,
-  currentPrice: 77,
-  originalPrice: 181
-};
-
-// Token image asset (in a real app, use a real asset)
+// Token Icon Component
 const TokenIcon = ({ style }) => (
   <View style={[styles.tokenIconContainer, style]}>
     <LinearGradient
@@ -112,76 +33,109 @@ const TokenIcon = ({ style }) => (
 
 const TokensScreen = () => {
   const navigation = useNavigation();
-  const [packages, setPackages] = useState([]);
-  const [usage, setUsage] = useState(null);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [purchasing, setPurchasing] = useState(false);
   
-  // Add animated values for enhanced UI
+  // Animated values
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(30)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
   useEffect(() => {
-    // In a real app, fetch from API
-    fetchTokenPackages();
+    initializeIAP();
     
-    // Delay animations slightly to prevent jank
-    setTimeout(() => {
-      // Start animations
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateY, {
-          toValue: 0,
-          duration: 700,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        })
-      ]).start();
-    }, 100);
+    // Cleanup on unmount
+    return () => {
+      // Don't cleanup here as other screens might use IAP
+    };
   }, []);
 
-  const fetchTokenPackages = async () => {
+  const initializeIAP = async () => {
     try {
-      // Simulate API call
-      setTimeout(() => {
-        setPackages(DUMMY_TOKEN_PACKAGES);
-        setUsage(DUMMY_TOKEN_USAGE);
-        setLoading(false);
-      }, 1000);
+      setLoading(true);
+      setError(null);
       
-      // In a real app, you would fetch from an API:
-      // const response = await fetch('https://api.example.com/token-packages');
-      // const data = await response.json();
-      // setPackages(data.packages);
-      // setUsage(data.usage);
+      console.log('Initializing IAP Service...');
+      
+      // Override IAP service callbacks to handle purchases in this screen
+      IAPService.onPurchaseSuccess = handlePurchaseSuccess;
+      IAPService.onPurchaseError = handlePurchaseError;
+      IAPService.onPurchasesRestored = handlePurchasesRestored;
+      
+      // Initialize IAP service
+      await IAPService.init();
+      
+      // Get products
+      const fetchedProducts = IAPService.getProducts();
+      console.log('Fetched products:', fetchedProducts);
+      
+      setProducts(fetchedProducts);
+      setLoading(false);
+      
+      // Start fade in animation
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }).start();
+      
     } catch (error) {
-      console.error('Failed to fetch token packages:', error);
-      setError('Failed to load token packages. Please try again.');
+      console.error('Failed to initialize IAP:', error);
+      setError('Failed to load products. Please check your connection and try again.');
       setLoading(false);
     }
+  };
+
+  const handlePurchaseSuccess = (purchase) => {
+    console.log('Purchase successful:', purchase);
+    setPurchasing(false);
+    
+    const tokenAmount = IAPService.getTokenAmountFromProductId(purchase.productId);
+    Alert.alert(
+      'Purchase Successful!', 
+      `You have successfully purchased ${tokenAmount} tokens!`,
+      [{ text: 'OK' }]
+    );
+    
+    // TODO: Update user's token balance in your app state/storage
+  };
+
+  const handlePurchaseError = (error) => {
+    console.error('Purchase error:', error);
+    setPurchasing(false);
+    // Error handling is already done in IAPService
+  };
+
+  const handlePurchasesRestored = (purchases) => {
+    console.log('Purchases restored:', purchases);
+    Alert.alert(
+      'Purchases Restored', 
+      `${purchases.length} purchase(s) have been restored.`,
+      [{ text: 'OK' }]
+    );
   };
 
   const handleGoBack = () => {
     navigation.goBack();
   };
 
-  const goToVipSubscription = () => {
-    navigation.navigate('VipSubscription');
+  const handlePurchaseProduct = async (product) => {
+    try {
+      setPurchasing(true);
+      console.log('Purchasing product:', product.productId);
+      await IAPService.purchaseProduct(product.productId);
+    } catch (error) {
+      console.error('Purchase failed:', error);
+      setPurchasing(false);
+    }
   };
 
-  const handlePurchaseTokens = (tokenPackage) => {
-    // In a real app, navigate to payment screen or show payment modal
-    console.log('Purchasing package:', tokenPackage);
-    alert(`Purchase ${tokenPackage.tokenAmount} tokens for ${tokenPackage.currency}${tokenPackage.price}`);
+  const getTokenAmountFromProductId = (productId) => {
+    return IAPService.getTokenAmountFromProductId(productId);
+  };
+
+  const formatPrice = (product) => {
+    return product.localizedPrice || `$${product.price}`;
   };
 
   if (loading) {
@@ -190,7 +144,7 @@ const TokensScreen = () => {
         <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
         <View style={styles.loadingContent}>
           <ActivityIndicator size="large" color={Colors.primary} />
-          <Text style={styles.loadingText}>Loading tokens...</Text>
+          <Text style={styles.loadingText}>Initializing store...</Text>
         </View>
       </SafeAreaView>
     );
@@ -206,7 +160,7 @@ const TokensScreen = () => {
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity 
             style={styles.retryButton} 
-            onPress={fetchTokenPackages}
+            onPress={initializeIAP}
           >
             <LinearGradient
               colors={[Colors.primaryLight, Colors.primary]}
@@ -226,7 +180,7 @@ const TokensScreen = () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={Colors.primary} />
       
-      {/* Enhanced Header with Gradient */}
+      {/* Header */}
       <View style={styles.headerContainer}>
         <LinearGradient
           colors={[Colors.primary, Colors.primaryLight]}
@@ -241,24 +195,13 @@ const TokensScreen = () => {
             >
               <Icon name="chevron-back" size={24} color="#FFF" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Tokens</Text>
+            <Text style={styles.headerTitle}>Buy Tokens</Text>
             <View style={styles.tokenBalanceContainer}>
               <TokenIcon />
-              <Text style={styles.tokenBalanceText}>2</Text>
+              <Text style={styles.tokenBalanceText}>{this.userDa}</Text>
             </View>
           </View>
-          
-          {/* Add decorative circles for consistency */}
-          <View style={styles.headerDecor1} />
-          <View style={styles.headerDecor2} />
         </LinearGradient>
-        
-        {/* Updated shadow for better visual effect */}
-        <LinearGradient 
-          colors={['rgba(108, 99, 255, 0.08)', 'transparent']}
-          style={styles.headerShadow}
-          pointerEvents="none"
-        />
       </View>
       
       <ScrollView 
@@ -266,246 +209,116 @@ const TokensScreen = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Animated Promotional Banner */}
-        <Animated.View 
-          style={[
-            styles.promotionalBanner,
-            {
-              opacity: fadeAnim,
-              transform: [
-                { translateY: translateY },
-                { scale: scaleAnim }
-              ]
-            }
-          ]}
-        >
-          <LinearGradient
-            colors={[Colors.gradientStart, Colors.primary, Colors.primaryDark]}
-            style={styles.bannerGradient}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 1}}
-          >
-            {/* Enhanced decorative elements */}
-            <View style={styles.decorCircle1} />
-            <View style={styles.decorCircle2} />
-            <View style={styles.decorCircle3} />
-            
-            <View style={styles.bannerContent}>
-              <View style={styles.bannerTextContainer}>
-                <Text style={styles.discountText}>30%OFF</Text>
-                <Text style={styles.bannerMainText}>
-                  Get <TokenIcon style={styles.inlineTokenIcon} />
-                </Text>
-                <Text style={styles.bannerSubText}>Every day</Text>
-              </View>
-              
-              <View style={styles.bannerImageContainer}>
-                <View style={styles.tokenImageFallback}>
-                  <Icon name="gift-outline" size={60} color="#FFF" />
-                  <Icon name="cash-outline" size={36} color="#FFD700" style={styles.coinIcon} />
-                </View>
-              </View>
-              
-              <TouchableOpacity 
-                style={styles.bannerButton}
-                onPress={goToVipSubscription}
-              >
-                <Icon name="chevron-forward-outline" size={24} color={Colors.primary} />
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </Animated.View>
-        
-        {/* Fix VIP Subscription Link */}
-        <Animated.View 
-          style={[
-            styles.vipSubscriptionLink,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: Animated.multiply(translateY, 1.2) }]
-            }
-          ]}
-        >
-          <TouchableOpacity 
-            style={styles.vipLinkTouchable}
-            onPress={goToVipSubscription}
-            activeOpacity={0.85}
-          >
-            <View style={styles.vipIconContainer}>
-              <Icon name="diamond-outline" size={24} color="#FFF" />
-            </View>
-            <View style={styles.vipLinkContent}>
-              <Text style={styles.vipLinkText}>Get VIP Membership</Text>
-              <Text style={styles.vipLinkSubText}>Unlock exclusive features</Text>
-            </View>
-            <View style={styles.vipLinkBadge}>
-              <Text style={styles.vipLinkBadgeText}>Premium</Text>
-            </View>
-          </TouchableOpacity>
-        </Animated.View>
-        
-        {/* Enhanced Current Token Usage Summary */}
-        {usage && (
-          <Animated.View 
-            style={[
-              styles.usageSummary,
-              {
-                opacity: fadeAnim,
-                transform: [{ translateY: Animated.multiply(translateY, 1.5) }]
-              }
-            ]}
-          >
-            <LinearGradient
-              colors={[Colors.primary, '#8B5CF6', '#7C3AED']}
-              style={styles.usageSummaryGradient}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 1}}
-            >
-              {/* Enhanced decorative elements */}
-              <View style={styles.usageDecor1} />
-              <View style={styles.usageDecor2} />
-              <View style={styles.usageDecor3} />
-              
-              <View style={styles.usageTimeContainer}>
-                <Icon name="time-outline" size={18} color="#FFF" style={styles.usageIcon} />
-                <Text style={styles.usageTimeText}>{usage.timeDuration}</Text>
-              </View>
-              
-              <View style={styles.usageDetailsContainer}>
-                <View style={styles.usageTokenRow}>
-                  <View style={styles.usageTokenItem}>
-                    <TokenIcon />
-                    <Text style={styles.usageTokenAmount}>{usage.tokensRemaining}</Text>
-                  </View>
-                  
-                  <View style={styles.usageTokenItem}>
-                    <View style={styles.usageTokenIcon}>
-                      <Icon name="videocam" size={16} color="#FFF" />
-                    </View>
-                    <Text style={styles.usageTokenAmount}>{usage.videoCallTokens}</Text>
-                  </View>
-                  
-                  <View style={styles.usageTokenItem}>
-                    <View style={[styles.usageTokenIcon, styles.chatTokenIcon]}>
-                      <Icon name="chatbubble" size={16} color="#FFF" />
-                    </View>
-                    <Text style={styles.usageTokenAmount}>{usage.chatTokens}</Text>
-                  </View>
-                </View>
-              </View>
-              
-              <View style={styles.usagePriceContainer}>
-                <Text style={styles.currentPriceText}>{usage.currency || 'Rs'}{usage.currentPrice}</Text>
-                <Text style={styles.originalPriceText}>{usage.currency || 'Rs'}{usage.originalPrice}</Text>
-              </View>
-            </LinearGradient>
-          </Animated.View>
-        )}
-        
-        {/* Title for token packages section */}
+        {/* Products Title */}
         <Animated.Text 
           style={[
             styles.sectionTitle,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: Animated.multiply(translateY, 1.6) }]
-            }
+            { opacity: fadeAnim }
           ]}
         >
-          Choose Token Package
+          Choose Token Package: {products?.length}
         </Animated.Text>
         
-        {/* Token Packages Grid - Fix package item layout */}
-        <View style={styles.packageGrid}>
-          {packages.map((pkg, index) => (
-            <Animated.View
-              key={pkg.id}
-              style={[
-                { 
-                  width: '48%',
-                  opacity: fadeAnim,
-                  transform: [{ 
-                    translateY: Animated.multiply(translateY, 1.8 + (index * 0.1)) 
-                  }]
-                }
-              ]}
-            >
-              <TouchableOpacity
-                style={[
-                  styles.packageItem,
-                  pkg.isPopular && styles.popularPackage
-                ]}
-                onPress={() => handlePurchaseTokens(pkg)}
-                activeOpacity={0.85}
+        {/* Products Grid */}
+        <Animated.View 
+          style={[
+            styles.productGrid,
+            { opacity: fadeAnim }
+          ]}
+        >
+          {products.length === 0 ? (
+            <View style={styles.noProductsContainer}>
+              <Icon name="storefront-outline" size={60} color="#999" />
+              <Text style={styles.noProductsText}>No products available</Text>
+              <TouchableOpacity 
+                style={styles.refreshButton} 
+                onPress={initializeIAP}
               >
-                {pkg.isPopular && (
-                  <View style={styles.popularTag}>
-                    <Text style={styles.popularTagText}>Popular</Text>
-                  </View>
-                )}
-                
-                {pkg.discount && (
-                  <View style={styles.discountBadge}>
-                    <Text style={styles.discountBadgeText}>{pkg.discount}</Text>
-                  </View>
-                )}
-                
-                {pkg.label && pkg.label !== 'Popular' && (
-                  <View style={styles.labelContainer}>
-                    <Text style={styles.labelText}>{pkg.label}</Text>
-                  </View>
-                )}
-                
-                <View style={styles.packageIconContainer}>
-                  {pkg.tokenAmount > 100 ? (
-                    <View style={styles.tokenStackFallback}>
-                      <LinearGradient
-                        colors={['#FFD700', '#FFA500']}
-                        style={styles.tokenStackGradient}
-                      >
-                        <Icon name="cash" size={40} color="#FFF" />
-                      </LinearGradient>
-                    </View>
-                  ) : (
-                    <View style={styles.tokenSingleFallback}>
-                      <LinearGradient
-                        colors={['#FFD700', '#FFA500']}
-                        style={styles.tokenSingleGradient}
-                      >
-                        <Icon name="cash-outline" size={36} color="#FFF" />
-                      </LinearGradient>
-                    </View>
-                  )}
-                </View>
-                
-                <View style={styles.packageTokenAmount}>
-                  <TokenIcon />
-                  <Text style={styles.packageTokenText}>{pkg.tokenAmount}</Text>
-                </View>
-                
-                {pkg.originalPrice > 0 && pkg.originalPrice !== pkg.price && (
-                  <Text style={styles.packageOriginalPrice}>
-                    {pkg.currency}{pkg.originalPrice.toFixed(0)}
-                  </Text>
-                )}
-                
-                <LinearGradient
-                  colors={pkg.isFree 
-                    ? ['#4CAF50', '#2E7D32'] 
-                    : [Colors.gradientStart, Colors.primary, Colors.primaryDark]
-                  }
-                  style={styles.packagePriceButton}
-                  start={{x: 0, y: 0}}
-                  end={{x: 1, y: 0}}
-                >
-                  <Text style={styles.packagePriceText}>
-                    {pkg.isFree ? 'Free' : `${pkg.currency}${pkg.price}`}
-                  </Text>
-                </LinearGradient>
+                <Text style={styles.refreshButtonText}>Refresh</Text>
               </TouchableOpacity>
-            </Animated.View>
-          ))}
-        </View>
+            </View>
+          ) : (
+            products.map((product, index) => (
+              <View
+                key={product.productId}
+                style={styles.productItemContainer}
+              >
+                <TouchableOpacity
+                  style={styles.productItem}
+                  onPress={() => handlePurchaseProduct(product)}
+                  disabled={purchasing}
+                  activeOpacity={0.85}
+                >
+                  {/* Token Icon */}
+                  <View style={styles.productIconContainer}>
+                    <LinearGradient
+                      colors={['#FFD700', '#FFA500']}
+                      style={styles.productIconGradient}
+                    >
+                      <Icon name="cash" size={40} color="#FFF" />
+                    </LinearGradient>
+                  </View>
+                  
+                  {/* Token Amount */}
+                  <View style={styles.productTokenAmount}>
+                    <TokenIcon />
+                    <Text style={styles.productTokenText}>
+                      {getTokenAmountFromProductId(product.productId)}
+                    </Text>
+                  </View>
+                  
+                  {/* Product Title */}
+                  <Text style={styles.productTitle}>
+                    {product.title || `${getTokenAmountFromProductId(product.productId)} Tokens`}
+                  </Text>
+                  
+                  {/* Product Description */}
+                  {product.description && (
+                    <Text style={styles.productDescription}>
+                      {product.description}
+                    </Text>
+                  )}
+                  
+                  {/* Purchase Button */}
+                  <LinearGradient
+                    colors={[Colors.gradientStart, Colors.primary, Colors.primaryDark]}
+                    style={[
+                      styles.purchaseButton,
+                      purchasing && styles.purchaseButtonDisabled
+                    ]}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 0}}
+                  >
+                    {purchasing ? (
+                      <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                      <Text style={styles.purchaseButtonText}>
+                        {formatPrice(product)}
+                      </Text>
+                    )}
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            ))
+          )}
+        </Animated.View>
+        
+        {/* Restore Purchases Button */}
+        <Animated.View 
+          style={[
+            styles.restoreContainer,
+            { opacity: fadeAnim }
+          ]}
+        >
+          <TouchableOpacity 
+            style={styles.restoreButton}
+            onPress={() => IAPService.restorePurchases()}
+            disabled={purchasing}
+          >
+            <Icon name="refresh-outline" size={20} color={Colors.primary} />
+            <Text style={styles.restoreButtonText}>Restore Purchases</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -590,35 +403,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    position: 'relative',
-    zIndex: 2,
-  },
-  headerShadow: {
-    height: 16,
-    width: '100%',
-    position: 'absolute',
-    bottom: -16,
-    left: 0,
-  },
-  headerDecor1: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    top: -30,
-    right: 20,
-    zIndex: 1,
-  },
-  headerDecor2: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    bottom: -10,
-    left: 50,
-    zIndex: 1,
   },
   backButton: {
     width: 40,
@@ -635,9 +419,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#FFFFFF',
     letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.1)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 2,
   },
   tokenBalanceContainer: {
     flexDirection: 'row',
@@ -648,7 +429,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.3)',
-    minWidth: 60,
   },
   tokenBalanceText: {
     fontSize: 16,
@@ -663,11 +443,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(255, 215, 0, 0.3)',
-    elevation: 2,
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
   },
   tokenIconGradient: {
     width: '100%',
@@ -694,468 +469,124 @@ const styles = StyleSheet.create({
     color: Colors.textDark,
     marginBottom: 16,
     marginTop: 10,
-    alignSelf: 'flex-start',
   },
-  promotionalBanner: {
-    height: 170,
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 20,
-    backgroundColor: Colors.primary,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  bannerGradient: {
-    flex: 1,
-    position: 'relative',
-  },
-  decorCircle1: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    top: -30,
-    right: -30,
-  },
-  decorCircle2: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    bottom: -30,
-    left: 40,
-  },
-  decorCircle3: {
-    position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    top: 20,
-    left: 20,
-  },
-  bannerContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    position: 'relative',
-  },
-  bannerTextContainer: {
-    flex: 1,
-  },
-  discountText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 3,
-    letterSpacing: 1,
-  },
-  bannerMainText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginBottom: 4,
-  },
-  bannerSubText: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: 'rgba(255, 255, 255, 0.9)',
-  },
-  inlineTokenIcon: {
-    marginLeft: -6,
-  },
-  bannerImageContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: '100%',
-  },
-  tokenImageFallback: {
-    width: '100%',
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  coinIcon: {
-    position: 'absolute',
-    bottom: 20,
-    right: 30,
-  },
-  bannerButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#FFF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: 'rgba(0,0,0,0.3)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  vipSubscriptionLink: {
-    marginBottom: 20,
-    borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: 'rgba(150, 51, 255, 0.6)',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  vipLinkTouchable: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    backgroundColor: 'rgba(150, 51, 255, 0.05)',
-    borderWidth: 1,
-    borderColor: 'rgba(150, 51, 255, 0.15)',
-    borderRadius: 16,
-  },
-  vipIconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#9633FF',
-    marginRight: 12,
-    shadowColor: '#9633FF',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  vipLinkIcon: {
-    // Remove marginRight: 0 as it's not needed
-  },
-  vipLinkContent: {
-    flex: 1,
-  },
-  vipLinkText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#9633FF',
-  },
-  vipLinkSubText: {
-    fontSize: 12,
-    color: '#9633FF',
-    opacity: 0.7,
-    marginTop: 2,
-    fontWeight: '400',
-  },
-  vipLinkBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: 'rgba(150, 51, 255, 0.15)',
-    borderRadius: 12,
-  },
-  vipLinkBadgeText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#9633FF',
-  },
-  usageSummary: {
-    height: 140,
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 20,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  usageSummaryGradient: {
-    flex: 1,
-    padding: 16,
-    position: 'relative',
-  },
-  usageDecor1: {
-    position: 'absolute',
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    top: 10,
-    left: 10,
-  },
-  usageDecor2: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    bottom: -30,
-    right: 40,
-  },
-  usageDecor3: {
-    position: 'absolute',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: 'rgba(255,255,255,0.12)',
-    top: 70,
-    left: 80,
-  },
-  usageTimeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    position: 'relative',
-    zIndex: 1,
-  },
-  usageIcon: {
-    marginRight: 8,
-  },
-  usageTimeText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-    letterSpacing: 0.5,
-  },
-  usageDetailsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-    position: 'relative',
-    zIndex: 1,
-  },
-  usageTokenRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  usageTokenItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 20,
-  },
-  usageTokenIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FF5252',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  chatTokenIcon: {
-    backgroundColor: '#FF9800',
-  },
-  usageTokenAmount: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginLeft: 8,
-  },
-  usagePriceContainer: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    alignItems: 'flex-end',
-    zIndex: 1,
-  },
-  currentPriceText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-    letterSpacing: 0.5,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 2,
-  },
-  originalPriceText: {
-    fontSize: 16,
-    color: 'rgba(255,255,255,0.7)',
-    textDecorationLine: 'line-through',
-  },
-  packageGrid: {
+  productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    paddingBottom: 20,
   },
-  packageItem: {
-    width: '100%',
+  productItemContainer: {
+    width: '48%',
+    marginBottom: 16,
+  },
+  productItem: {
     backgroundColor: '#FFF',
     borderRadius: 20,
     padding: 16,
-    paddingTop: 20,
-    marginBottom: 16,
     alignItems: 'center',
     shadowColor: 'rgba(108, 99, 255, 0.5)',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 4,
-    position: 'relative',
     borderWidth: 1,
     borderColor: 'rgba(108, 99, 255, 0.08)',
-    minHeight: 220,
+    minHeight: 200,
   },
-  popularPackage: {
-    borderColor: Colors.primary,
-    borderWidth: 2,
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 6,
-    paddingTop: 22,
-  },
-  popularTag: {
-    position: 'absolute',
-    top: -12,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 5,
-  },
-  popularTagText: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    backgroundColor: Colors.primary,
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-    borderRadius: 12,
-    overflow: 'hidden',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
-    minWidth: 80,
-    textAlign: 'center',
-  },
-  discountBadge: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    backgroundColor: '#FFECF8',
-    borderRadius: 12,
-    zIndex: 1,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 64, 129, 0.15)',
-  },
-  discountBadgeText: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#FF4081',
-  },
-  labelContainer: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-  },
-  labelText: {
-    fontSize: 20,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: {width: 0, height: 1},
-    textShadowRadius: 2,
-  },
-  packageIconContainer: {
-    width: 80,
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  tokenStackFallback: {
-    width: 80,
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tokenStackGradient: {
+  productIconContainer: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
-    backgroundColor: '#FFA500',
+    marginBottom: 12,
+    overflow: 'hidden',
   },
-  tokenSingleFallback: {
-    width: 80,
-    height: 80,
+  productIconGradient: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  tokenSingleGradient: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#FFD700',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 215, 0, 0.3)',
-    backgroundColor: '#FFA500',
-  },
-  packageTokenAmount: {
+  productTokenAmount: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
-  packageTokenText: {
-    fontSize: 28,
+  productTokenText: {
+    fontSize: 24,
     fontWeight: 'bold',
     color: Colors.textDark,
     marginLeft: 6,
   },
-  packageOriginalPrice: {
-    fontSize: 16,
-    color: '#999',
-    textDecorationLine: 'line-through',
+  productTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.textMedium,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  productDescription: {
+    fontSize: 12,
+    color: Colors.textLight,
+    textAlign: 'center',
     marginBottom: 12,
   },
-  packagePriceButton: {
+  purchaseButton: {
     width: '100%',
-    height: 44,
-    borderRadius: 22,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 10,
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-    backgroundColor: Colors.primary,
+    marginTop: 'auto',
   },
-  packagePriceText: {
-    fontSize: 16,
+  purchaseButtonDisabled: {
+    opacity: 0.6,
+  },
+  purchaseButtonText: {
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#FFF',
-    letterSpacing: 0.5,
+  },
+  noProductsContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  noProductsText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 16,
+    marginBottom: 20,
+  },
+  refreshButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: Colors.primary,
+    borderRadius: 20,
+  },
+  refreshButtonText: {
+    color: '#FFF',
+    fontWeight: '600',
+  },
+  restoreContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  restoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(108, 99, 255, 0.1)',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(108, 99, 255, 0.2)',
+  },
+  restoreButtonText: {
+    fontSize: 14,
+    color: Colors.primary,
+    marginLeft: 8,
+    fontWeight: '500',
   },
 });
 

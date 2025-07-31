@@ -108,6 +108,31 @@
         }
       }
     },
+    "react-native-iap": {
+      "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-iap",
+      "name": "react-native-iap",
+      "platforms": {
+        "ios": {
+          "podspecPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-iap/RNIap.podspec",
+          "version": "13.0.2",
+          "configurations": [],
+          "scriptPhases": []
+        },
+        "android": {
+          "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-iap/android",
+          "packageImportPath": "import com.dooboolab.rniap.RNIapPackage;",
+          "packageInstance": "new RNIapPackage()",
+          "buildTypes": [],
+          "libraryName": "RNIap",
+          "componentDescriptors": [],
+          "cmakeListsPath": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/react-native-iap/android/build/generated/source/codegen/jni/CMakeLists.txt",
+          "cxxModuleCMakeListsModuleName": null,
+          "cxxModuleCMakeListsPath": null,
+          "cxxModuleHeaderName": null,
+          "isPureCxxDependency": false
+        }
+      }
+    },
     "zego-zpns-react-native": {
       "root": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/node_modules/zego-zpns-react-native",
       "name": "zego-zpns-react-native",
@@ -1073,8 +1098,8 @@
     "android": {
       "sourceDir": "/Users/anurag_shanu/Documents/DISK_ONE/Lakhan/chatter/android",
       "appName": "app",
-      "packageName": "com.sakooneqlab",
-      "applicationId": "com.sakooneqlab",
+      "packageName": "com.sakoonclub",
+      "applicationId": "com.sakoonclub",
       "mainActivity": ".MainActivity",
       "assets": []
     }

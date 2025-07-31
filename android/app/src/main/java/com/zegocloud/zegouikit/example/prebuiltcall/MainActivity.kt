@@ -1,4 +1,4 @@
-package com.sakooneqlab
+package com.sakoonclub
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

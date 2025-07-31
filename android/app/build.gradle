@@ -77,14 +77,15 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    namespace "com.sakooneqlab"
+    namespace "com.sakoonclub"
     defaultConfig {
-        applicationId "com.sakooneqlab"
+        applicationId "com.sakoonclub"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionName versName
         versionCode versCode.toInteger()
         vectorDrawables.useSupportLibrary = true
+        missingDimensionStrategy "store", "play"
     }
     signingConfigs {
         debug {
@@ -139,6 +140,7 @@ dependencies {
     }
 
     implementation project(':react-native-vector-icons')
+    implementation project(':react-native-iap')
 }
 
 task copyFonts(type: Copy) {
