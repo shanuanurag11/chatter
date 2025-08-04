@@ -16,8 +16,9 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import Colors from '../constants/colors';
 import IAPService from '../services/iapService';
+import userService from '../services/userService';
 
-// Token Icon Component
+// Coin Icon Component
 const TokenIcon = ({ style }) => (
   <View style={[styles.tokenIconContainer, style]}>
     <LinearGradient
@@ -37,18 +38,32 @@ const TokensScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [purchasing, setPurchasing] = useState(false);
+  const [userData, setUserData] = useState(null);
   
   // Animated values
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     initializeIAP();
+    loadUserData();
     
     // Cleanup on unmount
     return () => {
       // Don't cleanup here as other screens might use IAP
     };
   }, []);
+
+  const loadUserData = async () => {
+    try {
+      const data = await userService.getUserData();
+      setUserData(data);
+      console.log('Current user data:', data);
+      console.log('Current user coins:', data?.coins || 0);
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      setUserData(null);
+    }
+  };
 
   const initializeIAP = async () => {
     try {
@@ -97,7 +112,8 @@ const TokensScreen = () => {
       [{ text: 'OK' }]
     );
     
-    // TODO: Update user's token balance in your app state/storage
+    // Reload user data after successful purchase
+    loadUserData();
   };
 
   const handlePurchaseError = (error) => {
@@ -113,6 +129,9 @@ const TokensScreen = () => {
       `${purchases.length} purchase(s) have been restored.`,
       [{ text: 'OK' }]
     );
+    
+    // Reload user data after restore
+    loadUserData();
   };
 
   const handleGoBack = () => {
@@ -198,7 +217,7 @@ const TokensScreen = () => {
             <Text style={styles.headerTitle}>Buy Tokens</Text>
             <View style={styles.tokenBalanceContainer}>
               <TokenIcon />
-              <Text style={styles.tokenBalanceText}>{this.userDa}</Text>
+              <Text style={styles.tokenBalanceText}>{userData?.coins || 0}</Text>
             </View>
           </View>
         </LinearGradient>
@@ -216,7 +235,7 @@ const TokensScreen = () => {
             { opacity: fadeAnim }
           ]}
         >
-          Choose Token Package: {products?.length}
+          Choose Coin Package: {products?.length}
         </Animated.Text>
         
         {/* Products Grid */}
@@ -249,7 +268,7 @@ const TokensScreen = () => {
                   disabled={purchasing}
                   activeOpacity={0.85}
                 >
-                  {/* Token Icon */}
+                  {/* Coin Icon */}
                   <View style={styles.productIconContainer}>
                     <LinearGradient
                       colors={['#FFD700', '#FFA500']}
@@ -259,7 +278,7 @@ const TokensScreen = () => {
                     </LinearGradient>
                   </View>
                   
-                  {/* Token Amount */}
+                  {/* Coin Amount */}
                   <View style={styles.productTokenAmount}>
                     <TokenIcon />
                     <Text style={styles.productTokenText}>

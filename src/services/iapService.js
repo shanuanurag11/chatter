@@ -10,6 +10,8 @@ import {
   getAvailablePurchases,
 } from 'react-native-iap';
 import { Platform, Alert } from 'react-native';
+import apiClient from './api/client';
+import userService from './userService';
 
 class IAPService {
   constructor() {
@@ -17,15 +19,38 @@ class IAPService {
     this.purchaseErrorSubscription = null;
     this.isInitialized = false;
     
-    // Product IDs for tokens as specified
-    this.productIds = [
-      'token_55',
-      'token_100', 
-      'token_155',
-      'token_300'
-    ];
+    // Product IDs will be fetched from API
+    this.productIds = [];
     
     this.products = [];
+  }
+
+  /**
+   * Fetch product IDs from API
+   */
+  async fetchProductIds() {
+    try {
+      console.log('Fetching product IDs from API...');
+      
+      const response = await apiClient.get('/api/v1/products/');
+      console.log('Product IDs API response:', response.data);
+      
+      if (response.data && response.data.status && response.data.data && response.data.data.products) {
+        this.productIds = response.data.data.products;
+        console.log('Product IDs fetched successfully:', this.productIds);
+        return this.productIds;
+      } else {
+        console.error('Invalid API response for product IDs:', response.data);
+        throw new Error('Invalid API response for product IDs');
+      }
+    } catch (error) {
+      console.error('Error fetching product IDs from API:', error);
+      
+      // Fallback to default product IDs if API fails
+      console.log('Using fallback product IDs...');
+      
+      return this.productIds;
+    }
   }
 
   /**
@@ -52,7 +77,10 @@ class IAPService {
       // Set up listeners
       this.setupPurchaseListeners();
       
-      // Load products
+      // Fetch product IDs from API first
+      await this.fetchProductIds();
+      
+      // Load products using fetched IDs
       await this.loadProducts();
       
       this.isInitialized = true;
@@ -87,7 +115,12 @@ class IAPService {
    */
   async loadProducts() {
     try {
-      console.log('Loading products...');
+      console.log('Loading products with IDs:', this.productIds);
+      
+      if (!this.productIds || this.productIds.length === 0) {
+        throw new Error('No product IDs available. Please fetch product IDs first.');
+      }
+      
       const products = await getProducts({ skus: this.productIds });
       this.products = products;
       console.log('Products loaded:', products);
@@ -103,6 +136,13 @@ class IAPService {
    */
   getProducts() {
     return this.products;
+  }
+
+  /**
+   * Get current product IDs
+   */
+  getProductIds() {
+    return this.productIds;
   }
 
   /**
@@ -159,15 +199,11 @@ class IAPService {
       
       const receipt = purchase.transactionReceipt;
       if (receipt) {
-        // Here you would typically validate the purchase with your server
-        // For now, we'll just log it and finish the transaction
         console.log('Purchase receipt:', receipt);
         
-        // TODO: Send receipt to your server for validation
-        // const validationResult = await this.validatePurchaseWithServer(receipt);
-        
-        // For demo purposes, we'll assume validation is successful
-        const validationResult = { success: true };
+        // Validate the purchase with our server
+        console.log('Validating purchase with server...');
+        const validationResult = await this.validatePurchaseWithServer(purchase);
         
         if (validationResult.success) {
           // Finish the transaction
@@ -178,25 +214,27 @@ class IAPService {
           
           console.log('Purchase completed successfully');
           
-          // Show success message
-          Alert.alert(
-            'Purchase Successful', 
-            `You have successfully purchased ${this.getTokenAmountFromProductId(purchase.productId)} tokens!`
-          );
+          // Update user's token balance and other data from profile API
+          console.log('Updating user data from profile API...');
+          await userService.updateCoinsAndTotalSecondsFromProfile();
           
-          // TODO: Update user's token balance in your app state
+          // Show success message
+          Alert.alert('Success', 'Success');
+          
+          // Call the success callback
           this.onPurchaseSuccess(purchase);
           
         } else {
-          console.error('Purchase validation failed');
-          Alert.alert('Purchase Error', 'Purchase validation failed. Please contact support.');
+          console.error('Purchase validation failed:', validationResult.message || 'Unknown error');
+          Alert.alert('Transaction Failed', 'Transaction failed.');
         }
       } else {
         console.error('No receipt found in purchase');
+        Alert.alert('Transaction Failed', 'Transaction failed.');
       }
     } catch (error) {
       console.error('Error processing purchase:', error);
-      Alert.alert('Purchase Error', 'Error processing purchase. Please contact support.');
+      Alert.alert('Transaction Failed', 'Transaction failed.');
     }
   }
 
@@ -237,6 +275,13 @@ class IAPService {
    * Get token amount from product ID
    */
   getTokenAmountFromProductId(productId) {
+    // Extract number from product ID (e.g., 'token_100' -> '100')
+    const match = productId.match(/token_(\d+)/);
+    if (match) {
+      return match[1];
+    }
+    
+    // Fallback to static mapping for backwards compatibility
     const tokenMap = {
       'token_55': '55',
       'token_100': '100',
@@ -269,8 +314,30 @@ class IAPService {
       const purchases = await this.getAvailablePurchases();
       
       if (purchases.length > 0) {
-        Alert.alert('Restore Successful', `${purchases.length} purchase(s) restored.`);
-        // TODO: Process restored purchases
+        console.log('Processing restored purchases...');
+        
+        // Verify each restored purchase with server
+        let verifiedCount = 0;
+        for (const purchase of purchases) {
+          try {
+            console.log('Verifying restored purchase:', purchase.productId);
+            const validationResult = await this.validatePurchaseWithServer(purchase);
+            if (validationResult.success) {
+              verifiedCount++;
+            }
+          } catch (error) {
+            console.warn('Error verifying restored purchase:', error);
+          }
+        }
+        
+        if (verifiedCount > 0) {
+          // Update user data after successful verifications
+          await userService.updateCoinsAndTotalSecondsFromProfile();
+          Alert.alert('Restore Successful', `${verifiedCount} purchase(s) restored and verified.`);
+        } else {
+          Alert.alert('Restore Complete', 'Purchases restored but none could be verified.');
+        }
+        
         this.onPurchasesRestored(purchases);
       } else {
         Alert.alert('No Purchases', 'No previous purchases found to restore.');
@@ -283,6 +350,7 @@ class IAPService {
       throw error;
     }
   }
+
 
   /**
    * Callback for successful purchase - override in your app
@@ -328,15 +396,68 @@ class IAPService {
   }
 
   /**
-   * Validate purchase with your server (implement this)
+   * Validate purchase with your server
    */
-  async validatePurchaseWithServer(receipt) {
-    // TODO: Implement server-side receipt validation
-    // This should send the receipt to your backend for validation
-    console.log('TODO: Implement server-side validation for receipt:', receipt);
-    
-    // For demo purposes, return success
-    return { success: true };
+  async validatePurchaseWithServer(purchase) {
+    try {
+      console.log('Sending purchase receipt to server for validation...');
+      
+      const requestData = {
+        receipt: purchase.transactionReceipt,
+        product_id: purchase.productId,
+        transaction_id: purchase.transactionId,
+        platform: Platform.OS,
+        purchase_token: purchase.purchaseToken, // Android
+        original_transaction_id: purchase.originalTransactionIdentifierIOS, // iOS
+      };
+      
+      console.log('Verification request data:', requestData);
+      
+      const response = await apiClient.post('/api/v1/user/wallet/reacharge/', requestData);
+      
+      console.log('Verification API response:', response.data);
+      
+      if (response.data && response.data.status) {
+        console.log('Purchase verification successful');
+        return { 
+          success: true, 
+          data: response.data.data 
+        };
+      } else {
+        console.error('Purchase verification failed:', response.data?.message || 'Unknown error');
+        return { 
+          success: false, 
+          message: response.data?.message || 'Verification failed' 
+        };
+      }
+    } catch (error) {
+      console.error('Error validating purchase with server:', error);
+      
+      // Handle different types of errors
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || 'Server error during verification';
+        console.error('Server error response:', error.response.data);
+        return { 
+          success: false, 
+          message: errorMessage 
+        };
+      } else if (error.request) {
+        // Network error
+        console.error('Network error during verification:', error.request);
+        return { 
+          success: false, 
+          message: 'Network error during verification' 
+        };
+      } else {
+        // Other error
+        console.error('Unknown error during verification:', error.message);
+        return { 
+          success: false, 
+          message: 'Unknown error during verification' 
+        };
+      }
+    }
   }
 }
 

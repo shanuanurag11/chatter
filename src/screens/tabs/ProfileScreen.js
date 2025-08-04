@@ -173,10 +173,6 @@ const ProfileScreen = () => {
     navigation.navigate('Tokens');
   };
   
-  const handleVIPPress = () => {
-    navigation.navigate('VipSubscription');
-  };
-
   const handleWithdrawalPress = () => {
     navigation.navigate('Withdrawal');
   };
@@ -349,7 +345,7 @@ const ProfileScreen = () => {
         </View>
 
         {/* Withdrawal Card - Only for Female Users */}
-        {user?.gender?.toLowerCase()  === 'female' ? (
+        {user?.gender?.toLowerCase() === 'female' ? (
           <Animated.View style={[styles.withdrawalContainer, {transform: [{scale: cardScale}]}]}>
             <TouchableOpacity 
               style={styles.withdrawalCard}
@@ -379,58 +375,46 @@ const ProfileScreen = () => {
               </LinearGradient>
             </TouchableOpacity>
           </Animated.View>
-        )
-      :( <Animated.View style={[styles.cardsContainer, {transform: [{scale: cardScale}]}]}>
-        <TouchableOpacity 
-          style={styles.tokenCard}
-          onPress={handleTokenPress}
-          activeOpacity={0.85}
-        >
-          <LinearGradient
-            colors={[Colors.primaryLight, Colors.primary]}
-            style={styles.cardGradient}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-          >
-            <View style={styles.cardPattern} />
-            <View style={styles.cardContent}>
-              <View style={styles.cardIconContainer}>
-                <Icon name="key" size={24} color="#FFC107" />
-              </View>
-              <View style={{flex: 1}}>
-                <Text style={styles.tokenAmount}>0</Text>
-                <Text style={styles.cardLabel}>Tokens</Text>
-              </View>
-              <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.vipCard}
-          onPress={handleVIPPress}
-          activeOpacity={0.85}
-        >
-          <LinearGradient
-            colors={['#FF9D80', '#FF7D6B']}
-            style={styles.cardGradient}
-            start={{x: 0, y: 0}}
-            end={{x: 1, y: 0}}
-          >
-            <View style={styles.cardPattern} />
-            <View style={styles.cardContent}>
-              <View style={styles.cardIconContainer}>
-                <Icon name="crown" size={24} color="#FFC107" />
-              </View>
-              <View style={{flex: 1}}>
-                <Text style={styles.cardLabel}>VIP</Text>
-                <Text style={styles.vipText}>Get VIP</Text>
-              </View>
-              <Icon name="chevron-forward" size={20} color={Colors.white} style={styles.cardArrow} />
-            </View>
-          </LinearGradient>
-        </TouchableOpacity>
-      </Animated.View>)}
+        ) : (
+          /* Enhanced Coins Card - Full Width */
+          <Animated.View style={[styles.coinsContainer, {transform: [{scale: cardScale}]}]}>
+            <TouchableOpacity 
+              style={styles.coinsCard}
+              onPress={handleTokenPress}
+              activeOpacity={0.85}
+            >
+              <LinearGradient
+                colors={['#667eea', '#764ba2', '#f093fb']}
+                style={styles.coinsGradient}
+                start={{x: 0, y: 0}}
+                end={{x: 1, y: 1}}
+              >
+                <View style={styles.coinsPattern} />
+                <View style={styles.coinsContent}>
+                  <View style={styles.coinsLeftSection}>
+                    <View style={styles.coinsIconContainer}>
+                      <Icon name="wallet-outline" size={28} color="#FFC107" />
+                    </View>
+                    <View style={styles.coinsTextSection}>
+                      <View style={styles.coinsAmountRow}>
+                        <Text style={styles.coinsAmount}>{user.coins}</Text>
+                        <Text style={styles.coinsLabel}>Coins</Text>
+                      </View>
+                      <Text style={styles.coinsBuyText}>Tap to buy more coins</Text>
+                    </View>
+                  </View>
+                  <View style={styles.coinsRightSection}>
+                    <View style={styles.buyIconContainer}>
+                      <Icon name="add-circle" size={24} color="#FFFFFF" />
+                    </View>
+                    {/* <Icon name="chevron-forward" size={20} color="#FFFFFF" style={styles.coinsArrow} /> */}
+                  </View>
+                </View>
+                <View style={styles.coinsShine} />
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
 
         {/* Personal Information Section */}
         <View style={styles.sectionContainer}>
@@ -814,96 +798,6 @@ const styles = StyleSheet.create({
     color: '#666666',
     fontWeight: '500',
   },
-  cardsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 24,
-    gap: 12,
-  },
-  tokenCard: {
-    flex: 1,
-    borderRadius: 20,
-    overflow: 'hidden',
-    height: 100,
-    elevation: 6,
-    shadowColor: '#6C63FF',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  vipCard: {
-    flex: 1,
-    borderRadius: 20,
-    overflow: 'hidden',
-    height: 100,
-    elevation: 6,
-    shadowColor: '#FF7D6B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  cardGradient: {
-    flex: 1,
-    position: 'relative',
-  },
-  cardContent: {
-    flex: 1,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
-    zIndex: 2,
-  },
-  cardPattern: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    opacity: 0.1,
-    zIndex: 1,
-    backgroundColor: 'transparent',
-    borderTopWidth: 100,
-    borderLeftWidth: 100,
-    borderStyle: 'solid',
-    borderTopColor: 'white',
-    borderLeftColor: 'transparent',
-  },
-  cardIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  tokenAmount: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 2,
-  },
-  cardLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  vipText: {
-    fontSize: 14,
-    color: '#FFFFFF',
-    opacity: 0.9,
-    marginTop: 2,
-  },
-  cardArrow: {
-    position: 'absolute',
-    right: 16,
-    top: '50%',
-    transform: [{ translateY: -8 }],
-    opacity: 0.8,
-  },
   sectionContainer: {
     paddingHorizontal: 20,
     marginBottom: 24,
@@ -1244,6 +1138,120 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   withdrawalShine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'transparent',
+    borderRadius: 20,
+    opacity: 0.1,
+    zIndex: 0,
+  },
+  coinsContainer: {
+    marginHorizontal: 20,
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  coinsCard: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    height: 110,
+    elevation: 8,
+    shadowColor: '#667eea',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+  },
+  coinsGradient: {
+    flex: 1,
+    position: 'relative',
+  },
+  coinsPattern: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.15,
+    zIndex: 1,
+    backgroundColor: 'transparent',
+  },
+  coinsContent: {
+    flex: 1,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+    zIndex: 2,
+  },
+  coinsLeftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  coinsIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  coinsTextSection: {
+    flex: 1,
+  },
+  coinsAmountRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  coinsAmount: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginRight: 4,
+  },
+  coinsLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  coinsBuyText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    opacity: 0.9,
+    marginTop: 2,
+  },
+  coinsRightSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  buyIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  coinsArrow: {
+    position: 'absolute',
+    right: 0,
+    top: '50%',
+    transform: [{ translateY: -8 }],
+    opacity: 0.8,
+  },
+  coinsShine: {
     position: 'absolute',
     top: 0,
     left: 0,
