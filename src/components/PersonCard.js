@@ -87,7 +87,7 @@ const PersonCard = ({ person, onPress, onVideoPress }) => {
       <View style={styles.avatarContainer}>
         {console.log("person-12121->" ,person)     }
         {person?.profile_picture ?<Image 
-          source={{ uri: person.profile_picture || 'https://via.placeholder.com/150' }} 
+          source={{ uri: 'https://sakooneqalb.com' +person?.profile_picture || 'https://via.placeholder.com/150' }} 
           style={styles.avatar}
           resizeMode="cover"
         />:<Image 

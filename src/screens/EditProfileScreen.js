@@ -341,34 +341,82 @@ const EditProfileScreen = () => {
     setUploadingImage(true);
     
     try {
+      console.log("imageData received:", imageData);
+      
+      // Validate imageData object
+      if (!imageData || !imageData.uri) {
+        throw new Error('Invalid image data: missing URI');
+      }
+      
       // Create a FormData object for multipart/form-data uploads
       const formData = new FormData();
       
-      // Append the image file
-      formData.append('profile_picture', {
+      // Extract file extension from fileName or type
+      const getFileExtension = () => {
+        if (imageData.fileName) {
+          const extension = imageData.fileName.split('.').pop();
+          return extension ? `.${extension}` : '.jpg';
+        }
+        if (imageData.type) {
+          return imageData.type === 'image/jpeg' ? '.jpg' : 
+                 imageData.type === 'image/png' ? '.png' : '.jpg';
+        }
+        return '.jpg';
+      };
+      
+      // Prepare file object with all available properties
+      const fileObject = {
         uri: imageData.uri,
         type: imageData.type || 'image/jpeg',
-        name: imageData.fileName || 'profile.jpg',
+        name: imageData.fileName || `profile_${Date.now()}${getFileExtension()}`,
+      };
+      
+      // Add additional metadata if available
+      if (imageData.fileSize) {
+        console.log(`Image file size: ${imageData.fileSize} bytes`);
+      }
+      if (imageData.width && imageData.height) {
+        console.log(`Image dimensions: ${imageData.width}x${imageData.height}`);
+      }
+      if (imageData.originalPath) {
+        console.log(`Original path: ${imageData.originalPath}`);
+      }
+      
+      // Prepare current profile data for the API call
+      const currentProfileData = {};
+      
+      // Add current user data to profile update (excluding profile_picture as it's handled separately)
+      if (user.name) currentProfileData.name = user.name;
+      if (user.username) currentProfileData.username = user.username;
+      if (user.bio) currentProfileData.bio = user.bio;
+      if (user.gender) currentProfileData.gender = user.gender;
+      if (user.selected_age) currentProfileData.selected_age = user.selected_age;
+      if (user.address) currentProfileData.address = user.address;
+      if (user.city) currentProfileData.city = user.city;
+      if (user.date_of_birth) currentProfileData.date_of_birth = user.date_of_birth;
+      if (user.mobile_number) currentProfileData.mobile_number = user.mobile_number;
+      if (user.user_email) currentProfileData.user_email = user.user_email;
+      
+      // Add tags if they exist
+      if (tags && tags.length > 0) {
+        currentProfileData.tags = tags;
+      }
+      
+      console.log("Calling profileService.editProfileWithImage with:", {
+        profileData: currentProfileData,
+        imageData: imageData
       });
       
-      // In a real app, you would make an API call like this:
-      // const response = await fetch(`${API_URL}/profile/image`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'multipart/form-data',
-      //     'Authorization': `Bearer ${accessToken}`,
-      //   },
-      //   body: formData,
-      // });
+      // Call the API with both profile data and image
+      const updatedProfile = await profileService.editProfileWithImage(currentProfileData, imageData);
       
-      // For now, we'll simulate the delay and use the local image URI
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log("Profile with image updated successfully:", updatedProfile);
       
-      // After a successful upload, the server would return the new image URL
-      // For demo purposes, we'll use the local URI
+      // Update local user state with the response data
       setUser(prev => ({
         ...prev,
-        profile_picture: imageData.uri
+        ...updatedProfile,
+        profile_picture: updatedProfile.profile_picture || imageData.uri
       }));
       
       Alert.alert("Success", "Profile picture updated successfully!");
@@ -611,7 +659,7 @@ const EditProfileScreen = () => {
                     <ActivityIndicator size="large" color={Colors.primary} />
                   </View>
                 ) : user?.profile_picture ? (
-                  <Image source={{ uri: user.profile_picture }} style={styles.profileImage} />
+                  <Image source={{ uri: 'https://sakooneqalb.com'+user?.profile_picture }} style={styles.profileImage} />
                 ) : (
                   <View style={styles.profileImagePlaceholder}>
                     <Icon name="person" size={40} color="#CCCCCC" />

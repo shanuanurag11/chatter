@@ -146,7 +146,7 @@ const ChatItem = ({ chat, onPress, onAvatarPress }) => {
           activeOpacity={0.8}
           // style={styles.avatarTouchable}
         >
-          <Image source={{ uri: chat.avatar }} style={styles.avatar} />
+          <Image source={{ uri: 'https://sakooneqalb.com' +chat?.profile_picture }} style={styles.avatar} />
         </TouchableOpacity>
         {chat.isOnline && <View style={styles.onlineBadge} />}
       </View>

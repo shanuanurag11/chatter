@@ -146,7 +146,7 @@ const PhoneLoginScreen = ({ navigation }) => {
             <View style={styles.header}>
               <TouchableOpacity
                 style={styles.backButton}
-                onPress={() => navigation.goBack()}
+                onPress={() =>{dispatch(resetOTPStatus());}}
               >
                 <Icon name="arrow-back" size={24} color="#FFFFFF" />
               </TouchableOpacity>
@@ -210,7 +210,7 @@ const PhoneLoginScreen = ({ navigation }) => {
                 />
                 
                 <TouchableOpacity style={styles.resendOtp} onPress={handleRequestOtp}>
-                  <Text style={styles.resendOtpText}>Resend OTP</Text>
+                {isLoading?<Text style={styles.resendOtpText}>Resending...</Text>:<Text style={styles.resendOtpText}>Resend OTP</Text>}
                 </TouchableOpacity>
               </>
             ) : (

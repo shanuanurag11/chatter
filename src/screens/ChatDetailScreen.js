@@ -479,8 +479,7 @@ const ChatDetailScreen = () => {
   // Set up message listener
   useEffect(() => {
     const unsubscribe = socketService.addMessageListener((event, data) => {
-      console.log('Message event received11:', event);
-      console.log('Message data11:', data);
+      console.log('this is actual events', event);
       
       if (event === 'message_received' && data.room_id === chat.id) {
         // Create a properly formatted message object
@@ -670,7 +669,7 @@ const ChatDetailScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ChatHeader
-        avatar={chat.avatar}
+        avatar={'https://sakooneqalb.com' +chat?.profile_picture}
         name={chat.name}
         isOnline={chat.isOnline}
         onBackPress={() => navigation.goBack()}

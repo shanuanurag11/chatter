@@ -353,7 +353,7 @@ const UserDetailsScreen = () => {
                 <Image
                   source={
                     userProfile.profile_picture
-                      ? { uri: userProfile.profile_picture }
+                      ? { uri: 'https://sakooneqalb.com'+userProfile?.profile_picture }
                       : require('../assets/images/user.png')
                   }
                   style={styles.profileImage}
@@ -422,9 +422,9 @@ const UserDetailsScreen = () => {
             >
               {renderInfoItem('person-outline', 'Full Name', userProfile.name)}
               {renderInfoItem('at-outline', 'Username', userProfile.username)}
-              {renderInfoItem('mail-outline', 'Email Address', userProfile.user_email)}
-              {renderInfoItem('call-outline', 'Mobile Number', userProfile.mobile_number)}
-              {renderInfoItem('calendar-outline', 'Date of Birth', formatDate(userProfile.date_of_birth))}
+              {/* {renderInfoItem('mail-outline', 'Email Address', userProfile.user_email)} */}
+              {/* {renderInfoItem('call-outline', 'Mobile Number', userProfile.mobile_number)} */}
+              {/* {renderInfoItem('calendar-outline', 'Date of Birth', formatDate(userProfile.date_of_birth))} */}
               {age && renderInfoItem('time-outline', 'Age', `${age} years old`)}
               {renderInfoItem('male-female-outline', 'Gender', userProfile.gender)}
               {renderInfoItem('location-outline', 'City', userProfile.city)}

@@ -11,7 +11,8 @@ import {
   Animated,
   Dimensions,
   ActivityIndicator,
-  RefreshControl
+  RefreshControl,
+  Alert
 } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -174,7 +175,12 @@ const ProfileScreen = () => {
   };
   
   const handleWithdrawalPress = () => {
-    navigation.navigate('Withdrawal');
+    if (user?.coins >= 500) {
+      navigation.navigate('Withdrawal');
+    }
+    else {
+      Alert.alert('Insufficient Coins', 'You need at least 500 coins to withdraw.');
+    }
   };
 
   const handleSettings = () => {
@@ -272,7 +278,7 @@ const ProfileScreen = () => {
               <Animated.View style={[styles.avatarWrapper, avatarAnimStyle]}>
                 <View style={styles.avatarContainer}>
                   <Image 
-                    source={{ uri: user.profile_picture || 'https://randomuser.me/api/portraits/lego/1.jpg' }} 
+                    source={{ uri: 'https://sakooneqalb.com'+user.profile_picture || 'https://randomuser.me/api/portraits/lego/1.jpg' }} 
                     style={styles.avatar} 
                     resizeMode="cover"
                   />
@@ -501,87 +507,7 @@ const ProfileScreen = () => {
             )}
           </View>
         </View>
-
-        {/* Media Section */}
-        {(user.images?.length > 0 || user.videos?.length > 0) && (
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Media</Text>
-            
-            {/* Images Grid */}
-            {user.images?.length > 0 && (
-              <View style={styles.mediaContainer}>
-                <Text style={styles.mediaSubtitle}>Photos</Text>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.mediaScrollView}
-                >
-                  {user.images.map((image, index) => (
-                    <TouchableOpacity 
-                      key={index}
-                      style={styles.mediaItem}
-                      onPress={() => {
-                        console.log('Preview image:', image);
-                      }}
-                    >
-                      <Image 
-                        source={{ uri: image }} 
-                        style={styles.mediaImage}
-                        resizeMode="cover"
-                      />
-                      <LinearGradient
-                        colors={['transparent', 'rgba(0,0,0,0.3)']}
-                        style={styles.mediaOverlay}
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Videos Grid */}
-            {user.videos?.length > 0 && (
-              <View style={styles.mediaContainer}>
-                <Text style={styles.mediaSubtitle}>Videos</Text>
-                <ScrollView 
-                  horizontal 
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.mediaScrollView}
-                >
-                  {user.videos.map((video, index) => (
-                    <TouchableOpacity 
-                      key={index}
-                      style={styles.mediaItem}
-                      onPress={() => {
-                        console.log('Preview video:', video);
-                      }}
-                    >
-                      <View style={styles.videoThumbnail}>
-                        <Icon name="play-circle" size={40} color={Colors.white} />
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Empty Media State */}
-        {(!user.images || user.images.length === 0) && (!user.videos || user.videos.length === 0) && (
-          <View style={styles.sectionContainer}>
-            <Text style={styles.sectionTitle}>Media</Text>
-            <View style={styles.emptyMediaContainer}>
-              <Icon name="images-outline" size={48} color="#CCCCCC" />
-              <Text style={styles.emptyMediaTitle}>No Media Yet</Text>
-              <Text style={styles.emptyMediaText}>Add photos and videos to your profile</Text>
-              <TouchableOpacity style={styles.addMediaButton} onPress={handleEditProfile}>
-                <Icon name="add" size={20} color={Colors.white} />
-                <Text style={styles.addMediaButtonText}>Add Media</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+{/*  */}
         
         {/* Logout Button */}
         <View style={styles.logoutContainer}>

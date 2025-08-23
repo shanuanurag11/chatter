@@ -1,14 +1,10 @@
 // ZEGOCLOUD Configuration
-// Get these values from your ZEGOCLOUD Admin Console: https://console.zego.im/
+// Note: Credentials are now fetched directly in zegoService.js from API
+// This file now only contains static configuration
 
 import uuid from 'react-native-uuid';
 
 export const ZEGO_CONFIG = {
-  // Replace with your actual App ID from ZEGOCLOUD Console
-  APP_ID: 229292280, // Your ZEGOCLOUD App ID (number)
-  
-  // Replace with your actual App Sign from ZEGOCLOUD Console
-  APP_SIGN: 'a6e5dd0784398ee99430daf2105c74095d1ff2b0e18540a2bbfa510a0c8ed3da', // Your ZEGOCLOUD App Sign (string)
   
   // Server URL (usually doesn't need to be changed)
   SERVER_URL: 'https://webliveroom-test.zego.im',
@@ -65,28 +61,32 @@ export const ZEGO_CONFIG = {
   },
 };
 
-// Helper function to validate ZEGO configuration
-export const validateZegoConfig = () => {
-  const requiredFields = ['APP_ID', 'APP_SIGN'];
-  const missingFields = requiredFields.filter(field => !ZEGO_CONFIG[field]);
-  
-  if (missingFields.length > 0) {
-    console.error('Missing required ZEGO configuration fields:', missingFields);
+// Helper function to validate ZEGO credentials (now used with API credentials)
+export const validateZegoCredentials = (credentials) => {
+  try {
+    const { appId, appSign } = credentials;
+    
+    if (!appId || !appSign) {
+      console.error('ZEGO credentials missing appId or appSign');
+      return false;
+    }
+    
+    if (typeof appId !== 'number') {
+      console.error('ZEGO appId must be a number');
+      return false;
+    }
+    
+    if (typeof appSign !== 'string' || appSign.length < 10) {
+      console.error('ZEGO appSign must be a valid string');
+      return false;
+    }
+    
+    console.log('ZEGO credentials are valid');
+    return true;
+  } catch (error) {
+    console.error('Error validating ZEGO credentials:', error.message);
     return false;
   }
-  
-  if (typeof ZEGO_CONFIG.APP_ID !== 'number') {
-    console.error('ZEGO APP_ID must be a number');
-    return false;
-  }
-  
-  if (typeof ZEGO_CONFIG.APP_SIGN !== 'string' || ZEGO_CONFIG.APP_SIGN.length < 10) {
-    console.error('ZEGO APP_SIGN must be a valid string');
-    return false;
-  }
-  
-  console.log('ZEGO configuration is valid');
-  return true;
 };
 
 // Helper function to generate unique call ID using UUID

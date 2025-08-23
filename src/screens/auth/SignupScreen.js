@@ -283,7 +283,7 @@ const SignupScreen = ({ navigation, route }) => {
                 <View style={styles.profileImageContainer}>
                   {formData.profile_picture ? (
                     <Image
-                      source={{ uri: formData.profile_picture.uri }}
+                      source={{ uri: formData?.profile_picture.uri }}
                       style={styles.profileImage}
                     />
                   ) : (
@@ -445,7 +445,7 @@ const SignupScreen = ({ navigation, route }) => {
             </View>
 
             {/* Media Section */}
-            <View style={styles.section}>
+            {/* <View style={styles.section}>
               <Text style={styles.sectionTitle}>Additional Media</Text>
               
               <View style={styles.mediaSection}>
@@ -484,19 +484,7 @@ const SignupScreen = ({ navigation, route }) => {
                   )}
                 </ScrollView>
 
-                <Text style={styles.mediaLabel}>Video</Text>
-                {formData.videos.length > 0 ? (
-                  <View style={styles.videoPreview}>
-                    <Icon name="videocam" size={32} color={Colors.success} />
-                    <Text style={styles.videoText}>Video selected</Text>
-                    <TouchableOpacity 
-                      style={styles.removeVideoButton}
-                      onPress={() => setFormData(prev => ({ ...prev, videos: [] }))}
-                    >
-                      <Icon name="close" size={20} color={Colors.error} />
-                    </TouchableOpacity>
-                  </View>
-                ) : (
+               
                   <TouchableOpacity 
                     style={styles.addVideoButton}
                     onPress={handleVideoPicker}
@@ -504,9 +492,9 @@ const SignupScreen = ({ navigation, route }) => {
                     <Icon name="video-call" size={32} color={Colors.lightGray} />
                     <Text style={styles.addVideoText}>Add a video</Text>
                   </TouchableOpacity>
-          )}
+          
         </View>
-            </View>
+            </View> */}
 
             {renderError()}
 

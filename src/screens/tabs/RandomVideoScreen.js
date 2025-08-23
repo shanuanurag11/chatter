@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef,useCallback } from 'react';
 import {
   View,
   Text,
@@ -20,9 +20,9 @@ import LinearGradient from 'react-native-linear-gradient';
 import Colors from '../../constants/colors';
 import callService from '../../services/callService';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import apiClient from '../../services/api/client.js';
 import userService from '../../services/userService';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -123,17 +123,7 @@ const RandomVideoScreen = () => {
 
   useEffect(() => {
     // Load user data on component mount
-    const loadUserData = async () => {
-      try {
-        const data = await userService.getUserData();
-        setUserData(data);
-        console.log('[RandomVideoScreen] User data loaded:', data);
-      } catch (error) {
-        console.error('[RandomVideoScreen] Error loading user data:', error);
-      }
-    };
-    
-    loadUserData();
+
     
     // Generate static profiles when component mounts
     const generatedProfiles = generateProfiles();
@@ -327,6 +317,21 @@ const RandomVideoScreen = () => {
       }
     };
   }, []);
+  const loadUserData = async () => {
+    try {
+      const data = await userService.getUserData();
+      setUserData(data);
+      console.log('[RandomVideoScreen] User data loaded:', data);
+    } catch (error) {
+      console.error('[RandomVideoScreen] Error loading user data:', error);
+    }
+  };
+  
+  useFocusEffect(
+      useCallback(() => {
+        loadUserData()
+      }, [])
+    );
 
   // Determine if a permission-related error message
   const isPermissionError = (message) => {
@@ -341,14 +346,12 @@ const RandomVideoScreen = () => {
     try {
       const response = await apiClient.get('/api/v1/match/');
       console.log('[RandomVideoScreen] Match API response:', response.data);
-      
       if (response.data.status === 'matched') {
         // Clear polling interval
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
         }
-        
         // Navigate to video call with matched data
         const callData = {
           callId: response.data.caller_id,

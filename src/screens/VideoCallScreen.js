@@ -3,6 +3,7 @@ import { View, StyleSheet, BackHandler, Alert, Platform, Text, TouchableOpacity,
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { request, PERMISSIONS, RESULTS, requestMultiple } from 'react-native-permissions';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import callService from '../services/callService';
 import callHistoryService from '../services/callHistoryService';
 import userService from '../services/userService';
@@ -12,9 +13,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 // ZegoCloud import for production use
 import {ZegoUIKitPrebuiltCall, ONE_ON_ONE_VIDEO_CALL_CONFIG, ZegoUIKitPrebuiltCallService } from '@zegocloud/zego-uikit-prebuilt-call-rn'
 
-// Replace with your ZegoCloud credentials once you have them
-const ZEGO_APP_ID = 1765584231; // Replace with your actual App ID (as a number)
-const ZEGO_APP_SIGN = '5187d0a49871d478f21df4a71737fc84255f33c0095b8d1dd160ac333b10802d';
+// ZegoCloud credentials will be loaded from AsyncStorage
 
 const VideoCallScreen = ({ route, navigation }) => {
   console.log('[VideoCallScreen] Mounted');
@@ -75,7 +74,7 @@ const VideoCallScreen = ({ route, navigation }) => {
     }
 
     try {
-      console.log('[VideoCallScreen] Notifying server about call initiation');
+      console.log('[VideoCallScreen] Notifying server about call initiation::',callId);
       
       await callHistoryService.initiateCall({
         call_id: callId,
@@ -94,7 +93,7 @@ const VideoCallScreen = ({ route, navigation }) => {
 
   // Function to notify server about call end
   const notifyCallEnd = async (total_seconds) => {
-    console.log('[VideoCallScreen] notifyCallEnd called with duration:', total_seconds);
+    console.log('[VideoCallScreen] notifyCallEnd called with duration:', total_seconds,"***",callId);
     if (!callId) {
       console.log('[VideoCallScreen] Skipping call end notification - no callId');
       return;
@@ -102,13 +101,15 @@ const VideoCallScreen = ({ route, navigation }) => {
 
     try {
       console.log('[VideoCallScreen] Notifying server about call end**total_seconds**',total_seconds);
-      
-      await callHistoryService.endCall({
-        call_id: callId,
-        total_seconds
-      });
+      try {
+        await callHistoryService.endCall({
+          call_id: callId,
+          total_seconds
+        });
+      }
+      catch { }
 
-      console.log('[VideoCallScreen] Call end notification successful');
+      console.log('[VideoCallScreen] Call end notification successful1111');
 
       // Update coins and total_seconds from profile API
       if (total_seconds && total_seconds > 0) {
@@ -120,8 +121,10 @@ const VideoCallScreen = ({ route, navigation }) => {
           console.error('[VideoCallScreen] Failed to update coins and total_seconds from profile API');
         }
       }
+      navigation.navigate('Match');
     } catch (error) {
       console.error('[VideoCallScreen] Error notifying call end:', error);
+      navigation.navigate('Match')
       // Don't block navigation if the API fails
     }
   };
@@ -269,7 +272,7 @@ const VideoCallScreen = ({ route, navigation }) => {
                 text: 'Go Back', 
                 onPress: () => {
                   console.log('[VideoCallScreen] User cancelled permission retry, going back');
-                  navigation.goBack();
+                  navigation.navigate('Match');
                 }
               },
               { 
@@ -325,7 +328,7 @@ const VideoCallScreen = ({ route, navigation }) => {
           'Permission Error',
           'Failed to check permissions. Please try again.',
           [
-            { text: 'Go Back', onPress: () => navigation.goBack() },
+            { text: 'Go Back', onPress: () => navigation.navigate('Match') },
             { 
               text: 'Try Again', 
               onPress: () => {
@@ -386,7 +389,7 @@ const VideoCallScreen = ({ route, navigation }) => {
           style: 'destructive',
           onPress: async () => {
             console.log('[VideoCallScreen] Call ended by user');
-            navigation.goBack();
+            navigation.navigate('Match');
           } 
         }
       ]
@@ -417,7 +420,7 @@ const VideoCallScreen = ({ route, navigation }) => {
           <View style={styles.buttonRow}>
             <TouchableOpacity
               style={[styles.retryButton, { marginRight: 10, backgroundColor: '#455A64' }]}
-              onPress={() => navigation.goBack()}
+              onPress={() => navigation.navigate('Match')}
             >
               <Text style={styles.retryButtonText}>Go Back</Text>
             </TouchableOpacity>
@@ -496,43 +499,87 @@ const VideoCallScreen = ({ route, navigation }) => {
     );
   }
 
-  // ZegoCloud implementation for production use
+  // ZegoCloud implementation using AsyncStorage credentials
+  const VideoCallComponent = () => {
+    const [zegoCredentials, setZegoCredentials] = useState(null);
+    const [userCreds, setUserCreds] = useState(null);
+    
+    useEffect(() => {
+      const loadCredentials = async () => {
+        try {
+          // Load ZEGO credentials from AsyncStorage
+          const storedCreds = await AsyncStorage.getItem('zegoCredentials');
+          if (storedCreds) {
+            const parsedCreds = JSON.parse(storedCreds);
+            setZegoCredentials(parsedCreds);
+            console.log('[VideoCallScreen] ZEGO credentials loaded from AsyncStorage',parsedCreds);
+          } else {
+            // console.error('[VideoCallScreen] No ZEGO credentials found in AsyncStorage',parsedCreds);
+            setErrorMessage('ZEGO credentials not available. Please restart the app.');
+            return;
+          }
+          
+          // Load user credentials
+          const userData = await userService.getUserData();
+          if (userData) {
+            const userID = userData.id?.toString() || userData.user_id?.toString();
+            const userName = userData.name || userData.username || `User_${userID}`;
+            setUserCreds({ userId: userID, userName });
+            console.log('[VideoCallScreen] User credentials loaded:', { userId: userID, userName });
+          }
+        } catch (error) {
+          console.error('[VideoCallScreen] Error loading credentials:', error);
+          setErrorMessage('Failed to load credentials. Please restart the app.');
+        }
+      };
+      
+      loadCredentials();
+    }, []);
+    
+    if (!zegoCredentials || !userCreds) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={styles.loadingText}>Loading credentials...</Text>
+        </View>
+      );
+    }
+    
+    return (
+      <ZegoUIKitPrebuiltCall
+        appID={zegoCredentials.appId}
+        appSign={zegoCredentials.appSign}
+        userID={userCreds.userId}
+        userName={userCreds.userName}
+        callID={callId}
+        config={{
+          ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
+          onCallEnd: async (callID, reason, duration) => { 
+            console.log('[VideoCallScreen] Call ended with reason:', reason, 'duration:', duration);
+            notifyCallEnd(duration);
+            
+          },
+          timingConfig: {
+            isDurationVisible: true,
+            onDurationUpdate: (durationInSec) => {
+              console.log('[VideoCallScreen] Call duration:', durationInSec, 'seconds');
+              const totalSeconds = userData?.total_seconds;
+              if (durationInSec >= totalSeconds) {
+                console.log('[VideoCallScreen] Auto-ending call at', totalSeconds, 'seconds');
+                ZegoUIKitPrebuiltCallService.hangUp();
+                notifyCallEnd(durationInSec);
+              }
+            },
+          },
+        }}
+      />
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.callContainer}>
-     {<ZegoUIKitPrebuiltCall
-                appID={ZEGO_APP_ID}
-                appSign={ZEGO_APP_SIGN}
-                userID={userId} // userID can be something like a phone number or the user id on your own user system. 
-                userName={userName}
-                callID={callId} // callID can be any unique string. 
-
-                config=
-                {{
-                    // You can also use ONE_ON_ONE_VOICE_CALL_CONFIG/GROUP_VIDEO_CALL_CONFIG/GROUP_VOICE_CALL_CONFIG to make more types of calls.
-                    ...ONE_ON_ONE_VIDEO_CALL_CONFIG,
-                    onCallEnd: async (callID, reason, duration) => { 
-                      console.log('[VideoCallScreen] Call ended with reason:', reason, 'duration:', duration);
-                      notifyCallEnd(duration);
-                      navigation.goBack();
-                    },
-                    timingConfig: {
-                      isDurationVisible: true,
-                      onDurationUpdate: (durationInSec) => {
-                        console.log('[VideoCallScreen] Call duration:', durationInSec, 'seconds');
-                        // Auto-end call at 20 seconds (same as zegoService)
-                        const totalSeconds = userData?.total_seconds;
-                        if (durationInSec >= totalSeconds) {
-                          console.log('[VideoCallScreen] Auto-ending call at', totalSeconds, 'seconds');
-                          // Import and use ZegoUIKitPrebuiltCallService to hang up
-                          ZegoUIKitPrebuiltCallService.hangUp();
-                          notifyCallEnd(durationInSec);
-                          navigation.goBack();
-                        }
-                      },
-                    },
-                }}
-            />}
+        <VideoCallComponent />
       </View>
     </SafeAreaView>
   );

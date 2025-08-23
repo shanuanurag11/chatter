@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { authApi } from '../../api/authApi';
-import dummyAuthApi from '../../api/dummyAuthApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EncryptedStorage from 'react-native-encrypted-storage';
 import apiClient from '../../services/api/client';
@@ -19,107 +18,6 @@ export const login = createAsyncThunk(
   }
 );
 
-export const loginWithPhone = createAsyncThunk(
-  'auth/loginWithPhone',
-  async ({ phone, password }, { rejectWithValue }) => {
-    try {
-      return await dummyAuthApi.loginWithPhone(phone, password);
-    } catch (error) {
-      return rejectWithValue(error);
-    }
-  }
-);
-
-export const loginWithGoogle = createAsyncThunk(
-  'auth/loginWithGoogle',
-  async (googleData, { rejectWithValue }) => {
-    try {
-      const response = await dummyAuthApi.loginWithGoogle(googleData);
-      await AsyncStorage.setItem('authToken', response.token);
-      
-      // Initialize ZEGOCLOUD call service after successful login
-      try {
-        const userID = response.user.id?.toString() || googleData.id;
-        const userName = response.user.name || googleData.displayName || `User_${userID}`;
-        await zegoService.initialize(userID, userName);
-        console.log('[Auth] ZEGOCLOUD initialized successfully for Google login 111');
-      } catch (zegoError) {
-        console.error('[Auth] ZEGOCLOUD initialization failed for Google login:', zegoError);
-        // Don't fail the login if ZEGOCLOUD fails to initialize
-      }
-      
-      // Return user data to be stored in Redux state
-      return {
-        user: response.user,
-        token: response.token
-      };
-    } catch (error) {
-      return rejectWithValue(error.message || 'Failed to login with Google');
-    }
-  }
-);
-
-export const loginWithFacebook = createAsyncThunk(
-  'auth/loginWithFacebook',
-  async (facebookData, { rejectWithValue }) => {
-    try {
-      const response = await dummyAuthApi.loginWithFacebook(facebookData);
-      
-      // Store auth tokens in secure storage
-      await AsyncStorage.setItem('authToken', response.token);
-      
-      // Initialize ZEGOCLOUD call service after successful login
-      try {
-        const userID = response.user.id?.toString() || facebookData.id;
-        const userName = response.user.name || facebookData.displayName || `User_${userID}`;
-        await zegoService.initialize(userID, userName);
-        console.log('[Auth] ZEGOCLOUD initialized successfully for Facebook login 22');
-      } catch (zegoError) {
-        console.error('[Auth] ZEGOCLOUD initialization failed for Facebook login:', zegoError);
-        // Don't fail the login if ZEGOCLOUD fails to initialize
-      }
-      
-      // Return user data to be stored in Redux state
-      return {
-        user: response.user,
-        token: response.token
-      };
-    } catch (error) {
-      return rejectWithValue(error.message || 'Failed to login with Facebook');
-    }
-  }
-);
-
-export const loginWithApple = createAsyncThunk(
-  'auth/loginWithApple',
-  async (appleData, { rejectWithValue }) => {
-    try {
-      const response = await dummyAuthApi.loginWithApple(appleData);
-      
-      // Store auth tokens in secure storage
-      await AsyncStorage.setItem('authToken', response.token);
-      
-      // Initialize ZEGOCLOUD call service after successful login
-      try {
-        const userID = response.user.id?.toString() || appleData.id;
-        const userName = response.user.name || appleData.displayName || `User_${userID}`;
-        await zegoService.initialize(userID, userName);
-        console.log('[Auth] ZEGOCLOUD initialized successfully for Apple login 33');
-      } catch (zegoError) {
-        console.error('[Auth] ZEGOCLOUD initialization failed for Apple login:', zegoError);
-        // Don't fail the login if ZEGOCLOUD fails to initialize
-      }
-      
-      // Return user data to be stored in Redux state
-      return {
-        user: response.user,
-        token: response.token
-      };
-    } catch (error) {
-      return rejectWithValue(error.message || 'Failed to login with Apple');
-    }
-  }
-);
 
 export const requestOTP = createAsyncThunk(
   'auth/requestOTP',
@@ -197,17 +95,6 @@ export const signup = createAsyncThunk(
   }
 );
 
-export const registerWithPhone = createAsyncThunk(
-  'auth/registerWithPhone',
-  async (userData, { rejectWithValue }) => {
-    try {
-      return await dummyAuthApi.registerWithPhone(userData);
-    } catch (error) {
-      return rejectWithValue(error);
-    }
-  }
-);
-
 export const googleSignIn = createAsyncThunk(
   'auth/googleSignIn',
   async (googleUser, { rejectWithValue }) => {
@@ -247,16 +134,18 @@ export const checkAuthStatus = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       // Try to get the stored tokens
+      console.log("**checkAuthStatus**")
       const userToken = await EncryptedStorage.getItem('user_token');
       const refreshToken = await EncryptedStorage.getItem('refresh_token');
 
       if (userToken && refreshToken) {
         // Get user data from storage
         const userData = await userService.getUserData();
-        
+        console.log("userData**userData--->",userData)
         // Initialize ZEGOCLOUD call service if user is authenticated
         if (userData) {
           try {
+            console.log("****checkStatus****")
             const userID = userData.id?.toString() || userData.user_id?.toString();
             const userName = userData.name || userData.username || `User_${userID}`;
             const duration = userData.total_seconds;
@@ -385,70 +274,8 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Login with Phone
-      .addCase(loginWithPhone.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(loginWithPhone.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-      })
-      .addCase(loginWithPhone.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload?.message || 'Login failed';
-      })
-      
-      // Login with Google
-      .addCase(loginWithGoogle.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(loginWithGoogle.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-      })
-      .addCase(loginWithGoogle.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'Failed to login with Google';
-      })
-      
-      // Login with Facebook
-      .addCase(loginWithFacebook.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(loginWithFacebook.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-      })
-      .addCase(loginWithFacebook.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'Failed to login with Facebook';
-      })
-      
-      // Login with Apple
-      .addCase(loginWithApple.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(loginWithApple.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isAuthenticated = true;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-      })
-      .addCase(loginWithApple.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'Failed to login with Apple';
-      })
-      
+
+
       // Request OTP
       .addCase(requestOTP.pending, (state) => {
         state.isLoading = true;
@@ -487,19 +314,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload || 'Login failed';
       })
-      
-      // Register with Phone
-      .addCase(registerWithPhone.pending, (state) => {
-        state.isLoading = true;
-        state.error = null;
-      })
-      .addCase(registerWithPhone.fulfilled, (state) => {
-        state.isLoading = false;
-      })
-      .addCase(registerWithPhone.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload?.message || 'Registration failed';
-      })
+  
       
       // Login
       .addCase(login.pending, (state) => {
